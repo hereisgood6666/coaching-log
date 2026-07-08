@@ -25,6 +25,10 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
   cursor: pointer; transition: .15s; white-space: nowrap;
 }
 .tab.active { background: #b08968; color: #fff; }
+@media (max-width: 420px) { .tab { font-size: 13px; padding: 10px 2px; } }
+.filter-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.filter-bar .fl { font-size: 13px; color: #8a7c68; font-weight: 600; flex-shrink: 0; }
+.filter-bar select { flex: 1; width: auto; }
 .card {
   background: #fff; border-radius: 14px; padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
@@ -185,6 +189,7 @@ textarea { resize: vertical; min-height: 46px; }
   <div class="tabs">
     <button class="tab active" id="tabNew" onclick="showView('new')">新增紀錄</button>
     <button class="tab" id="tabHist" onclick="showView('hist')">歷史紀錄 <span id="cnt"></span></button>
+    <button class="tab" id="tabClients" onclick="showView('clients')">客戶</button>
     <button class="tab" id="tabAsk" onclick="showView('ask')">導師提問 <span id="askCnt"></span></button>
   </div>
 
@@ -202,7 +207,8 @@ textarea { resize: vertical; min-height: 46px; }
         </div>
       </div>
       <label>客戶</label>
-      <input type="text" id="f-client" placeholder="例：Tom、A 小姐（代號）">
+      <select id="f-client-sel" onchange="onClientSelChange()"></select>
+      <input type="text" id="f-client-new" class="hidden" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
 
       <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
@@ -269,8 +275,12 @@ textarea { resize: vertical; min-height: 46px; }
 
   <!-- ===== HISTORY ===== -->
   <div id="view-hist" class="hidden">
+    <div class="card filter-bar">
+      <span class="fl">客戶篩選</span>
+      <select id="hist-filter" onchange="onHistFilter()"></select>
+    </div>
     <div class="card" id="chart-card">
-      <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受</span></label>
+      <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受 <span id="chart-hint"></span></span></label>
       <div class="chart-box" id="trendChart"></div>
     </div>
     <div class="actions" style="margin-bottom:14px">
@@ -283,6 +293,33 @@ textarea { resize: vertical; min-height: 46px; }
       <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
     </div>
     <div id="hist-list"></div>
+  </div>
+
+  <!-- ===== CLIENTS ===== -->
+  <div id="view-clients" class="hidden">
+    <div class="card">
+      <label style="margin-top:0">新增客戶 <span class="hint">一律使用代號</span></label>
+      <div class="phrase-add" style="margin-top:0">
+        <input type="text" id="new-client-code" placeholder="客戶代號，例：Tom、A 小姐">
+        <button onclick="addClient()">新增</button>
+      </div>
+    </div>
+    <div id="client-list"></div>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- ===== CLIENT DETAIL ===== -->
+  <div id="view-client-detail" class="hidden">
+    <div class="card" id="client-info"></div>
+    <div class="card" id="client-chart-card">
+      <label style="margin-top:0">這位客戶的趨勢 <span class="hint">依會談時間排序</span></label>
+      <div class="chart-box" id="clientChart"></div>
+    </div>
+    <div id="client-recs"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="showView('clients')">返回客戶列表</button>
+    </div>
+    <div style="height:24px"></div>
   </div>
 
   <!-- ===== MENTOR QUESTIONS ===== -->
@@ -306,7 +343,7 @@ textarea { resize: vertical; min-height: 46px; }
   <div id="view-detail" class="hidden">
     <div class="card" id="detail-body"></div>
     <div class="actions">
-      <button class="btn btn-ghost" onclick="showView('hist')">返回</button>
+      <button class="btn btn-ghost" onclick="backFromDetail()">返回</button>
       <button class="btn btn-ghost" onclick="copyDetail()">複製文字</button>
       <button class="btn btn-primary" onclick="editCurrent()">編輯</button>
     </div>
@@ -355,12 +392,42 @@ const ACC = [
 const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
 let currentId = null;   // record shown in detail
+let detailFrom = 'hist';        // where detail view was opened from ('hist' | 'client')
+let currentClientId = null;     // client shown in client detail
+let histFilter = '';            // history view: filter by clientId ('' = all)
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
 function store(a) { localStorage.setItem(KEY, JSON.stringify(a)); schedulePush(); }
 const QKEY = "coachingQuestions_v1";
 function loadQ() { try { return JSON.parse(localStorage.getItem(QKEY)) || []; } catch(e){ return []; } }
 function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(a)); schedulePush(); }
+const CKEY = "coachingClients_v1";
+function loadC() { try { return JSON.parse(localStorage.getItem(CKEY)) || []; } catch(e){ return []; } }
+function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(a)); schedulePush(); }
+function clientById(id) { return loadC().find(c=>c.id===id); }
+function clientRecs(id) { return load().filter(r=>r.clientId===id); }
+/* 把舊紀錄的 client 字串轉成客戶實體（去重：忽略大小寫與前後空白） */
+function migrateClients() {
+  const cs = loadC(), recs = load();
+  let cCh = false, rCh = false, seq = 0;
+  const byId = {}; cs.forEach(c=>byId[c.id]=c);
+  const byCode = {}; cs.forEach(c=>{ byCode[(c.code||'').trim().toLowerCase()] = c; });
+  recs.forEach(r=>{
+    if (r.clientId && byId[r.clientId]) return;
+    const code = (r.client||'').trim();
+    if (!code) { if (r.clientId) { r.clientId = ''; rCh = true; } return; }
+    const k = code.toLowerCase();
+    let c = byCode[k];
+    if (!c) {
+      c = { id: 'c'+Date.now()+'_'+(seq++), code, status:'active', goal:'', note:'', created: r.date||todayStr() };
+      cs.push(c); byCode[k] = c; byId[c.id] = c; cCh = true;
+    }
+    r.clientId = c.id; rCh = true;
+  });
+  if (cCh) localStorage.setItem(CKEY, JSON.stringify(cs));
+  if (rCh) localStorage.setItem(KEY, JSON.stringify(recs));
+  if (cCh || rCh) schedulePush();
+}
 
 /* ===== 雲端同步（Firebase，選用；沒有填設定時自動用本機模式）===== */
 const FIREBASE_CONFIG = {
@@ -437,7 +504,7 @@ async function onLogin(user){
 async function doLogout(){
   if (fb.auth){ try { await fb.authMod.signOut(fb.auth); } catch(e){} }
   currentUser = null;
-  localStorage.removeItem(KEY); localStorage.removeItem(QKEY);
+  localStorage.removeItem(KEY); localStorage.removeItem(QKEY); localStorage.removeItem(CKEY);
   updateCount(); updateAskCount();
   document.getElementById('acct-bar').classList.add('hidden');
   showAuth();
@@ -451,11 +518,12 @@ async function syncPull(){
       const p = JSON.parse(snap.data().payload);
       if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
       if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
+      if (Array.isArray(p.clients))   localStorage.setItem(CKEY, JSON.stringify(p.clients));
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
   } catch(e){}
-  migrateQ(); updateCount(); updateAskCount();
+  migrateQ(); migrateClients(); buildClientSel(''); updateCount(); updateAskCount();
 }
 function schedulePush(){
   if (!fb.db || !currentUser) return;
@@ -466,7 +534,7 @@ async function pushCloud(){
   if (!fb.db || !currentUser) return;
   try {
     const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
-    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ() }), updated_at: Date.now() });
+    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC() }), updated_at: Date.now() });
   } catch(e){}
 }
 
@@ -745,11 +813,16 @@ function exportQuestionsXLSX(){
 
 /* ---- trend chart (self-contained SVG, no library) ---- */
 function renderChart() {
-  const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  let arr = load();
+  if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
+  arr = arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
   const card = document.getElementById('chart-card');
+  const hintEl = document.getElementById('chart-hint');
   if (arr.length < 2) { card.style.display = 'none'; return; }
   card.style.display = '';
-  const labels = arr.map(r => r.client || r.date || '');
+  if (hintEl) hintEl.textContent = (!histFilter && arr.length > 20) ? '（最近 20 筆）' : '';
+  if (!histFilter && arr.length > 20) arr = arr.slice(-20);
+  const labels = arr.map(r => histFilter ? (r.session || (r.date||'').slice(5) || '') : (r.client || r.date || ''));
   const series = [
     { name:'自評表現', color:'#b08968', vals: arr.map(r=>parseFloat(r.perf)) },
     { name:'我的感受', color:'#5a9e5f', vals: arr.map(r=>parseFloat(r.feel)) },
@@ -791,7 +864,7 @@ function svgLineChart(labels, series) {
 
 /* ---- backup / restore / export ---- */
 function backupJSON() {
-  const data = { records: load(), questions: loadQ(), exportedAt: new Date().toISOString() };
+  const data = { records: load(), questions: loadQ(), clients: loadC(), exportedAt: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -817,6 +890,12 @@ function restoreJSON(e) {
         d.questions.forEach(x=>{ if(!qids.has(x.id)) qcur.push(x); });
         storeQ(qcur); updateAskCount();
       }
+      if (d.clients && Array.isArray(d.clients)) {
+        const ccur = loadC(); const cids = new Set(ccur.map(x=>x.id));
+        d.clients.forEach(x=>{ if(!cids.has(x.id)) ccur.push(x); });
+        storeC(ccur);
+      }
+      migrateClients(); buildClientSel(''); buildHistFilter();
       updateCount(); renderHist(); renderChart();
       toast('已還原，新增 '+added+' 筆');
     } catch(err){ toast('檔案格式錯誤'); }
@@ -915,20 +994,39 @@ function showView(v) {
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
   document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
   document.getElementById('view-ask').classList.toggle('hidden', v!=='ask');
+  document.getElementById('view-clients').classList.toggle('hidden', v!=='clients');
+  document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
   document.getElementById('tabNew').classList.toggle('active', v==='new');
-  document.getElementById('tabHist').classList.toggle('active', v==='hist' || v==='detail');
+  document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
+  document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
-  if (v==='hist') { renderHist(); renderChart(); }
+  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); }
   if (v==='ask') renderAsk();
+  if (v==='clients') renderClients();
 }
 
 /* ---- save ---- */
 function saveRecord() {
+  const selVal = document.getElementById('f-client-sel').value;
+  let clientId = '', clientCode = '';
+  if (selVal === '__new__') {
+    clientCode = document.getElementById('f-client-new').value.trim();
+    if (clientCode) {
+      const cs = loadC();
+      let c = cs.find(x=>(x.code||'').trim().toLowerCase()===clientCode.toLowerCase());
+      if (!c) { c = { id:'c'+Date.now(), code:clientCode, status:'active', goal:'', note:'', created:todayStr() }; cs.push(c); storeC(cs); }
+      clientId = c.id; clientCode = c.code;
+    }
+  } else if (selVal) {
+    const c = clientById(selVal);
+    if (c) { clientId = c.id; clientCode = c.code; }
+  }
   const rec = {
     id: editId || Date.now(),
     date: document.getElementById('f-date').value,
     session: document.getElementById('f-session').value.trim(),
-    client: document.getElementById('f-client').value.trim(),
+    client: clientCode,
+    clientId: clientId,
     instant: document.getElementById('f-instant').value.trim(),
     perf: document.getElementById('f-perf').value,
     feel: document.getElementById('f-feel').value,
@@ -960,7 +1058,7 @@ function saveRecord() {
 function resetForm() {
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-session').value = '';
-  document.getElementById('f-client').value = '';
+  document.getElementById('f-client-new').value = '';
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
@@ -973,6 +1071,7 @@ function resetForm() {
   addItem('special-list');
   buildAcc();
   editId = null;
+  buildClientSel('');
   document.getElementById('saveBtn').textContent = '儲存紀錄';
 }
 
@@ -983,8 +1082,10 @@ function updateCount() {
 }
 function renderHist() {
   const list = document.getElementById('hist-list');
-  const arr = load().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
-  if (!arr.length) { list.innerHTML = '<div class="empty">還沒有紀錄<br>先到「新增紀錄」填一筆吧</div>'; return; }
+  let arr = load();
+  if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
+  arr = arr.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  if (!arr.length) { list.innerHTML = histFilter ? '<div class="empty">這位客戶還沒有紀錄</div>' : '<div class="empty">還沒有紀錄<br>先到「新增紀錄」填一筆吧</div>'; return; }
   list.innerHTML = arr.map(r=>{
     const accN = (r.acc||[]).filter(x=>x.on).length;
     return `<div class="rec" onclick="openDetail(${r.id})">
@@ -999,7 +1100,8 @@ function renderHist() {
 }
 
 /* ---- detail ---- */
-function openDetail(id) {
+function openDetail(id, from) {
+  detailFrom = from || 'hist';
   currentId = id;
   const r = load().find(x=>x.id===id);
   if (!r) return;
@@ -1040,7 +1142,9 @@ function editCurrent() {
   if (!r) return;
   document.getElementById('f-date').value = r.date || '';
   document.getElementById('f-session').value = r.session || '';
-  document.getElementById('f-client').value = r.client || '';
+  editId = r.id;   // 先設，避免 buildClientSel 觸發自動帶入會談次數
+  buildClientSel(r.clientId || '');
+  document.getElementById('f-client-new').value = '';
   document.getElementById('f-instant').value = r.instant || '';
   document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
   document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
@@ -1067,7 +1171,7 @@ function deleteCurrent() {
   store(load().filter(x=>x.id!==currentId));
   updateCount();
   toast('已刪除');
-  showView('hist');
+  backFromDetail();
 }
 
 function copyDetail() {
@@ -1082,7 +1186,141 @@ function copyDetail() {
   });
 }
 
-function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---- clients (CRM) ---- */
+function backFromDetail(){
+  if (detailFrom === 'client' && currentClientId) openClient(currentClientId);
+  else showView('hist');
+}
+function buildClientSel(selId){
+  const sel = document.getElementById('f-client-sel');
+  if (!sel) return;
+  const cs = loadC().slice().sort((a,b)=>
+    ((a.status==='closed')?1:0)-((b.status==='closed')?1:0) || (a.code||'').localeCompare(b.code||'','zh-Hant'));
+  sel.innerHTML = '<option value="">— 選擇客戶 —</option>' +
+    cs.map(c=>'<option value="'+c.id+'">'+esc(c.code)+(c.status==='closed'?'（已結案）':'')+'</option>').join('') +
+    '<option value="__new__">＋ 新增客戶…</option>';
+  sel.value = selId || '';
+  if (sel.value !== (selId||'')) sel.value = '';
+  onClientSelChange();
+}
+function onClientSelChange(){
+  const sel = document.getElementById('f-client-sel');
+  const inp = document.getElementById('f-client-new');
+  if (!sel || !inp) return;
+  inp.classList.toggle('hidden', sel.value !== '__new__');
+  if (sel.value === '__new__') { inp.focus(); return; }
+  if (!sel.value || editId) return;
+  // 自動帶入下一次會談編號（僅在空白或仍是自動格式時覆蓋）
+  const sess = document.getElementById('f-session');
+  const cur = sess.value.trim();
+  if (!cur || /^第.+次(會談)?$/.test(cur)) {
+    const n = clientRecs(sel.value).length + 1;
+    sess.value = '第' + numToCh(n) + '次';
+  }
+}
+function addClient(){
+  const code = document.getElementById('new-client-code').value.trim();
+  if (!code) { toast('請填客戶代號'); return; }
+  const cs = loadC();
+  if (cs.some(c=>(c.code||'').trim().toLowerCase()===code.toLowerCase())) { toast('已有這位客戶'); return; }
+  cs.push({ id:'c'+Date.now(), code, status:'active', goal:'', note:'', created:todayStr() });
+  storeC(cs);
+  document.getElementById('new-client-code').value = '';
+  renderClients(); toast('已新增客戶');
+}
+function renderClients(){
+  const list = document.getElementById('client-list');
+  const cs = loadC();
+  if (!cs.length) { list.innerHTML = '<div class="empty">還沒有客戶<br>在上面新增一位，或先去「新增紀錄」填一筆</div>'; return; }
+  const recs = load();
+  const info = cs.map(c=>{
+    const rs = recs.filter(r=>r.clientId===c.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    return { c, n: rs.length, last: rs.length ? (rs[0].date||'') : '' };
+  }).sort((a,b)=>
+    ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0) || (b.last||'').localeCompare(a.last||''));
+  list.innerHTML = info.map(x=>`<div class="rec" onclick="openClient('${x.c.id}')">
+    <div class="rec-top">
+      <span class="rec-client">${esc(x.c.code)}${x.c.status==='closed'?'<span class="badge">已結案</span>':''}</span>
+      <span class="rec-date">${x.last||'尚無紀錄'}</span>
+    </div>
+    <div class="rec-meta">會談 ${x.n} 次${x.c.goal?' · 目標：'+esc(x.c.goal):''}</div>
+  </div>`).join('');
+}
+function openClient(id){
+  currentClientId = id;
+  const c = clientById(id); if (!c) return;
+  const rs = clientRecs(id).sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  document.getElementById('client-info').innerHTML = `
+    <label style="margin-top:0">客戶代號</label><input type="text" id="c-code" value="${esc(c.code)}">
+    <label>狀態</label>
+    <select id="c-status">
+      <option value="active"${c.status!=='closed'?' selected':''}>進行中</option>
+      <option value="closed"${c.status==='closed'?' selected':''}>已結案</option>
+    </select>
+    <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
+    <label>備註 <span class="hint">選填，同樣不要寫可辨識個資</span></label><textarea id="c-note">${esc(c.note||'')}</textarea>
+    <div class="actions" style="margin-top:12px">
+      ${rs.length ? '' : `<button class="btn btn-ghost" style="color:#c0392b" onclick="deleteClient('${c.id}')">刪除</button>`}
+      <button class="btn btn-primary" onclick="saveClient('${c.id}')">儲存客戶資料</button>
+    </div>`;
+  const cc = document.getElementById('client-chart-card');
+  if (rs.length >= 2) {
+    cc.style.display = '';
+    const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
+    const series = [
+      { name:'自評表現', color:'#b08968', vals: rs.map(r=>parseFloat(r.perf)) },
+      { name:'我的感受', color:'#5a9e5f', vals: rs.map(r=>parseFloat(r.feel)) },
+      { name:'客戶感受', color:'#4f7fb5', vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+    ];
+    document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
+  } else cc.style.display = 'none';
+  const rl = rs.slice().reverse();
+  document.getElementById('client-recs').innerHTML = rl.length
+    ? '<div class="ask-sub">會談紀錄（'+rl.length+'）</div>' + rl.map(r=>`<div class="rec" onclick="openDetail(${r.id},'client')">
+        <div class="rec-top"><span class="rec-client">${esc(formatSession(r.session))||'會談'}</span><span class="rec-date">${r.date||''}</span></div>
+        <div class="rec-meta">自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}<span class="badge">ACC ${(r.acc||[]).filter(x=>x.on).length}/8</span></div>
+      </div>`).join('')
+    : '<div class="empty">這位客戶還沒有紀錄</div>';
+  showView('clientdetail');
+}
+function saveClient(id){
+  const cs = loadC(); const c = cs.find(x=>x.id===id); if (!c) return;
+  const code = document.getElementById('c-code').value.trim();
+  if (!code) { toast('代號不能空白'); return; }
+  c.code = code;
+  c.status = document.getElementById('c-status').value;
+  c.goal = document.getElementById('c-goal').value.trim();
+  c.note = document.getElementById('c-note').value.trim();
+  storeC(cs);
+  // 代號改了，同步更新既有紀錄上的顯示名稱
+  const recs = load(); let ch = false;
+  recs.forEach(r=>{ if (r.clientId===id && r.client!==code) { r.client = code; ch = true; } });
+  if (ch) store(recs);
+  buildClientSel(document.getElementById('f-client-sel').value);
+  toast('已儲存'); openClient(id);
+}
+function deleteClient(id){
+  if (clientRecs(id).length) { toast('已有會談紀錄，請改用「已結案」'); return; }
+  if (!confirm('刪除這位客戶？')) return;
+  storeC(loadC().filter(c=>c.id!==id));
+  buildClientSel('');
+  toast('已刪除'); showView('clients');
+}
+function buildHistFilter(){
+  const sel = document.getElementById('hist-filter');
+  if (!sel) return;
+  const cs = loadC().slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'','zh-Hant'));
+  sel.innerHTML = '<option value="">全部客戶</option>' +
+    cs.map(c=>'<option value="'+c.id+'">'+esc(c.code)+(c.status==='closed'?'（已結案）':'')+'</option>').join('');
+  sel.value = histFilter;
+  if (sel.value !== histFilter) { histFilter = ''; sel.value = ''; }
+}
+function onHistFilter(){
+  histFilter = document.getElementById('hist-filter').value;
+  renderHist(); renderChart();
+}
 
 /* ---- 使用條款・隱私政策 ---- */
 const LEGAL_HTML = `
@@ -1121,9 +1359,10 @@ const HELP_HTML = `
 <p><b>2.</b> 按「使用 Google 登入」，選自己的 Google 帳號。</p>
 <p><b>3.</b> 之後手機或電腦登入「同一個」Google 帳號，就會看到自己的所有紀錄；每個人資料各自獨立，看不到彼此。</p>
 
-<h3>三個分頁</h3>
-<p><b>新增紀錄：</b>填日期、客戶代號、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。</p>
-<p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖；可匯出 PDF 或全部文字。</p>
+<h3>四個分頁</h3>
+<p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會談次數會自動帶入。</p>
+<p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖，可用上方「客戶篩選」只看某一位；可匯出 PDF 或全部文字。</p>
+<p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；點進單一客戶可看專屬趨勢圖和全部會談紀錄。</p>
 <p><b>導師提問：</b>記下想問導師的問題，1-on-1 前可複製清單或匯出 Excel；拿到答案再填回存起來。</p>
 
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
@@ -1145,6 +1384,7 @@ function closeLegal(){ document.getElementById('legal-modal').classList.remove('
 
 /* init */
 migrateQ();
+migrateClients();
 resetForm();
 updateCount();
 updateAskCount();
