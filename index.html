@@ -199,7 +199,7 @@ textarea { resize: vertical; min-height: 46px; }
       <div class="row">
         <div>
           <label>日期</label>
-          <input type="date" id="f-date">
+          <input type="date" id="f-date" onchange="autoSessionFill()">
         </div>
         <div>
           <label>會談次數</label>
@@ -419,7 +419,7 @@ function migrateClients() {
     const k = code.toLowerCase();
     let c = byCode[k];
     if (!c) {
-      c = { id: 'c'+Date.now()+'_'+(seq++), code, status:'active', goal:'', note:'', created: r.date||todayStr() };
+      c = { id: 'c'+Date.now()+'_'+(seq++), code, status:'active', preSessions:0, goal:'', note:'', created: r.date||todayStr() };
       cs.push(c); byCode[k] = c; byId[c.id] = c; cCh = true;
     }
     r.clientId = c.id; rCh = true;
@@ -1014,7 +1014,7 @@ function saveRecord() {
     if (clientCode) {
       const cs = loadC();
       let c = cs.find(x=>(x.code||'').trim().toLowerCase()===clientCode.toLowerCase());
-      if (!c) { c = { id:'c'+Date.now(), code:clientCode, status:'active', goal:'', note:'', created:todayStr() }; cs.push(c); storeC(cs); }
+      if (!c) { c = { id:'c'+Date.now(), code:clientCode, status:'active', preSessions:0, goal:'', note:'', created:todayStr() }; cs.push(c); storeC(cs); }
       clientId = c.id; clientCode = c.code;
     }
   } else if (selVal) {
@@ -1211,21 +1211,29 @@ function onClientSelChange(){
   if (!sel || !inp) return;
   inp.classList.toggle('hidden', sel.value !== '__new__');
   if (sel.value === '__new__') { inp.focus(); return; }
-  if (!sel.value || editId) return;
-  // 自動帶入下一次會談編號（僅在空白或仍是自動格式時覆蓋）
+  autoSessionFill();
+}
+/* 依「該客戶在此日期（含）之前的紀錄數 + 開始記錄前已談次數」自動算第幾次
+   僅在欄位空白或仍是自動格式（第Ｎ次）時覆蓋，不動使用者手改過的值 */
+function autoSessionFill(){
+  if (editId) return;
+  const sel = document.getElementById('f-client-sel');
+  if (!sel || !sel.value || sel.value === '__new__') return;
   const sess = document.getElementById('f-session');
   const cur = sess.value.trim();
-  if (!cur || /^第.+次(會談)?$/.test(cur)) {
-    const n = clientRecs(sel.value).length + 1;
-    sess.value = '第' + numToCh(n) + '次';
-  }
+  if (cur && !/^第.+次(會談)?$/.test(cur)) return;
+  const c = clientById(sel.value); if (!c) return;
+  const d = document.getElementById('f-date').value || todayStr();
+  const prior = clientRecs(sel.value).filter(r=>(r.date||'') <= d).length;
+  const n = (parseInt(c.preSessions,10)||0) + prior + 1;
+  sess.value = '第' + numToCh(n) + '次';
 }
 function addClient(){
   const code = document.getElementById('new-client-code').value.trim();
   if (!code) { toast('請填客戶代號'); return; }
   const cs = loadC();
   if (cs.some(c=>(c.code||'').trim().toLowerCase()===code.toLowerCase())) { toast('已有這位客戶'); return; }
-  cs.push({ id:'c'+Date.now(), code, status:'active', goal:'', note:'', created:todayStr() });
+  cs.push({ id:'c'+Date.now(), code, status:'active', preSessions:0, goal:'', note:'', created:todayStr() });
   storeC(cs);
   document.getElementById('new-client-code').value = '';
   renderClients(); toast('已新增客戶');
@@ -1259,10 +1267,12 @@ function openClient(id){
       <option value="active"${c.status!=='closed'?' selected':''}>進行中</option>
       <option value="closed"${c.status==='closed'?' selected':''}>已結案</option>
     </select>
+    <label>開始記錄前已談次數 <span class="hint">用這工具之前已談過幾次就填幾，都在這裡記就填 0</span></label>
+    <input type="text" id="c-pre" inputmode="numeric" value="${parseInt(c.preSessions,10)||0}">
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
     <label>備註 <span class="hint">選填，同樣不要寫可辨識個資</span></label><textarea id="c-note">${esc(c.note||'')}</textarea>
     <div class="actions" style="margin-top:12px">
-      ${rs.length ? '' : `<button class="btn btn-ghost" style="color:#c0392b" onclick="deleteClient('${c.id}')">刪除</button>`}
+      ${rs.length ? `<button class="btn btn-ghost" onclick="renumberClient('${c.id}')">依日期重新編號</button>` : `<button class="btn btn-ghost" style="color:#c0392b" onclick="deleteClient('${c.id}')">刪除</button>`}
       <button class="btn btn-primary" onclick="saveClient('${c.id}')">儲存客戶資料</button>
     </div>`;
   const cc = document.getElementById('client-chart-card');
@@ -1291,6 +1301,7 @@ function saveClient(id){
   if (!code) { toast('代號不能空白'); return; }
   c.code = code;
   c.status = document.getElementById('c-status').value;
+  c.preSessions = parseInt(document.getElementById('c-pre').value,10)||0;
   c.goal = document.getElementById('c-goal').value.trim();
   c.note = document.getElementById('c-note').value.trim();
   storeC(cs);
@@ -1300,6 +1311,19 @@ function saveClient(id){
   if (ch) store(recs);
   buildClientSel(document.getElementById('f-client-sel').value);
   toast('已儲存'); openClient(id);
+}
+function renumberClient(id){
+  const c = clientById(id); if (!c) return;
+  const off = parseInt(c.preSessions,10)||0;
+  const rs = clientRecs(id).sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  if (!rs.length) { toast('沒有紀錄可編號'); return; }
+  if (!confirm('依日期順序重新編號這位客戶的 '+rs.length+' 筆紀錄？\n（從第'+numToCh(off+1)+'次開始，會覆蓋原本的會談次數欄位）')) return;
+  const map = {};
+  rs.forEach((r,i)=>{ map[r.id] = '第'+numToCh(off+i+1)+'次'; });
+  const recs = load();
+  recs.forEach(r=>{ if (map[r.id]) r.session = map[r.id]; });
+  store(recs);
+  toast('已重新編號'); openClient(id);
 }
 function deleteClient(id){
   if (clientRecs(id).length) { toast('已有會談紀錄，請改用「已結案」'); return; }
@@ -1360,9 +1384,9 @@ const HELP_HTML = `
 <p><b>3.</b> 之後手機或電腦登入「同一個」Google 帳號，就會看到自己的所有紀錄；每個人資料各自獨立，看不到彼此。</p>
 
 <h3>四個分頁</h3>
-<p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會談次數會自動帶入。</p>
+<p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會依「日期」自動算出這是第幾次會談（含補登舊日期）。</p>
 <p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖，可用上方「客戶篩選」只看某一位；可匯出 PDF 或全部文字。</p>
-<p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；點進單一客戶可看專屬趨勢圖和全部會談紀錄。</p>
+<p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；點進單一客戶可看專屬趨勢圖和全部會談紀錄。若用這工具之前已和某位客戶談過幾次，在「開始記錄前已談次數」填上次數，編號就會接著算；補登舊會談後可按「依日期重新編號」一次修正全部編號。</p>
 <p><b>導師提問：</b>記下想問導師的問題，1-on-1 前可複製清單或匯出 Excel；拿到答案再填回存起來。</p>
 
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
