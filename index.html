@@ -201,7 +201,7 @@ textarea { resize: vertical; min-height: 46px; }
           <input type="text" id="f-session" placeholder="第一次">
         </div>
       </div>
-      <label>客戶 <span class="hint" style="color:#b0703f">請用代號，勿寫真名</span></label>
+      <label>客戶</label>
       <input type="text" id="f-client" placeholder="例：Tom、A 小姐（代號）">
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
 
@@ -328,7 +328,6 @@ textarea { resize: vertical; min-height: 46px; }
     <div class="sub">用 Google 登入，你的紀錄會跨裝置同步</div>
     <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
     <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
-    <div class="auth-hint">從 LINE／IG／FB 等 App 開啟時，Google 不允許在 App 內建瀏覽器登入。請先點右上角「⋯」或分享鍵，用 <b>Safari 或 Chrome</b> 開啟本網站，再登入。</div>
     <div class="footer" style="margin-top:16px"><a onclick="openHelp()">使用說明</a><br>登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
   </div>
 </div>
@@ -400,7 +399,7 @@ function isInAppBrowser(){
 function showAuth(){
   document.getElementById('app').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('hidden');
-  if (isInAppBrowser()) authMsg('請先用 Safari 或 Chrome 開啟本網站再登入：點右上角「⋯」或分享鍵 →「用預設瀏覽器開啟」。');
+  authMsg('');   // 開啟時不顯示提示，按下登入才視情況顯示
 }
 function authMsg(m){ const el=document.getElementById('auth-msg'); if(el) el.textContent = m || ''; }
 async function doGoogleLogin(){
