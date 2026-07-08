@@ -31,10 +31,12 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 }
 label { display: block; font-weight: 600; margin: 12px 0 5px; font-size: 14px; }
 label .hint { font-weight: 400; color: #a39b8e; font-size: 12px; }
+.privacy-tip { margin-top: 6px; background: #fbeee2; border: 1px solid #eadaca; border-radius: 8px; padding: 7px 10px; font-size: 12px; color: #a4693c; line-height: 1.5; }
 input[type=text], input[type=date], textarea, select {
   width: 100%; padding: 9px 11px; border: 1px solid #e0dbd2; border-radius: 9px;
   font-size: 15px; font-family: inherit; background: #fdfcfa; color: #2c2a28;
 }
+input[type=date] { -webkit-appearance: none; appearance: none; text-align: left; min-height: 42px; }
 textarea { resize: vertical; min-height: 46px; }
 .row { display: flex; gap: 10px; }
 .row > div { flex: 1; min-width: 0; }
@@ -175,7 +177,7 @@ textarea { resize: vertical; min-height: 46px; }
 
   <div class="acct-bar hidden" id="acct-bar">
     <span id="acct-email"></span>
-    <button onclick="doLogout()">登出</button>
+    <span><button onclick="openHelp()">使用說明</button>　<button onclick="doLogout()">登出</button></span>
   </div>
 
   <div class="tabs">
@@ -197,8 +199,9 @@ textarea { resize: vertical; min-height: 46px; }
           <input type="text" id="f-session" placeholder="第一次">
         </div>
       </div>
-      <label>客戶</label>
-      <input type="text" id="f-client" placeholder="客戶代稱">
+      <label>客戶 <span class="hint" style="color:#b0703f">請用代號，勿寫真名</span></label>
+      <input type="text" id="f-client" placeholder="例：Tom、A 小姐（代號）">
+      <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
 
       <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
       <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
@@ -313,7 +316,7 @@ textarea { resize: vertical; min-height: 46px; }
   </div>
 
   <div class="footer">
-    © 2026 李懿恩 · <a onclick="openLegal()">使用條款・隱私政策</a>
+    <a onclick="openHelp()">使用說明</a> · <a onclick="openLegal()">使用條款・隱私政策</a><br>© 2026 李懿恩
   </div>
 </div>
 
@@ -323,7 +326,7 @@ textarea { resize: vertical; min-height: 46px; }
     <div class="sub">用 Google 登入，你的紀錄會跨裝置同步</div>
     <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
     <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
-    <div class="footer" style="margin-top:16px">登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
+    <div class="footer" style="margin-top:16px"><a onclick="openHelp()">使用說明</a><br>登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
   </div>
 </div>
 
@@ -1107,11 +1110,35 @@ const LEGAL_HTML = `
 <p><b>8. 未成年人：</b>本工具非為未滿 18 歲者設計。</p>
 <p><b>9. 聯絡方式：</b>yienlee.coaching@gmail.com</p>
 <p style="color:#a39b8e;font-size:12px;margin-top:14px">© 2026 李懿恩. All rights reserved.</p>`;
-function openLegal(){
-  const el = document.getElementById('legal-content');
-  if (el && !el.innerHTML) el.innerHTML = LEGAL_HTML;
+const HELP_HTML = `
+<h2>使用說明</h2>
+<div class="lp-sub">會談後快速記錄　·　會談結束 15 分鐘內填寫</div>
+
+<h3>如何開始</h3>
+<p><b>1.</b> 用手機或電腦瀏覽器打開網址。</p>
+<p><b>2.</b> 按「使用 Google 登入」，選自己的 Google 帳號。</p>
+<p><b>3.</b> 之後手機或電腦登入「同一個」Google 帳號，就會看到自己的所有紀錄；每個人資料各自獨立，看不到彼此。</p>
+
+<h3>三個分頁</h3>
+<p><b>新增紀錄：</b>填日期、客戶代號、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。</p>
+<p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖；可匯出 PDF 或全部文字。</p>
+<p><b>導師提問：</b>記下想問導師的問題，1-on-1 前可複製清單或匯出 Excel；拿到答案再填回存起來。</p>
+
+<div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
+
+<h3>記得備份</h3>
+<p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
+
+<h3>手機登入小提醒</h3>
+<p>若你是從 LINE、IG、FB 等 App 裡點開連結，請先點右上角「⋯」或分享鍵 →「用 Safari／Chrome 開啟」，在瀏覽器裡再登入。（這是 Google 的安全規定。）</p>
+
+<p style="color:#a39b8e;font-size:12px;margin-top:14px">有問題再問 Yi-En 🙂</p>`;
+function openModal(html){
+  document.getElementById('legal-content').innerHTML = html;
   document.getElementById('legal-modal').classList.add('show');
 }
+function openLegal(){ openModal(LEGAL_HTML); }
+function openHelp(){ openModal(HELP_HTML); }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
 
 /* init */
