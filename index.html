@@ -152,6 +152,20 @@ textarea { resize: vertical; min-height: 46px; }
 .auth-msg { color:#c0392b; font-size:13px; min-height:18px; margin:6px 0; }
 .acct-bar { display:flex; justify-content:space-between; align-items:center; background:#f2ede5; border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:#6b655c; }
 .acct-bar button { border:none; background:none; color:#a07d55; font-weight:600; cursor:pointer; font-size:13px; }
+/* footer + legal */
+.footer { text-align:center; color:#a39b8e; font-size:12px; padding:22px 0 8px; }
+.footer a { color:#a07d55; cursor:pointer; text-decoration:underline; }
+#legal-modal { position:fixed; inset:0; background:rgba(44,42,40,.5); display:none; align-items:center; justify-content:center; padding:16px; z-index:100; }
+#legal-modal.show { display:flex; }
+.legal-box { background:#fff; border-radius:14px; max-width:640px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 26px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.legal-close { position:absolute; top:12px; right:14px; border:none; background:#f0ece5; color:#8a8378; width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; }
+.legal-box h3 { color:#966b43; font-size:17px; margin:22px 0 8px; }
+.legal-box h3:first-of-type { margin-top:6px; }
+.legal-box h2 { font-size:20px; margin:0 0 2px; }
+.legal-box .lp-sub { color:#8a8378; font-size:13px; margin-bottom:8px; }
+.legal-box p { font-size:14px; line-height:1.7; color:#3a352f; margin:0 0 9px; }
+.legal-box .lp-note { background:#fbeee2; border:1px solid #e4c4a4; border-radius:10px; padding:10px 12px; color:#8a5a2e; font-size:13px; line-height:1.6; margin-bottom:14px; }
+.legal-box b { color:#2c2a28; }
 </style>
 </head>
 <body>
@@ -297,6 +311,10 @@ textarea { resize: vertical; min-height: 46px; }
     </div>
     <div style="height:24px"></div>
   </div>
+
+  <div class="footer">
+    © 2026 李懿恩 · <a onclick="openLegal()">使用條款・隱私政策</a>
+  </div>
 </div>
 
 <div class="wrap hidden" id="auth-screen">
@@ -305,6 +323,14 @@ textarea { resize: vertical; min-height: 46px; }
     <div class="sub">用 Google 登入，你的紀錄會跨裝置同步</div>
     <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
     <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
+    <div class="footer" style="margin-top:16px">登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
+  </div>
+</div>
+
+<div id="legal-modal" onclick="if(event.target===this)closeLegal()">
+  <div class="legal-box">
+    <button class="legal-close" onclick="closeLegal()">×</button>
+    <div id="legal-content"></div>
   </div>
 </div>
 
@@ -1034,6 +1060,41 @@ function copyDetail() {
 }
 
 function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---- 使用條款・隱私政策 ---- */
+const LEGAL_HTML = `
+<h2>使用條款・隱私政策</h2>
+<div class="lp-sub">會談後快速記錄　·　生效日 2026-07-08　·　版本 v1.0</div>
+<div class="lp-note">本工具為協助教練自我練習與反思之免費工具。請一律使用「代號」，不要輸入客戶真名或任何可辨識的細節，請勿存放真實客戶個資。</div>
+
+<h3>服務條款</h3>
+<p><b>1. 服務內容：</b>本工具依「現況（as-is）」免費提供，不保證持續可用、無錯誤或符合特定目的。</p>
+<p><b>2. 帳號與登入：</b>使用者透過 Google 帳號登入，應妥善保管其帳號，並對該帳號下之一切活動負責。</p>
+<p><b>3. 可接受之使用：</b>本工具僅供個人自我練習之用；不得上傳違法、侵權或不當內容，亦不得輸入任何可辨識第三人（包括客戶）身分之個人資料。</p>
+<p><b>4. 使用者內容：</b>使用者對其輸入之內容負完全責任，內容著作權歸使用者所有；使用者同意授權本工具為提供功能之目的儲存與處理該內容。</p>
+<p><b>5. 免責聲明：</b>本工具內容不構成任何專業、法律、心理或認證上之建議。在法律允許之最大範圍內，作者不對因使用或無法使用本工具所生之任何損害負責。</p>
+<p><b>6. 服務變更與終止：</b>作者得隨時修改、暫停或終止本工具，恕不另行個別通知；強烈建議使用者定期自行備份（工具內「備份全部」）。</p>
+<p><b>7. 智慧財產權：</b>本工具之著作權及其他智慧財產權均歸作者李懿恩所有。</p>
+<p><b>8. 準據法：</b>本條款以中華民國法律為準據法。</p>
+<p><b>9. 聯絡方式：</b>yienlee.interiors@gmail.com</p>
+
+<h3>隱私政策</h3>
+<p><b>1. 蒐集的資料：</b>(a) 登入資訊——你的 Google 帳號 Email、顯示名稱與使用者識別碼；(b) 你主動輸入的紀錄內容。</p>
+<p><b>2. 儲存位置：</b>資料儲存於 Google Firebase（Cloud Firestore），位於亞洲區伺服器，傳輸與儲存過程均經加密。</p>
+<p><b>3. 誰能存取：</b>安全規則確保每位使用者僅能存取自己的資料，彼此無法互相讀取。惟基於維運之必要，服務管理者（作者）技術上可存取資料庫；作者承諾非必要不查閱使用者內容。</p>
+<p><b>4. 用途：</b>所蒐集之資料僅用於提供與維運本工具之功能；不作廣告，亦不會出售或出租予第三方。</p>
+<p><b>5. 第三方服務：</b>本工具使用 Google（身分驗證與資料庫）與 GitHub（網站託管），各有其隱私政策。</p>
+<p><b>6. 你的權利：</b>你可隨時於工具內編輯或刪除自己的紀錄，或來信要求刪除你的帳號資料。</p>
+<p><b>7. 重要提醒：</b>為保護第三人隱私，請勿輸入任何可辨識客戶身分之個人資料，一律使用代號。</p>
+<p><b>8. 未成年人：</b>本工具非為未滿 18 歲者設計。</p>
+<p><b>9. 聯絡方式：</b>yienlee.interiors@gmail.com</p>
+<p style="color:#a39b8e;font-size:12px;margin-top:14px">© 2026 李懿恩. All rights reserved.</p>`;
+function openLegal(){
+  const el = document.getElementById('legal-content');
+  if (el && !el.innerHTML) el.innerHTML = LEGAL_HTML;
+  document.getElementById('legal-modal').classList.add('show');
+}
+function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
 
 /* init */
 migrateQ();
