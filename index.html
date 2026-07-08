@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會談後快速記錄</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: #f7f5f2;
+  color: #2c2a28;
+  line-height: 1.6;
+  font-size: 15px;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 20px; margin: 4px 0 2px; }
+.sub { color: #8a8378; font-size: 13px; margin-bottom: 14px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tab {
+  flex: 1; padding: 10px 6px; border: none; border-radius: 10px;
+  background: #ebe7e0; color: #6b655c; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.tab.active { background: #b08968; color: #fff; }
+.card {
+  background: #fff; border-radius: 14px; padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
+}
+label { display: block; font-weight: 600; margin: 12px 0 5px; font-size: 14px; }
+label .hint { font-weight: 400; color: #a39b8e; font-size: 12px; }
+input[type=text], input[type=date], textarea, select {
+  width: 100%; padding: 9px 11px; border: 1px solid #e0dbd2; border-radius: 9px;
+  font-size: 15px; font-family: inherit; background: #fdfcfa; color: #2c2a28;
+}
+textarea { resize: vertical; min-height: 46px; }
+.row { display: flex; gap: 10px; }
+.row > div { flex: 1; }
+.score-wrap { display: flex; align-items: center; gap: 12px; }
+.score-wrap input[type=range] { flex: 1; accent-color: #b08968; }
+.score-val {
+  min-width: 42px; text-align: center; font-weight: 700; font-size: 17px;
+  color: #b08968; background: #f4efe8; border-radius: 8px; padding: 3px 0;
+}
+.multi-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+.multi-item textarea { flex: 1; }
+.mini-btn {
+  border: none; background: #f0ece5; color: #8a8378; border-radius: 8px;
+  width: 34px; min-height: 40px; font-size: 18px; cursor: pointer; flex-shrink: 0;
+}
+.add-btn {
+  border: 1px dashed #cdc5b8; background: transparent; color: #8a7c68;
+  border-radius: 9px; padding: 8px; width: 100%; cursor: pointer; font-size: 14px; margin-top: 4px;
+}
+.acc-item {
+  border: 1px solid #ece7de; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+}
+.acc-head { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.acc-head input { margin-top: 4px; width: 18px; height: 18px; accent-color: #b08968; flex-shrink: 0; }
+.acc-title { font-weight: 600; font-size: 14px; }
+.acc-desc { color: #9a9184; font-size: 12px; margin-top: 2px; }
+.acc-item.checked { background: #f6f1ea; border-color: #d9c9b4; }
+.acc-note { margin-top: 8px; display: none; }
+.acc-item.checked .acc-note { display: block; }
+.actions { display: flex; gap: 10px; margin-top: 6px; }
+.btn {
+  flex: 1; padding: 12px; border: none; border-radius: 11px; font-size: 15px;
+  font-weight: 600; cursor: pointer;
+}
+.btn-primary { background: #b08968; color: #fff; }
+.btn-ghost { background: #ebe7e0; color: #6b655c; }
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #2c2a28; color: #fff; padding: 10px 20px; border-radius: 20px;
+  font-size: 14px; opacity: 0; pointer-events: none; transition: .3s; z-index: 50;
+}
+.toast.show { opacity: 1; }
+/* history */
+.rec {
+  background: #fff; border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05); cursor: pointer;
+}
+.rec-top { display: flex; justify-content: space-between; align-items: baseline; }
+.rec-client { font-weight: 700; font-size: 16px; }
+.rec-date { color: #a39b8e; font-size: 13px; }
+.rec-meta { color: #8a8378; font-size: 13px; margin-top: 3px; }
+.badge { display: inline-block; background: #f4efe8; color: #a07d55; border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 6px; }
+.empty { text-align: center; color: #a39b8e; padding: 40px 0; }
+.detail-field { margin-bottom: 12px; }
+.detail-label { font-weight: 700; font-size: 13px; color: #8a7c68; margin-bottom: 3px; }
+.detail-val { white-space: pre-wrap; }
+.detail-val ul { margin: 4px 0; padding-left: 20px; }
+.score-lines {
+  background: #faf6f0; border: 1px solid #eadfce; border-radius: 12px;
+  padding: 13px 15px; margin: 12px 0 18px;
+}
+.score-line { font-size: 15px; margin-bottom: 6px; }
+.score-line:last-child { margin-bottom: 0; }
+.score-line b { color: #b08968; }
+.because-note {
+  margin: 8px 0 0 4px; padding: 4px 0 4px 11px; border-left: 3px solid #d9c9b0;
+  color: #7a7266; font-size: 14px;
+}
+.because-note .bl { color: #a89478; font-weight: 700; }
+.acc-sub { font-weight: 700; font-size: 13px; color: #6b655c; margin: 10px 0 5px; }
+.acc-group { padding-left: 4px; }
+.acc-detail { margin-bottom: 8px; }
+.acc-detail-title { font-weight: 600; font-size: 14px; color: #2c2a28; }
+.acc-mark { font-weight: 700; margin-right: 6px; font-family: monospace; }
+.acc-detail-note { font-size: 13px; color: #9a9184; margin-top: 2px; padding-left: 22px; }
+.acc-none { color: #b3ab9d; font-size: 14px; }
+/* mentor questions */
+.qcard { background:#fff; border:1px solid #ece7de; border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.qcard.done { background:#f6f4ef; }
+.qtext { font-weight:600; font-size:15px; white-space:pre-wrap; }
+.qctx { color:#a39b8e; font-size:13px; margin-top:3px; }
+.qans { margin-top:8px; min-height:44px; }
+.qanswer { margin-top:8px; border-left:3px solid #cdbfa8; padding:5px 10px; font-size:14px; white-space:pre-wrap; }
+.qanswer .alabel { display:block; color:#a89478; font-weight:700; font-size:12px; margin-bottom:2px; }
+.qbtns { margin-top:9px; display:flex; gap:16px; }
+.mini-link { background:none; border:none; color:#a07d55; font-size:13px; cursor:pointer; padding:0; font-weight:600; }
+.mini-link.del-link { color:#c99; }
+.mini-link:hover { text-decoration:underline; }
+.ask-sub { font-weight:700; font-size:14px; color:#6b655c; margin:4px 0 8px; }
+.hidden { display: none; }
+/* phrase cheat sheet */
+.phrase-card { background: #fbf7f0; border: 1px solid #eadfce; }
+.phrase-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.phrase-head .arrow { color: #b08968; font-size: 13px; }
+.phrase-body { margin-top: 10px; }
+.phrase-body.collapsed { display: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; background: #fff;
+  border: 1px solid #e3d6c2; border-radius: 16px; padding: 5px 6px 5px 12px;
+  margin: 4px 5px 0 0; font-size: 14px; cursor: pointer;
+}
+.chip:hover { background: #f6efe4; }
+.chip .del { color: #c9beac; font-weight: 700; padding: 0 3px; }
+.chip .del:hover { color: #c0392b; }
+.phrase-add { display: flex; gap: 8px; margin-top: 10px; }
+.phrase-add input { flex: 1; }
+.phrase-add button { border: none; background: #b08968; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 14px; cursor: pointer; }
+/* chart */
+.chart-box { width: 100%; }
+/* auth */
+.auth-box { max-width: 360px; margin: 40px auto; background:#fff; border-radius:14px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.auth-box h2 { font-size:18px; margin:0 0 4px; }
+.auth-box .sub { margin-bottom:16px; }
+.auth-msg { color:#c0392b; font-size:13px; min-height:18px; margin:6px 0; }
+.acct-bar { display:flex; justify-content:space-between; align-items:center; background:#f2ede5; border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:#6b655c; }
+.acct-bar button { border:none; background:none; color:#a07d55; font-weight:600; cursor:pointer; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <h1>會談後快速記錄</h1>
+  <div class="sub">會談結束 15 分鐘內填寫</div>
+
+  <div class="acct-bar hidden" id="acct-bar">
+    <span id="acct-email"></span>
+    <button onclick="doLogout()">登出</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabNew" onclick="showView('new')">新增紀錄</button>
+    <button class="tab" id="tabHist" onclick="showView('hist')">歷史紀錄 <span id="cnt"></span></button>
+    <button class="tab" id="tabAsk" onclick="showView('ask')">導師提問 <span id="askCnt"></span></button>
+  </div>
+
+  <!-- ===== NEW / EDIT FORM ===== -->
+  <div id="view-new">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>日期</label>
+          <input type="date" id="f-date">
+        </div>
+        <div>
+          <label>會談次數</label>
+          <input type="text" id="f-session" placeholder="第一次">
+        </div>
+      </div>
+      <label>客戶</label>
+      <input type="text" id="f-client" placeholder="客戶代稱">
+
+      <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
+      <textarea id="f-instant" placeholder="例：我發現我每次第一次會談都會花別多時間…"></textarea>
+    </div>
+
+    <div class="card">
+      <label>給我自己的表現打幾分 <span class="hint">0–10</span></label>
+      <div class="score-wrap">
+        <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
+               oninput="document.getElementById('perfVal').textContent=this.value">
+        <span class="score-val" id="perfVal">7</span>
+      </div>
+      <label>我自己的感受 <span class="hint">0–10</span></label>
+      <div class="score-wrap">
+        <input type="range" id="f-feel" min="0" max="10" step="0.5" value="7"
+               oninput="document.getElementById('feelVal').textContent=this.value">
+        <span class="score-val" id="feelVal">7</span>
+      </div>
+      <label>我覺得客戶的感受 <span class="hint">0–10</span></label>
+      <div class="score-wrap">
+        <input type="range" id="f-clientfeel" min="0" max="10" step="0.5" value="7"
+               oninput="document.getElementById('clientfeelVal').textContent=this.value">
+        <span class="score-val" id="clientfeelVal">7</span>
+      </div>
+      <label>因為 <span class="hint">為什麼覺得客戶是這個感受</span></label>
+      <textarea id="f-because" placeholder="是什麼讓你這樣感覺客戶的狀態？"></textarea>
+    </div>
+
+    <div class="card">
+      <label>我做得好的（舉出三個）</label>
+      <div id="good-list"></div>
+      <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
+    </div>
+
+    <div class="card">
+      <label>注意到客戶在哪個時刻受到啟發或頓悟？</label>
+      <textarea id="f-insight" placeholder="描述那個時刻，或客戶當下的反應…"></textarea>
+    </div>
+
+    <div class="card">
+      <label>我覺得我可以改進的部分</label>
+      <div id="improve-list"></div>
+      <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
+    </div>
+
+    <div class="card">
+      <label>這次的特殊狀況</label>
+      <div id="special-list"></div>
+      <button class="add-btn" onclick="addItem('special-list')">＋ 再加一項</button>
+    </div>
+
+    <div class="card">
+      <label>ACC 標記 Checklist <span class="hint">這次有做到的職能，勾選並可加註</span></label>
+      <div id="acc-list"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="resetForm()">清空</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">儲存紀錄</button>
+    </div>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- ===== HISTORY ===== -->
+  <div id="view-hist" class="hidden">
+    <div class="card" id="chart-card">
+      <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受</span></label>
+      <div class="chart-box" id="trendChart"></div>
+    </div>
+    <div class="actions" style="margin-bottom:14px">
+      <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
+      <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
+    </div>
+    <div class="actions" style="margin:-6px 0 14px">
+      <button class="btn btn-ghost" onclick="exportAllText()">匯出全部文字</button>
+      <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- ===== MENTOR QUESTIONS ===== -->
+  <div id="view-ask" class="hidden">
+    <div class="card">
+      <label style="margin-top:0">新增想問導師的問題</label>
+      <textarea id="ask-q" placeholder="這次會談後想問導師的問題…"></textarea>
+      <label>相關情境 <span class="hint">選填，客戶／會談</span></label>
+      <input type="text" id="ask-ctx" placeholder="例：詩瑜 第一次">
+      <button class="btn btn-primary" style="margin-top:12px" onclick="addQuestion()">加入清單</button>
+    </div>
+    <div class="actions" style="margin-bottom:16px">
+      <button class="btn btn-ghost" onclick="exportPending()">複製待問清單</button>
+      <button class="btn btn-primary" onclick="exportQuestionsXLSX()">匯出 Excel</button>
+    </div>
+    <div id="ask-list"></div>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- ===== DETAIL ===== -->
+  <div id="view-detail" class="hidden">
+    <div class="card" id="detail-body"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="showView('hist')">返回</button>
+      <button class="btn btn-ghost" onclick="copyDetail()">複製文字</button>
+      <button class="btn btn-primary" onclick="editCurrent()">編輯</button>
+    </div>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn btn-primary" onclick="exportRecordPDF(currentId)">匯出 PDF</button>
+      <button class="btn btn-ghost" style="color:#c0392b" onclick="deleteCurrent()">刪除這筆</button>
+    </div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="auth-screen">
+  <div class="auth-box">
+    <h2>會談後快速記錄</h2>
+    <div class="sub">用 Google 登入，你的紀錄會跨裝置同步</div>
+    <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
+    <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ACC = [
+  ["1 · 提問和探詢", "教練非導師和諮商"],
+  ["2 · 存在狀態", "being"],
+  ["3 · 共創明確協議", "打約四題"],
+  ["4 · 信任和安全感", "認可、同理、支持、接納"],
+  ["5 · 臨在狀態", "專注、開放、接納、好奇（沈默是得分）"],
+  ["6 · 積極聆聽", "5W1H、覆述、情緒/非語言、標籤/用字"],
+  ["7 · 啟發式探詢", "例外？轉換地點/時間？外在資源？反向思考？奇蹟問句、GROW Model"],
+  ["8 · 促進客戶成長", "收尾題目、認可、結束會話"]
+];
+const KEY = "coachingLogs_v1";
+let editId = null;      // record being edited (null = new)
+let currentId = null;   // record shown in detail
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
+function store(a) { localStorage.setItem(KEY, JSON.stringify(a)); schedulePush(); }
+const QKEY = "coachingQuestions_v1";
+function loadQ() { try { return JSON.parse(localStorage.getItem(QKEY)) || []; } catch(e){ return []; } }
+function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(a)); schedulePush(); }
+
+/* ===== 雲端同步（Firebase，選用；沒有填設定時自動用本機模式）===== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA54LNw32KvnKGHjQm6U0qUQuwwUyIyBbc",
+  authDomain: "coaching-log-9434c.firebaseapp.com",
+  projectId: "coaching-log-9434c",
+  appId: "1:376293497928:web:e5272b108bbc911a264c7d"
+};
+let fb = { app:null, auth:null, db:null, authMod:null, fsMod:null };
+let currentUser = null, pushTimer = null;
+
+async function initSync(){
+  if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId){ startLocal(); return; }
+  document.getElementById('app').classList.add('hidden');
+  try {
+    const V = '10.12.5';
+    const appMod  = await import('https://www.gstatic.com/firebasejs/'+V+'/firebase-app.js');
+    const authMod = await import('https://www.gstatic.com/firebasejs/'+V+'/firebase-auth.js');
+    const fsMod   = await import('https://www.gstatic.com/firebasejs/'+V+'/firebase-firestore.js');
+    fb.app = appMod.initializeApp(FIREBASE_CONFIG);
+    fb.auth = authMod.getAuth(fb.app);
+    fb.db = fsMod.getFirestore(fb.app);
+    fb.authMod = authMod; fb.fsMod = fsMod;
+    authMod.onAuthStateChanged(fb.auth, (user)=>{ if (user) onLogin(user); else showAuth(); });
+  } catch(e){ startLocal(); }
+}
+function startLocal(){
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+}
+function showAuth(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('auth-screen').classList.remove('hidden');
+}
+function authMsg(m){ const el=document.getElementById('auth-msg'); if(el) el.textContent = m || ''; }
+async function doGoogleLogin(){
+  if (!fb.auth){ authMsg('雲端尚未設定'); return; }
+  authMsg('開啟 Google 登入…');
+  try {
+    const provider = new fb.authMod.GoogleAuthProvider();
+    await fb.authMod.signInWithPopup(fb.auth, provider);   // 成功後由 onAuthStateChanged 接手
+    authMsg('');
+  } catch(e){ authMsg(e && e.message ? e.message : '登入失敗，請再試一次'); }
+}
+async function onLogin(user){
+  if (currentUser && currentUser.uid === user.uid) return;
+  currentUser = user;
+  authMsg('');
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('acct-email').textContent = '已登入：' + (user.displayName || user.email || '');
+  document.getElementById('acct-bar').classList.remove('hidden');
+  await syncPull();
+  showView('new');
+}
+async function doLogout(){
+  if (fb.auth){ try { await fb.authMod.signOut(fb.auth); } catch(e){} }
+  currentUser = null;
+  localStorage.removeItem(KEY); localStorage.removeItem(QKEY);
+  updateCount(); updateAskCount();
+  document.getElementById('acct-bar').classList.add('hidden');
+  showAuth();
+}
+async function syncPull(){
+  if (!fb.db || !currentUser) return;
+  try {
+    const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
+    const snap = await fb.fsMod.getDoc(ref);
+    if (snap.exists() && snap.data().payload){
+      const p = JSON.parse(snap.data().payload);
+      if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
+      if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
+    } else {
+      await pushCloud(); // 雲端還沒資料，把本機的推上去
+    }
+  } catch(e){}
+  migrateQ(); updateCount(); updateAskCount();
+}
+function schedulePush(){
+  if (!fb.db || !currentUser) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushCloud, 800);
+}
+async function pushCloud(){
+  if (!fb.db || !currentUser) return;
+  try {
+    const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
+    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ() }), updated_at: Date.now() });
+  } catch(e){}
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---- mentor questions ---- */
+function updateAskCount() {
+  const n = loadQ().filter(x=>!x.answered).length;
+  document.getElementById('askCnt').textContent = n ? '('+n+')' : '';
+}
+function addQuestion() {
+  const q = document.getElementById('ask-q').value.trim();
+  if (!q) { toast('請先寫問題'); return; }
+  const ctx = document.getElementById('ask-ctx').value.trim();
+  const arr = loadQ();
+  arr.push({ id: Date.now(), q, ctx, answer:'', answered:false, created: todayStr() });
+  storeQ(arr);
+  document.getElementById('ask-q').value = '';
+  document.getElementById('ask-ctx').value = '';
+  updateAskCount(); renderAsk(); toast('已加入清單');
+}
+function addQuestionFromRecord(id) {
+  const r = load().find(x=>x.id===id);
+  if (!r || !r.instant) return;
+  const arr = loadQ();
+  if (arr.some(x=> x.q === r.instant)) { toast('這題已加過了'); return; }
+  arr.push({ id: Date.now(), q: r.instant, ctx: buildCtx(r), answer:'', answered:false, created: todayStr() });
+  storeQ(arr); updateAskCount(); toast('已加入導師提問清單');
+}
+function renderAsk() {
+  const arr = loadQ().sort((a,b)=>b.id-a.id);
+  const pend = arr.filter(x=>!x.answered);
+  const done = arr.filter(x=>x.answered);
+  const pItem = x => `<div class="qcard">
+    <div class="qtext">${esc(x.q)}</div>
+    ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
+    <textarea class="qans" id="ans-${x.id}" placeholder="導師的回答…"></textarea>
+    <div class="qbtns">
+      <button class="mini-link" onclick="saveAnswer(${x.id})">存下答案</button>
+      <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
+    </div></div>`;
+  const dItem = x => `<div class="qcard done">
+    <div class="qtext">${esc(x.q)}</div>
+    ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
+    <div class="qanswer"><span class="alabel">導師回答</span>${esc(x.answer)}</div>
+    <div class="qbtns">
+      <button class="mini-link" onclick="reopenQuestion(${x.id})">改回待問</button>
+      <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
+    </div></div>`;
+  document.getElementById('ask-list').innerHTML =
+    `<div class="ask-sub">待回答（${pend.length}）</div>` +
+    (pend.length ? pend.map(pItem).join('') : '<div class="empty" style="padding:14px 0">目前沒有待問的問題</div>') +
+    `<div class="ask-sub" style="margin-top:18px">已回答（${done.length}）</div>` +
+    (done.length ? done.map(dItem).join('') : '<div class="empty" style="padding:14px 0">還沒有已回答的問題</div>');
+}
+function saveAnswer(id) {
+  const val = document.getElementById('ans-'+id).value.trim();
+  if (!val) { toast('請先填答案'); return; }
+  const arr = loadQ(); const it = arr.find(x=>x.id===id);
+  if (it) { it.answer = val; it.answered = true; storeQ(arr); }
+  updateAskCount(); renderAsk(); toast('已記錄答案');
+}
+function reopenQuestion(id) {
+  const arr = loadQ(); const it = arr.find(x=>x.id===id);
+  if (it) { it.answered = false; storeQ(arr); }
+  updateAskCount(); renderAsk();
+}
+function deleteQuestion(id) {
+  if (!confirm('刪除這個問題？')) return;
+  storeQ(loadQ().filter(x=>x.id!==id));
+  updateAskCount(); renderAsk(); toast('已刪除');
+}
+function exportPending() {
+  const pend = loadQ().filter(x=>!x.answered);
+  if (!pend.length) { toast('沒有待問的問題'); return; }
+  const text = '要問導師的問題：\n\n' + pend.map((x,i)=>(i+1)+'. '+x.q+(x.ctx?'（'+x.ctx+'）':'')).join('\n');
+  navigator.clipboard.writeText(text).then(()=>toast('待問清單已複製'),()=>{
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');toast('待問清單已複製');}catch(e){toast('複製失敗');} ta.remove();
+  });
+}
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function numToCh(n){ const m=['零','一','二','三','四','五','六','七','八','九','十']; const i=parseInt(n,10); return (i>=0&&i<=10)?m[i]:String(n); }
+function formatSession(s){
+  s = (s||'').trim();
+  if (!s) return '';
+  if (/^\d+$/.test(s)) return '第'+numToCh(s)+'次會談';              // 1 -> 第一次會談
+  if (/^[零一二三四五六七八九十]+$/.test(s)) return '第'+s+'次會談';   // 一 -> 第一次會談
+  if (s.indexOf('會談') < 0) return s+'會談';                        // 第一次 -> 第一次會談
+  return s;                                                          // 第一次會談 -> 不變
+}
+function buildCtx(r){ return ((r.client||'')+' '+formatSession(r.session||'')).trim(); }
+function migrateQ(){
+  const arr = loadQ(); let changed = false;
+  arr.forEach(x=>{
+    if (!x.ctx) return;
+    const orig = x.ctx; let m;
+    if ((m = x.ctx.match(/^(.*\S)\s+(\d+)$/)))
+      x.ctx = m[1]+' 第'+numToCh(m[2])+'次會談';                       // "詩瑜 1"
+    else if ((m = x.ctx.match(/^(.*\S)\s+([零一二三四五六七八九十]+)會談$/)))
+      x.ctx = m[1]+' 第'+m[2]+'次會談';                                // "詩瑜 一會談"
+    else if ((m = x.ctx.match(/^(.*\S)\s+([零一二三四五六七八九十]+)$/)))
+      x.ctx = m[1]+' 第'+m[2]+'次會談';                                // "詩瑜 一"
+    if (x.ctx !== orig) changed = true;
+  });
+  if (changed) storeQ(arr);
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---- export: PDF (history) via print ---- */
+function recordMainHTML(r){
+  const list = (title, items) => items&&items.length
+    ? `<div class="lbl">${title}</div><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul>` : '';
+  return `
+    <div class="doc-date">${r.date||''}</div>
+    <h2>客戶：${esc(r.client)||'（未填）'}</h2>
+    ${r.session?`<div class="date">會談次數：${esc(r.session)}</div>`:''}
+    <div class="scorebox">
+      <div class="score">自評表現：<b>${r.perf}</b></div>
+      <div class="score">自評感受：<b>${r.feel}</b></div>
+      ${r.clientfeel!=null?`<div class="score">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because"><b>因為</b>　${esc(r.because)}</div>`:''}`:''}
+    </div>
+    ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
+    ${list('我做得好的', r.good)}
+    ${r.insight?`<div class="lbl">客戶受到啟發／頓悟的時刻</div><div>${esc(r.insight)}</div>`:''}
+    ${list('可以改進的部分', r.improve)}
+    ${list('這次的特殊狀況', r.special)}`;
+}
+function recordAccHTML(r){
+  const done=[], undone=[];
+  (r.acc||[]).forEach((x,i)=>{
+    const mark = x.on?'✓':'✗';
+    const h = `<div class="accitem">${mark} 核心職能 ${ACC[i][0]}${x.on&&x.note?`<div class="accnote">${esc(x.note)}</div>`:''}</div>`;
+    (x.on?done:undone).push(h);
+  });
+  return `
+    <div class="acc-page-head"><h2 style="margin:0">ACC 標記</h2><span class="date">客戶：${esc(r.client)||'（未填）'}　${r.date||''}</span></div>
+    <div class="accsub">有做到（${done.length}）</div>${done.length?done.join(''):'<div>—</div>'}
+    <div class="accsub">沒做到（${undone.length}）</div>${undone.length?undone.join(''):'<div>—</div>'}`;
+}
+function exportPDF(){
+  const arr = load().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  if (!arr.length) { toast('沒有紀錄'); return; }
+  printRecordsPDF(arr, '會談後快速紀錄_'+todayStr());
+}
+function exportRecordPDF(id){
+  const r = load().find(x=>x.id===id);
+  if (!r) return;
+  const name = '會談後快速紀錄_'+(r.client||'')+'_'+(r.date||todayStr());
+  printRecordsPDF([r], name);
+}
+function printRecordsPDF(records, fname){
+  const pages = [];
+  records.forEach(r=>{
+    pages.push(`<section class="page">${recordMainHTML(r)}</section>`);   // 每筆紀錄一頁
+    pages.push(`<section class="page">${recordAccHTML(r)}</section>`);     // ACC 各自一頁
+  });
+  const css = `
+    @page{ margin:18mm 16mm; }
+    body{font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;color:#2c2a28;font-size:12pt;line-height:1.55;margin:0;}
+    .page{ page-break-after:always; }
+    .page:last-child{ page-break-after:auto; }
+    h2{font-size:16pt;margin:0 0 4pt;color:#2c2a28;}
+    .doc-date{color:#8a8378;font-size:10.5pt;margin:0 0 20pt;}
+    .acc-page-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4pt;}
+    .date{color:#8a8378;font-size:10.5pt;font-weight:normal;}
+    .scorebox{background:#faf6f0;border:1px solid #eadfce;border-radius:8px;padding:10pt 12pt;margin:10pt 0 14pt;}
+    .score{margin:0 0 6pt;} .score:last-child{margin-bottom:0;} .score b{color:#b08968;}
+    .because{margin:8pt 0 0 0;padding-left:10pt;border-left:3px solid #d9c9b0;color:#7a7266;}
+    .because b{color:#a89478;}
+    .lbl{color:#8a7c68;font-weight:bold;font-size:11.5pt;margin:12pt 0 4pt;}
+    ul{margin:3pt 0;padding-left:22pt;}
+    li{margin-bottom:2pt;}
+    .accsub{font-weight:bold;font-size:11pt;color:#6b655c;margin:10pt 0 5pt;}
+    .accitem{margin:0 0 6pt;font-size:12pt;}
+    .accnote{color:#9a9184;font-size:10.5pt;padding-left:18pt;margin-top:2pt;}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}`;
+  const html = `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${fname}</title><style>${css}</style></head><body>${pages.join('')}</body></html>`;
+  let ifr = document.getElementById('print-frame');
+  if (ifr) ifr.remove();
+  ifr = document.createElement('iframe');
+  ifr.id = 'print-frame';
+  ifr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  document.body.appendChild(ifr);
+  const doc = ifr.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  setTimeout(()=>{
+    try {
+      ifr.contentWindow.focus();
+      ifr.contentWindow.print();
+      toast('列印視窗：左下角「PDF ▾ → 儲存為 PDF」');
+    } catch(e) {
+      downloadBlob(html, fname+'.html', 'text/html;charset=utf-8');
+      toast('已下載報表，開啟後按 Cmd+P 存成 PDF');
+    }
+  }, 400);
+}
+
+/* ---- export: Excel .xlsx (mentor questions) — self-contained, no library ---- */
+function xmlEsc(s){ return (s==null?'':String(s)).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c])); }
+function _crc32(bytes){
+  if(!_crc32.t){ _crc32.t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); _crc32.t[n]=c>>>0; } }
+  const t=_crc32.t; let crc=-1;
+  for(let i=0;i<bytes.length;i++) crc=(crc>>>8)^t[(crc^bytes[i])&0xFF];
+  return (crc^-1)>>>0;
+}
+function _zip(files){
+  const enc=new TextEncoder(), chunks=[], central=[]; let offset=0;
+  const u16=n=>[n&0xff,(n>>8)&0xff], u32=n=>[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];
+  files.forEach(f=>{
+    const name=enc.encode(f.name), data=f.data, crc=_crc32(data);
+    const lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0)));
+    chunks.push(lh,name,data);
+    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset))));
+    central.push(name);
+    offset += lh.length+name.length+data.length;
+  });
+  const cStart=offset; let cSize=0;
+  central.forEach(c=>{ chunks.push(c); cSize+=c.length; });
+  chunks.push(new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cSize),u32(cStart),u16(0))));
+  let total=0; chunks.forEach(c=>total+=c.length);
+  const out=new Uint8Array(total); let p=0; chunks.forEach(c=>{ out.set(c,p); p+=c.length; });
+  return out;
+}
+function exportQuestionsXLSX(){
+  const arr = loadQ().slice().sort((a,b)=>a.id-b.id);
+  if (!arr.length) { toast('沒有提問'); return; }
+  const enc = new TextEncoder();
+  const cell = (ref,s,txt)=>`<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(txt)}</t></is></c>`;
+  let rowsXml = '';
+  rowsXml += `<row r="1" ht="18" customHeight="1">${cell('A1',3,'存檔日期：'+todayStr())}</row>`;      // 第1列：存檔日期（小字）
+  rowsXml += `<row r="2" ht="30" customHeight="1">${cell('A2',4,'對導師提問')}</row>`;                 // 第2列：大標題（粗體）
+  rowsXml += `<row r="3" ht="24" customHeight="1">${cell('A3',1,'編號')}${cell('B3',1,'問題')}${cell('C3',1,'答案')}</row>`;
+  arr.forEach((x,i)=>{
+    const r=i+4;
+    rowsXml += `<row r="${r}" ht="90" customHeight="1">${cell('A'+r,6,String(i+1))}${cell('B'+r,5,x.q)}${cell('C'+r,2,x.answer||'')}</row>`;
+  });
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="8" customWidth="1"/><col min="2" max="2" width="34" customWidth="1"/><col min="3" max="3" width="82" customWidth="1"/></cols><sheetData>${rowsXml}</sheetData><mergeCells count="2"><mergeCell ref="A1:C1"/><mergeCell ref="A2:C2"/></mergeCells></worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="12"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="9"/><color rgb="FF8A8378"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF2C2A28"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF2C2A28"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFB08968"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFDDD5C8"/></left><right style="thin"><color rgb="FFDDD5C8"/></right><top style="thin"><color rgb="FFDDD5C8"/></top><bottom style="thin"><color rgb="FFDDD5C8"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="4" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs></styleSheet>`;
+  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="導師提問" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const files = [
+    {name:'[Content_Types].xml', data:enc.encode(contentTypes)},
+    {name:'_rels/.rels', data:enc.encode(rootRels)},
+    {name:'xl/workbook.xml', data:enc.encode(workbook)},
+    {name:'xl/_rels/workbook.xml.rels', data:enc.encode(wbRels)},
+    {name:'xl/styles.xml', data:enc.encode(styles)},
+    {name:'xl/worksheets/sheet1.xml', data:enc.encode(sheet)}
+  ];
+  const zipped = _zip(files);
+  const blob = new Blob([zipped], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '導師提問_'+todayStr()+'.xlsx';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('已匯出 Excel');
+}
+
+/* ---- trend chart (self-contained SVG, no library) ---- */
+function renderChart() {
+  const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  const card = document.getElementById('chart-card');
+  if (arr.length < 2) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const labels = arr.map(r => r.client || r.date || '');
+  const series = [
+    { name:'自評表現', color:'#b08968', vals: arr.map(r=>parseFloat(r.perf)) },
+    { name:'我的感受', color:'#5a9e5f', vals: arr.map(r=>parseFloat(r.feel)) },
+    { name:'客戶感受', color:'#4f7fb5', vals: arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+  ];
+  document.getElementById('trendChart').innerHTML = svgLineChart(labels, series);
+}
+function escSvg(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function svgLineChart(labels, series) {
+  const W=600, H=250, padL=26, padR=14, padT=30, padB=44;
+  const plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
+  const X=i=> n===1 ? padL+plotW/2 : padL + plotW*i/(n-1);
+  const Y=v=> padT + plotH*(1 - v/10);
+  let g='';
+  for (let v=0; v<=10; v+=2){
+    const yy=Y(v);
+    g+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#ece4d7" stroke-width="1"/>`;
+    g+=`<text x="${padL-5}" y="${yy+3}" font-size="9" fill="#a39b8e" text-anchor="end">${v}</text>`;
+  }
+  labels.forEach((lb,i)=>{
+    const t = lb.length>6 ? lb.slice(0,6)+'…' : lb;
+    g+=`<text x="${X(i)}" y="${H-padB+16}" font-size="9" fill="#8a8378" text-anchor="middle">${escSvg(t)}</text>`;
+  });
+  // 繪製順序：把「我的感受」畫在最上層，避免與其他線重疊時被蓋掉
+  const drawOrder = [series[0], series[2], series[1]].filter(Boolean);
+  drawOrder.forEach(s=>{
+    const pts=[];
+    s.vals.forEach((v,i)=>{ if(v!=null && !isNaN(v)) pts.push(X(i).toFixed(1)+','+Y(v).toFixed(1)); });
+    if (pts.length>1) g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.vals.forEach((v,i)=>{ if(v!=null && !isNaN(v)) g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3.4" fill="${s.color}" stroke="#fff" stroke-width="1.2"/>`; });
+  });
+  let lx=padL, legend='';
+  series.forEach(s=>{
+    legend+=`<circle cx="${lx+4}" cy="12" r="4" fill="${s.color}"/><text x="${lx+12}" y="15" font-size="10" fill="#6b655c">${s.name}</text>`;
+    lx += 22 + s.name.length*11;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">${legend}${g}</svg>`;
+}
+
+/* ---- backup / restore / export ---- */
+function backupJSON() {
+  const data = { records: load(), questions: loadQ(), exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '會談紀錄備份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('已下載備份檔');
+}
+function restoreJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      const incoming = Array.isArray(d) ? d : (d.records||[]);
+      if (!Array.isArray(incoming)) throw 0;
+      const cur = load();
+      const ids = new Set(cur.map(r=>r.id));
+      let added = 0;
+      incoming.forEach(r=>{ if(!ids.has(r.id)){ cur.push(r); added++; } });
+      store(cur);
+      if (d.questions && Array.isArray(d.questions)) {
+        const qcur = loadQ(); const qids = new Set(qcur.map(x=>x.id));
+        d.questions.forEach(x=>{ if(!qids.has(x.id)) qcur.push(x); });
+        storeQ(qcur); updateAskCount();
+      }
+      updateCount(); renderHist(); renderChart();
+      toast('已還原，新增 '+added+' 筆');
+    } catch(err){ toast('檔案格式錯誤'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+function exportAllText() {
+  const arr = load().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  if (!arr.length) { toast('沒有紀錄'); return; }
+  const blocks = arr.map(r => recordToText(r));
+  const text = blocks.join('\n\n──────────\n\n');
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '會談紀錄_全部_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('已匯出全部文字');
+}
+function recordToText(r) {
+  const lines = [];
+  lines.push('日期：'+(r.date||''));
+  lines.push('客戶：'+(r.client||''));
+  lines.push('會談次數：'+(r.session||''));
+  if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
+  lines.push('自評表現：'+r.perf);
+  lines.push('自評感受：'+r.feel);
+  if(r.clientfeel!=null) lines.push('我覺得客戶的感受：'+r.clientfeel);
+  if(r.because) lines.push('　因為：'+r.because);
+  if(r.good&&r.good.length){ lines.push('我做得好的：'); r.good.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
+  if(r.insight) lines.push('客戶受到啟發／頓悟的時刻：'+r.insight);
+  if(r.improve&&r.improve.length){ lines.push('我可以改進的部分：'); r.improve.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
+  if(r.special&&r.special.length){ lines.push('這次的特殊狀況：'); r.special.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
+  const accDone = (r.acc||[]).map((x,i)=>x.on?('    ✓ 核心職能 '+ACC[i][0]+(x.note?'　—　'+x.note:'')):'').filter(Boolean);
+  const accUndone = (r.acc||[]).map((x,i)=>!x.on?('    ✗ 核心職能 '+ACC[i][0]):'').filter(Boolean);
+  lines.push('ACC 標記：');
+  lines.push('  有做到（'+accDone.length+'）：');
+  if(accDone.length) accDone.forEach(l=>lines.push(l)); else lines.push('    —');
+  lines.push('  沒做到（'+accUndone.length+'）：');
+  if(accUndone.length) accUndone.forEach(l=>lines.push(l)); else lines.push('    —');
+  return lines.join('\n');
+}
+
+/* ---- dynamic list items ---- */
+function addItem(listId, val="") {
+  const list = document.getElementById(listId);
+  const div = document.createElement('div');
+  div.className = 'multi-item';
+  const ta = document.createElement('textarea');
+  ta.value = val; ta.rows = 1;
+  const btn = document.createElement('button');
+  btn.className = 'mini-btn'; btn.textContent = '×';
+  btn.onclick = () => div.remove();
+  div.appendChild(ta); div.appendChild(btn);
+  list.appendChild(div);
+}
+function getItems(listId) {
+  return [...document.querySelectorAll('#'+listId+' textarea')]
+    .map(t=>t.value.trim()).filter(Boolean);
+}
+
+/* ---- ACC checklist ---- */
+function buildAcc() {
+  const box = document.getElementById('acc-list');
+  box.innerHTML = '';
+  ACC.forEach((a, i) => {
+    const item = document.createElement('div');
+    item.className = 'acc-item'; item.id = 'acc-'+i;
+    item.innerHTML = `
+      <div class="acc-head">
+        <input type="checkbox" id="acc-chk-${i}">
+        <div>
+          <div class="acc-title">核心職能 ${a[0]}</div>
+          <div class="acc-desc">${a[1]}</div>
+        </div>
+      </div>
+      <div class="acc-note"><input type="text" id="acc-note-${i}" placeholder="這項的具體事例／備註（選填）"></div>`;
+    const chk = item.querySelector('input[type=checkbox]');
+    item.querySelector('.acc-head').onclick = (e) => {
+      if (e.target.tagName !== 'INPUT') chk.checked = !chk.checked;
+      item.classList.toggle('checked', chk.checked);
+    };
+    box.appendChild(item);
+  });
+}
+function getAcc() {
+  return ACC.map((a,i)=>({
+    on: document.getElementById('acc-chk-'+i).checked,
+    note: document.getElementById('acc-note-'+i).value.trim()
+  }));
+}
+
+/* ---- views ---- */
+function showView(v) {
+  document.getElementById('view-new').classList.toggle('hidden', v!=='new');
+  document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
+  document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
+  document.getElementById('view-ask').classList.toggle('hidden', v!=='ask');
+  document.getElementById('tabNew').classList.toggle('active', v==='new');
+  document.getElementById('tabHist').classList.toggle('active', v==='hist' || v==='detail');
+  document.getElementById('tabAsk').classList.toggle('active', v==='ask');
+  if (v==='hist') { renderHist(); renderChart(); }
+  if (v==='ask') renderAsk();
+}
+
+/* ---- save ---- */
+function saveRecord() {
+  const rec = {
+    id: editId || Date.now(),
+    date: document.getElementById('f-date').value,
+    session: document.getElementById('f-session').value.trim(),
+    client: document.getElementById('f-client').value.trim(),
+    instant: document.getElementById('f-instant').value.trim(),
+    perf: document.getElementById('f-perf').value,
+    feel: document.getElementById('f-feel').value,
+    clientfeel: document.getElementById('f-clientfeel').value,
+    because: document.getElementById('f-because').value.trim(),
+    good: getItems('good-list'),
+    insight: document.getElementById('f-insight').value.trim(),
+    improve: getItems('improve-list'),
+    special: getItems('special-list'),
+    acc: getAcc()
+  };
+  if (!rec.client && !rec.instant) { toast('請至少填客戶或問題'); return; }
+  const arr = load();
+  if (editId) {
+    const idx = arr.findIndex(r=>r.id===editId);
+    if (idx>=0) arr[idx] = rec;
+  } else {
+    arr.push(rec);
+  }
+  store(arr);
+  toast(editId ? '已更新' : '已儲存');
+  editId = null;
+  document.getElementById('saveBtn').textContent = '儲存紀錄';
+  resetForm();
+  updateCount();
+  showView('hist');
+}
+
+function resetForm() {
+  document.getElementById('f-date').value = todayStr();
+  document.getElementById('f-session').value = '';
+  document.getElementById('f-client').value = '';
+  document.getElementById('f-instant').value = '';
+  document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
+  document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
+  document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
+  document.getElementById('f-because').value = '';
+  document.getElementById('f-insight').value = '';
+  ['good-list','improve-list','special-list'].forEach(id=>document.getElementById(id).innerHTML='');
+  addItem('good-list'); addItem('good-list'); addItem('good-list');
+  addItem('improve-list');
+  addItem('special-list');
+  buildAcc();
+  editId = null;
+  document.getElementById('saveBtn').textContent = '儲存紀錄';
+}
+
+/* ---- history list ---- */
+function updateCount() {
+  const n = load().length;
+  document.getElementById('cnt').textContent = n ? '('+n+')' : '';
+}
+function renderHist() {
+  const list = document.getElementById('hist-list');
+  const arr = load().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  if (!arr.length) { list.innerHTML = '<div class="empty">還沒有紀錄<br>先到「新增紀錄」填一筆吧</div>'; return; }
+  list.innerHTML = arr.map(r=>{
+    const accN = (r.acc||[]).filter(x=>x.on).length;
+    return `<div class="rec" onclick="openDetail(${r.id})">
+      <div class="rec-top">
+        <span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span>
+        <span class="rec-date">${r.date||''}</span>
+      </div>
+      <div class="rec-meta">${esc(r.session)||''} · 自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}
+        <span class="badge">ACC ${accN}/8</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- detail ---- */
+function openDetail(id) {
+  currentId = id;
+  const r = load().find(x=>x.id===id);
+  if (!r) return;
+  const listBlock = (title, items) => items && items.length
+    ? `<div class="detail-field"><div class="detail-label">${title}</div><div class="detail-val"><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul></div></div>` : '';
+  const done = [], undone = [];
+  (r.acc||[]).forEach((x,i)=>{
+    const mark = x.on ? '✓' : '✗';
+    const html = `<div class="acc-detail"><div class="acc-detail-title"><span class="acc-mark">${mark}</span>核心職能 ${ACC[i][0]}</div>${x.on&&x.note?`<div class="acc-detail-note">${esc(x.note)}</div>`:''}</div>`;
+    (x.on?done:undone).push(html);
+  });
+  document.getElementById('detail-body').innerHTML = `
+    <div class="rec-top"><span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span><span class="rec-date">${r.date||''}</span></div>
+    ${r.session?`<div class="rec-meta" style="margin-bottom:6px">會談次數：${esc(r.session)}</div>`:''}
+    <div class="score-lines">
+      <div class="score-line">自評表現：<b>${r.perf}</b></div>
+      <div class="score-line">自評感受：<b>${r.feel}</b></div>
+      ${r.clientfeel!=null?`<div class="score-line">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because-note"><span class="bl">因為</span>　${esc(r.because)}</div>`:''}`:''}
+    </div>
+    ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
+    ${listBlock('我做得好的', r.good)}
+    ${r.insight?`<div class="detail-field"><div class="detail-label">客戶受到啟發／頓悟的時刻</div><div class="detail-val">${esc(r.insight)}</div></div>`:''}
+    ${listBlock('可以改進的部分', r.improve)}
+    ${listBlock('這次的特殊狀況', r.special)}
+    <div class="detail-field">
+      <div class="detail-label">ACC 標記</div>
+      <div class="acc-sub">有做到（${done.length}）</div>
+      <div class="acc-group">${done.length?done.join(''):'<div class="acc-none">—</div>'}</div>
+      <div class="acc-sub">沒做到（${undone.length}）</div>
+      <div class="acc-group">${undone.length?undone.join(''):'<div class="acc-none">—</div>'}</div>
+    </div>
+  `;
+  showView('detail');
+}
+
+function editCurrent() {
+  const r = load().find(x=>x.id===currentId);
+  if (!r) return;
+  document.getElementById('f-date').value = r.date || '';
+  document.getElementById('f-session').value = r.session || '';
+  document.getElementById('f-client').value = r.client || '';
+  document.getElementById('f-instant').value = r.instant || '';
+  document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
+  document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
+  const cf = (r.clientfeel!=null?r.clientfeel:7);
+  document.getElementById('f-clientfeel').value = cf; document.getElementById('clientfeelVal').textContent = cf;
+  document.getElementById('f-because').value = r.because || '';
+  document.getElementById('f-insight').value = r.insight || '';
+  ['good-list','improve-list','special-list'].forEach(id=>document.getElementById(id).innerHTML='');
+  (r.good&&r.good.length?r.good:['']).forEach(v=>addItem('good-list',v));
+  (r.improve&&r.improve.length?r.improve:['']).forEach(v=>addItem('improve-list',v));
+  (r.special&&r.special.length?r.special:['']).forEach(v=>addItem('special-list',v));
+  buildAcc();
+  (r.acc||[]).forEach((x,i)=>{
+    if(x.on){ document.getElementById('acc-chk-'+i).checked=true; document.getElementById('acc-'+i).classList.add('checked'); }
+    if(x.note) document.getElementById('acc-note-'+i).value = x.note;
+  });
+  editId = r.id;
+  document.getElementById('saveBtn').textContent = '更新紀錄';
+  showView('new');
+}
+
+function deleteCurrent() {
+  if (!confirm('確定刪除這筆紀錄？')) return;
+  store(load().filter(x=>x.id!==currentId));
+  updateCount();
+  toast('已刪除');
+  showView('hist');
+}
+
+function copyDetail() {
+  const r = load().find(x=>x.id===currentId);
+  if (!r) return;
+  const text = recordToText(r);
+  navigator.clipboard.writeText(text).then(()=>toast('已複製到剪貼簿'),()=>{
+    // fallback
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');toast('已複製到剪貼簿');}catch(e){toast('複製失敗');}
+    ta.remove();
+  });
+}
+
+function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* init */
+migrateQ();
+resetForm();
+updateCount();
+updateAskCount();
+initSync();
+</script>
+</body>
+</html>
