@@ -37,7 +37,8 @@ input[type=text], input[type=date], textarea, select {
 }
 textarea { resize: vertical; min-height: 46px; }
 .row { display: flex; gap: 10px; }
-.row > div { flex: 1; }
+.row > div { flex: 1; min-width: 0; }
+@media (max-width: 480px) { .row { flex-direction: column; gap: 0; } }
 .score-wrap { display: flex; align-items: center; gap: 12px; }
 .score-wrap input[type=range] { flex: 1; accent-color: #b08968; }
 .score-val {
@@ -578,51 +579,51 @@ function exportRecordPDF(id){
   const name = '會談後快速紀錄_'+(r.client||'')+'_'+(r.date||todayStr());
   printRecordsPDF([r], name);
 }
+const PRINT_CSS = `
+#print-root{ display:none; }
+@media print {
+  html, body{ background:#fff !important; }
+  body > *:not(#print-root){ display:none !important; }
+  #print-root{ display:block !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page{ margin:18mm 16mm; }
+}
+#print-root{ font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif; color:#2c2a28; font-size:12pt; line-height:1.55; }
+#print-root .page{ page-break-after:always; }
+#print-root .page:last-child{ page-break-after:auto; }
+#print-root h2{ font-size:16pt; margin:0 0 4pt; color:#2c2a28; }
+#print-root .doc-date{ color:#8a8378; font-size:10.5pt; margin:0 0 20pt; }
+#print-root .acc-page-head{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 4pt; }
+#print-root .date{ color:#8a8378; font-size:10.5pt; font-weight:normal; }
+#print-root .scorebox{ background:#faf6f0; border:1px solid #eadfce; border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
+#print-root .score{ margin:0 0 6pt; }
+#print-root .score:last-child{ margin-bottom:0; }
+#print-root .score b{ color:#b08968; }
+#print-root .because{ margin:8pt 0 0 0; padding-left:10pt; border-left:3px solid #d9c9b0; color:#7a7266; }
+#print-root .because b{ color:#a89478; }
+#print-root .lbl{ color:#8a7c68; font-weight:bold; font-size:11.5pt; margin:12pt 0 4pt; }
+#print-root ul{ margin:3pt 0; padding-left:22pt; }
+#print-root li{ margin-bottom:2pt; }
+#print-root .accsub{ font-weight:bold; font-size:11pt; color:#6b655c; margin:10pt 0 5pt; }
+#print-root .accitem{ margin:0 0 6pt; font-size:12pt; }
+#print-root .accnote{ color:#9a9184; font-size:10.5pt; padding-left:18pt; margin-top:2pt; }
+`;
 function printRecordsPDF(records, fname){
-  const pages = [];
-  records.forEach(r=>{
-    pages.push(`<section class="page">${recordMainHTML(r)}</section>`);   // 每筆紀錄一頁
-    pages.push(`<section class="page">${recordAccHTML(r)}</section>`);     // ACC 各自一頁
-  });
-  const css = `
-    @page{ margin:18mm 16mm; }
-    body{font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;color:#2c2a28;font-size:12pt;line-height:1.55;margin:0;}
-    .page{ page-break-after:always; }
-    .page:last-child{ page-break-after:auto; }
-    h2{font-size:16pt;margin:0 0 4pt;color:#2c2a28;}
-    .doc-date{color:#8a8378;font-size:10.5pt;margin:0 0 20pt;}
-    .acc-page-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4pt;}
-    .date{color:#8a8378;font-size:10.5pt;font-weight:normal;}
-    .scorebox{background:#faf6f0;border:1px solid #eadfce;border-radius:8px;padding:10pt 12pt;margin:10pt 0 14pt;}
-    .score{margin:0 0 6pt;} .score:last-child{margin-bottom:0;} .score b{color:#b08968;}
-    .because{margin:8pt 0 0 0;padding-left:10pt;border-left:3px solid #d9c9b0;color:#7a7266;}
-    .because b{color:#a89478;}
-    .lbl{color:#8a7c68;font-weight:bold;font-size:11.5pt;margin:12pt 0 4pt;}
-    ul{margin:3pt 0;padding-left:22pt;}
-    li{margin-bottom:2pt;}
-    .accsub{font-weight:bold;font-size:11pt;color:#6b655c;margin:10pt 0 5pt;}
-    .accitem{margin:0 0 6pt;font-size:12pt;}
-    .accnote{color:#9a9184;font-size:10.5pt;padding-left:18pt;margin-top:2pt;}
-    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}`;
-  const html = `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>${fname}</title><style>${css}</style></head><body>${pages.join('')}</body></html>`;
-  let ifr = document.getElementById('print-frame');
-  if (ifr) ifr.remove();
-  ifr = document.createElement('iframe');
-  ifr.id = 'print-frame';
-  ifr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
-  document.body.appendChild(ifr);
-  const doc = ifr.contentWindow.document;
-  doc.open(); doc.write(html); doc.close();
-  setTimeout(()=>{
-    try {
-      ifr.contentWindow.focus();
-      ifr.contentWindow.print();
-      toast('列印視窗：左下角「PDF ▾ → 儲存為 PDF」');
-    } catch(e) {
-      downloadBlob(html, fname+'.html', 'text/html;charset=utf-8');
-      toast('已下載報表，開啟後按 Cmd+P 存成 PDF');
-    }
-  }, 400);
+  const pages = records.map(r =>
+    `<section class="page">${recordMainHTML(r)}</section><section class="page">${recordAccHTML(r)}</section>`
+  ).join('');
+  if (!document.getElementById('print-style')){
+    const st = document.createElement('style'); st.id = 'print-style'; st.textContent = PRINT_CSS;
+    document.head.appendChild(st);
+  }
+  let root = document.getElementById('print-root');
+  if (!root){ root = document.createElement('div'); root.id = 'print-root'; document.body.appendChild(root); }
+  root.innerHTML = pages;
+  const prevTitle = document.title;
+  document.title = fname;                 // 影響「儲存為 PDF」的預設檔名
+  const cleanup = () => { document.title = prevTitle; window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  toast('選「儲存為 PDF」');
+  setTimeout(()=>{ try { window.print(); } catch(e){ cleanup(); } }, 150);
 }
 
 /* ---- export: Excel .xlsx (mentor questions) — self-contained, no library ---- */
