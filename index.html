@@ -379,6 +379,7 @@ async function initSync(){
     fb.auth = authMod.getAuth(fb.app);
     fb.db = fsMod.getFirestore(fb.app);
     fb.authMod = authMod; fb.fsMod = fsMod;
+    authMod.getRedirectResult(fb.auth).catch(()=>{});   // 完成手機的轉址登入
     authMod.onAuthStateChanged(fb.auth, (user)=>{ if (user) onLogin(user); else showAuth(); });
   } catch(e){ startLocal(); }
 }
@@ -386,19 +387,36 @@ function startLocal(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
 }
+function isInAppBrowser(){
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|WhatsApp|Twitter|Snapchat|TikTok|musical_ly/i.test(ua);
+}
 function showAuth(){
   document.getElementById('app').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('hidden');
+  if (isInAppBrowser()) authMsg('請先用 Safari 或 Chrome 開啟本網站再登入：點右上角「⋯」或分享鍵 →「用預設瀏覽器開啟」。');
 }
 function authMsg(m){ const el=document.getElementById('auth-msg'); if(el) el.textContent = m || ''; }
 async function doGoogleLogin(){
   if (!fb.auth){ authMsg('雲端尚未設定'); return; }
+  if (isInAppBrowser()){
+    authMsg('目前是 App 內建瀏覽器，Google 不允許在此登入。請點右上角「⋯」或分享鍵，選「用 Safari／Chrome 開啟」後再登入。');
+    return;
+  }
   authMsg('開啟 Google 登入…');
+  const provider = new fb.authMod.GoogleAuthProvider();
   try {
-    const provider = new fb.authMod.GoogleAuthProvider();
-    await fb.authMod.signInWithPopup(fb.auth, provider);   // 成功後由 onAuthStateChanged 接手
+    await fb.authMod.signInWithPopup(fb.auth, provider);   // 桌面：彈窗；成功後由 onAuthStateChanged 接手
     authMsg('');
-  } catch(e){ authMsg(e && e.message ? e.message : '登入失敗，請再試一次'); }
+  } catch(e){
+    const code = e && e.code;
+    if (code==='auth/popup-blocked' || code==='auth/cancelled-popup-request' || code==='auth/popup-closed-by-user' || code==='auth/operation-not-supported-in-this-environment'){
+      try { await fb.authMod.signInWithRedirect(fb.auth, provider); }   // 手機：改用整頁轉址
+      catch(e2){ authMsg(e2 && e2.message ? e2.message : '登入失敗，請再試一次'); }
+    } else {
+      authMsg(e && e.message ? e.message : '登入失敗，請再試一次');
+    }
+  }
 }
 async function onLogin(user){
   if (currentUser && currentUser.uid === user.uid) return;
