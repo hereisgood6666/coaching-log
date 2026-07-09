@@ -181,7 +181,7 @@ textarea { resize: vertical; min-height: 46px; }
 <body>
 <div class="wrap" id="app">
   <h1>會談後快速記錄</h1>
-  <div class="sub">會談結束 15 分鐘內填寫</div>
+  <div class="sub">會談結束 15 分鐘內填寫<span id="stats-line"></span></div>
 
   <div class="acct-bar hidden" id="acct-bar">
     <span id="acct-email"></span>
@@ -207,6 +207,10 @@ textarea { resize: vertical; min-height: 46px; }
           <label>會談次數</label>
           <input type="text" id="f-session" placeholder="第一次">
         </div>
+        <div>
+          <label>時長 <span class="hint">分鐘</span></label>
+          <input type="text" id="f-mins" inputmode="numeric" placeholder="60">
+        </div>
       </div>
       <label>客戶</label>
       <select id="f-client-sel" onchange="onClientSelChange()"></select>
@@ -215,6 +219,7 @@ textarea { resize: vertical; min-height: 46px; }
         <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
         <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
       </div>
+      <div class="privacy-tip hidden" id="f-lastimprove" style="margin-top:8px"></div>
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
 
       <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
@@ -311,6 +316,11 @@ textarea { resize: vertical; min-height: 46px; }
 
   <!-- ===== CLIENTS ===== -->
   <div id="view-clients" class="hidden">
+    <div class="card" id="hours-card" style="display:none">
+      <label style="margin-top:0">教練時數 <span class="hint">ICF ACC 需 100 小時／8 位客戶，其中 25 小時在申請前 18 個月內</span></label>
+      <div id="hours-stats" style="font-size:14px;line-height:1.8"></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="exportHoursCSV()">匯出時數表（CSV）</button>
+    </div>
     <div class="card">
       <label style="margin-top:0">新增客戶 <span class="hint">一律使用代號</span></label>
       <div class="phrase-add" style="margin-top:0">
@@ -395,14 +405,14 @@ textarea { resize: vertical; min-height: 46px; }
 <script>
 /* ICF 八大核心職能（2025 版架構；分四領域：基礎、共創關係、有效溝通、培養學習與成長） */
 const ACC = [
-  ["1 · 提問和探詢", "開放式提問、簡短清晰、一次一問；不給建議、不教導、不諮商"],
-  ["2 · 存在狀態", "being——以夥伴身分同在，相信客戶有自己的答案，不急著解決問題"],
-  ["3 · 共創明確協議", "打約四題：想談什麼？想帶走什麼/如何知道達到了？為何重要？遇到什麼阻礙？"],
-  ["4 · 信任和安全感", "認可、同理、支持、接納；允許客戶表達情緒與脆弱，不評判"],
-  ["5 · 臨在狀態", "專注、開放、好奇、有彈性；自在面對沉默與不知道（沈默是得分）"],
-  ["6 · 積極聆聽", "覆述、摘要、反映情緒/非語言、用客戶的字；聽出沒說出口的"],
-  ["7 · 啟發式探詢", "例外、轉換時空/視角、外在資源、反向思考、奇蹟問句、隱喻、GROW"],
-  ["8 · 促進客戶成長", "邀請客戶總結學習、自主設計行動與問責、認可進展、好好收尾"]
+  ["1 · 提問和探詢", "保持教練角色：以提問與探詢著眼當下與未來；不做顧問（給指示）、不做治療（聚焦過去情緒）"],
+  ["2 · 存在狀態", "being——教練一貫的存在方式：開放、好奇、以客戶為中心，相信客戶有自己的答案"],
+  ["3 · 共創明確協議", "打約四題：想談什麼？想帶走什麼/如何知道達到了？為何重要？遇到什麼阻礙？全程跟隨客戶議程"],
+  ["4 · 信任和安全感", "當下承認並肯定客戶的洞察與學習；探索其情感、觀點與信念；關心客戶這個人，而非只有問題"],
+  ["5 · 臨在狀態", "全程保持好奇；承認客戶提出的情境；允許客戶引導對話方向，在對話與沉默中為反思創造空間"],
+  ["6 · 積極聆聽", "用摘要與轉述確認理解；提出觀察幫客戶建立新聯想；聽語氣、能量、情緒與肢體的多層次訊息"],
+  ["7 · 啟發式探詢", "用提問、探索、沉默支持新覺察與轉換觀點（例外、奇蹟問句、GROW）；避免引導式或帶預設答案的提問"],
+  ["8 · 促進客戶成長", "與客戶共同把覺察化為具體行動與可衡量成果；承認進展、支持客戶結束會談；不強加行動"]
 ];
 const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
@@ -988,6 +998,7 @@ function recordToText(r) {
   lines.push('日期：'+(r.date||''));
   lines.push('客戶：'+(r.client||''));
   lines.push('會談次數：'+(r.session||''));
+  if(r.mins) lines.push('時長：'+r.mins+' 分鐘');
   if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
   lines.push('自評表現：'+r.perf);
   lines.push('自評感受：'+r.feel);
@@ -1070,7 +1081,7 @@ function showView(v) {
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
   if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); }
   if (v==='ask') renderAsk();
-  if (v==='clients') renderClients();
+  if (v==='clients') { renderHours(); renderClients(); }
 }
 
 /* ---- save ---- */
@@ -1097,6 +1108,7 @@ function saveRecord() {
     id: editId || Date.now(),
     date: document.getElementById('f-date').value,
     session: document.getElementById('f-session').value.trim(),
+    mins: document.getElementById('f-mins').value.trim(),
     client: clientCode,
     clientId: clientId,
     instant: document.getElementById('f-instant').value.trim(),
@@ -1135,9 +1147,12 @@ function confirmReset() {
 function resetForm() {
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-session').value = '';
+  document.getElementById('f-mins').value = '';
   lastAutoSession = '';
   document.getElementById('f-client-new').value = '';
   document.getElementById('f-client-pre').value = '0';
+  const li = document.getElementById('f-lastimprove');
+  if (li) { li.classList.add('hidden'); li.innerHTML = ''; }
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
@@ -1158,6 +1173,46 @@ function resetForm() {
 function updateCount() {
   const n = load().length;
   document.getElementById('cnt').textContent = n ? '('+n+')' : '';
+  updateStats();
+}
+/* 累積統計（首頁小字） */
+function updateStats(){
+  const el = document.getElementById('stats-line');
+  if (!el) return;
+  const recs = load();
+  if (!recs.length) { el.textContent = ''; return; }
+  const goods = recs.reduce((s,r)=>s+((r.good||[]).length),0);
+  const mins = recs.reduce((s,r)=>s+(parseInt(r.mins,10)||0),0);
+  el.textContent = '　·　已累積 '+recs.length+' 次會談'
+    + (mins ? '、'+(Math.round(mins/60*10)/10)+' 小時' : '')
+    + (goods ? '、'+goods+' 條強項' : '');
+}
+/* 教練時數（客戶頁） */
+function renderHours(){
+  const card = document.getElementById('hours-card');
+  const recs = load();
+  const withMins = recs.filter(r=>parseInt(r.mins,10)>0);
+  if (!recs.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const totalMins = withMins.reduce((s,r)=>s+parseInt(r.mins,10),0);
+  const cut = new Date(); cut.setMonth(cut.getMonth()-18);
+  const cutStr = cut.getFullYear()+'-'+String(cut.getMonth()+1).padStart(2,'0')+'-'+String(cut.getDate()).padStart(2,'0');
+  const recentMins = withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10),0);
+  const nClients = new Set(recs.map(r=>r.clientId).filter(Boolean)).size;
+  const h = m => Math.round(m/60*10)/10;
+  document.getElementById('hours-stats').innerHTML =
+    '總計：<b>'+h(totalMins)+' 小時</b>（'+recs.length+' 次會談，'+nClients+' 位客戶）<br>'
+    + '近 18 個月：<b>'+h(recentMins)+' 小時</b>'
+    + (withMins.length < recs.length ? '<br><span class="hint">有 '+(recs.length-withMins.length)+' 筆未填時長，未計入時數</span>' : '');
+}
+function exportHoursCSV(){
+  const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  if (!arr.length) { toast('沒有紀錄'); return; }
+  const rows = [['日期','客戶代號','會談次數','時長(分鐘)']]
+    .concat(arr.map(r=>[r.date||'', r.client||'', formatSession(r.session)||'', r.mins||'']));
+  const csv = String.fromCharCode(0xFEFF) + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  downloadBlob(csv, '教練時數表_'+todayStr()+'.csv', 'text/csv;charset=utf-8');
+  toast('已匯出時數表');
 }
 function renderHist() {
   const list = document.getElementById('hist-list');
@@ -1194,7 +1249,7 @@ function openDetail(id, from) {
   });
   document.getElementById('detail-body').innerHTML = `
     <div class="rec-top"><span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span><span class="rec-date">${r.date||''}</span></div>
-    ${r.session?`<div class="rec-meta" style="margin-bottom:6px">會談次數：${esc(r.session)}</div>`:''}
+    ${r.session||r.mins?`<div class="rec-meta" style="margin-bottom:6px">${r.session?'會談次數：'+esc(r.session):''}${r.mins?'　·　'+esc(r.mins)+' 分鐘':''}</div>`:''}
     <div class="score-lines">
       <div class="score-line">自評表現：<b>${r.perf}</b></div>
       <div class="score-line">自評感受：<b>${r.feel}</b></div>
@@ -1224,6 +1279,7 @@ function editCurrent() {
   editId = r.id;   // 先設，避免 buildClientSel 觸發自動帶入會談次數
   buildClientSel(r.clientId || '');
   document.getElementById('f-client-new').value = '';
+  document.getElementById('f-mins').value = r.mins || '';
   document.getElementById('f-instant').value = r.instant || '';
   document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
   document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
@@ -1289,8 +1345,22 @@ function onClientSelChange(){
   const box = document.getElementById('f-client-newbox');
   if (!sel || !box) return;
   box.classList.toggle('hidden', sel.value !== '__new__');
+  showLastImprove(sel.value === '__new__' ? '' : sel.value);
   if (sel.value === '__new__') { document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
+}
+/* 閉環提醒：選了客戶就帶出上次的「可改進」，讓這次會談前先看見 */
+function showLastImprove(clientId){
+  const box = document.getElementById('f-lastimprove');
+  if (!box) return;
+  box.classList.add('hidden'); box.innerHTML = '';
+  if (!clientId || editId) return;   // 編輯舊紀錄時不顯示，避免時間對不上
+  const rs = clientRecs(clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  const last = rs.find(r=>r.improve && r.improve.length);
+  if (!last) return;
+  box.innerHTML = '💡 <b>上次（'+(last.date||'')+'）你想改進：</b>' +
+    last.improve.map(t=>'「'+esc(t)+'」').join('、') + '——這次有做到嗎？';
+  box.classList.remove('hidden');
 }
 /* 新客戶：依「之前已談次數」帶入下一次編號 */
 function newClientPreChange(){
@@ -1515,23 +1585,44 @@ function copyAdvicePrompt(){
   copyText(text, '已複製，貼到你慣用的 AI 取得建議');
 }
 function copyAccPrompt(){
-  const text = `你是一位 ICF（國際教練聯盟）資深考官與導師教練（Mentor Coach），熟悉 ICF 核心職能（含 2025 更新版）。我會在最後貼上一段教練會談逐字稿（已去識別化，「教練」是我，「客戶」是對方）。請以 ACC 級別的期待，依下列八項職能逐一評估（這是我培訓使用的架構，括號內為對應的 ICF 官方職能，請以 ICF 的行為指標為評估依據）：
+  const text = `你是一位 ICF（國際教練聯盟）資深考官與導師教練（Mentor Coach），熟悉 ICF ACC 績效評估標準（Criteria for Assessing ACC Performance Evaluations）。我會在最後貼上一段教練會談逐字稿（已去識別化，「教練」是我，「客戶」是對方）。請以 ACC 績效評估的標準，依下列八項核心職能逐一評估。每項列有「合格最低標準」與「未達標準」，請嚴格對照逐字稿判斷：
 
-1 提問和探詢（對應 ICF「喚起覺察」）：開放式提問、簡短清晰、一次只問一題；不給建議、不教導、不做諮商或治療
-2 存在狀態 being（對應 ICF「體現教練心態」）：以夥伴身分與客戶同在，相信客戶有自己的答案；不急著解決問題、不展現自己
-3 共創明確協議（對應 ICF「建立並維持協議」）：開場有打約四題——想談什麼、想帶走什麼／如何知道達到了、這對客戶為何重要、遇到什麼阻礙；中途偏離時有回頭核對
-4 信任和安全感（對應 ICF「培養信任與安全感」）：認可客戶的努力、特質與進展；同理、支持、接納；允許客戶表達情緒與脆弱，不評判
-5 臨在狀態（對應 ICF「保持臨在」）：專注、開放、好奇、有彈性；自在面對沉默與「不知道」；跟隨客戶的節奏而非自己的議程
-6 積極聆聽（對應 ICF「積極聆聽」）：覆述、摘要、反映情緒與非語言訊息；使用客戶的關鍵用字；聽出客戶的信念、價值觀與沒說出口的部分
-7 啟發式探詢（對應 ICF「喚起覺察」）：例外問句、轉換時間／空間／視角、外在資源、反向思考、奇蹟問句、隱喻比擬、GROW 等，擴展客戶的思考
-8 促進客戶成長（對應 ICF「促進客戶成長」）：邀請客戶總結學習與新覺察、由客戶自主設計行動與問責方式、認可進展、好好結束會談
+1 提問和探詢（展現道德規範）
+　合格：始終保持教練角色——以提問（inquire）與探詢（exploration）著眼當下與未來的議題
+　未達標準：主要在告訴客戶該做什麼（顧問模式）；過度探討過去的情緒議題（治療模式）；主要在給建議或指示，而非促進客戶自行產生洞察
+
+2 存在狀態 being（體現教練心態）
+　說明：這項關注教練整體一貫的存在方式，ICF 績效評估不設具體行為指標；請觀察教練是否開放、好奇、以客戶為中心，看不出來就標「無法判斷」
+
+3 共創明確協議（建立和維持協議）
+　合格：邀請客戶明確指出本次會談希望達成的目標與成功衡量方式；對客戶與其期望成果之間的關聯保持好奇；除非客戶另有表示，全程持續關注客戶設定的議程
+　未達標準：由教練為客戶選擇議題，或未圍繞客戶所選的議題進行對話
+
+4 信任和安全感（培養信任與安全感）
+　合格：當下承認並肯定客戶的洞察與學習；探索客戶所表達的情感、觀點、關注點與信念；對客戶整體（這個人）而非僅其問題或情境表達支持與關心
+　未達標準：顯著關注自己的觀點而非客戶的觀點；未主動了解客戶的想法；表現出不支持或不尊重；專注於自身表現或展示知識
+
+5 臨在狀態（維持臨在）
+　合格：整個會談保持好奇心；對客戶提出的情境予以承認；至少部分時間允許客戶引導對話方向；在對話與沉默中為反思創造空間
+　未達標準：由教練持續主導對話；對客戶提供的資訊沒有回應；注意力集中在自己的表現或展示對主題的知識
+
+6 積極聆聽
+　合格：使用摘要（summarize）或轉述（paraphrasing）確保正確理解客戶的意思；提出觀察幫助客戶建立新的聯想；傾聽語氣、能量、情緒變化或肢體語言等多層次訊息，並擷取、整合客戶的語言
+　未達標準：回應與客戶想達成的目標無關；傾聽只是為了找到展示自己知識的切入點，或想告訴客戶該如何處理
+
+7 啟發式探詢（喚起覺察）
+　合格：運用提問、探索、沉默及其他技巧，支持客戶獲得新的或更深層的學習與覺察；支持客戶以新的或不同觀點看待情境；針對與期望成果相關的想法、信念、思維、情緒與行為提問或探索
+　未達標準：持續專注於指導客戶，或分享自己的知識、想法或信念；大部分問題屬於引導式或包含預設答案；提問關注的議題並非由客戶設定
+
+8 促進客戶成長
+　合格：與客戶合作制定或確認具體的行動計畫；提出問題支持客戶將覺察轉化為行動；行動與客戶既定議程相關；支持客戶結束會談（可建議資源，但不得強加）
+　未達標準：強迫客戶執行由教練指定的行動；提出與客戶既定議程無明確關聯的行動建議；未邀請客戶探索如何應用其學習；未支持客戶結束會談
 
 請輸出：
-一、總表：每項標示「到位／部分到位／未見／無法從逐字稿判斷」（看不出來就標「無法從逐字稿判斷」，不要猜）
-二、逐項評估：各引用 1–2 句逐字稿原文作為證據（沒有就寫「無」），並簡短說明判斷理由
+一、總表：每項標示「到位／部分到位／未達標準／無法從逐字稿判斷」（看不出來就標「無法從逐字稿判斷」，不要猜）
+二、逐項評估：各引用 1–2 句逐字稿原文作為證據（沒有就寫「無」），對照上述標準簡短說明理由；若觸發任何「未達標準」的情況，請明確指出是哪一條
 三、最值得改進的 2 項：各給一個具體練習方法，和一句下次會談可直接使用的示範句
 四、整體回饋：1 個最大亮點、1 個最優先的成長點
-五、倫理提醒（對應 ICF「展現道德實踐」）：若逐字稿中有涉及倫理界線的地方——如提供諮商／醫療／法律建議、過度自我揭露、替客戶做決定——請特別指出；沒有就寫「無」
 
 以下是逐字稿：
 `;
@@ -1576,9 +1667,9 @@ const HELP_HTML = `
 <p><b>3.</b> 之後手機或電腦登入「同一個」Google 帳號，就會看到自己的所有紀錄；每個人資料各自獨立，看不到彼此。</p>
 
 <h3>四個分頁</h3>
-<p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會依「日期」自動算出這是第幾次會談（含補登舊日期）。</p>
+<p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期與時長、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會依「日期」自動算出這是第幾次會談（含補登舊日期），並提醒你上次想改進的部分。</p>
 <p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖，可用上方「客戶篩選」只看某一位；匯出 PDF／文字會跟著篩選走（選了某位客戶就只匯出他的）。展開「洞察」可彙整所有強項與待改進——強項可複製成清單，待改進可一鍵加入導師提問，或複製「求建議提示詞」貼給 AI 取得具體建議。</p>
-<p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；點進單一客戶可看專屬趨勢圖和全部會談紀錄。若用這工具之前已和某位客戶談過幾次，在「開始記錄前已談次數」填上次數，編號就會接著算；補登舊會談後可按「依日期重新編號」一次修正全部編號。</p>
+<p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；上方有教練時數統計（含近 18 個月），可匯出時數表 CSV，申請 ICF 認證時用得上；點進單一客戶可看專屬趨勢圖和全部會談紀錄。若用這工具之前已和某位客戶談過幾次，在「開始記錄前已談次數」填上次數，編號就會接著算；補登舊會談後可按「依日期重新編號」一次修正全部編號。</p>
 <p><b>導師提問：</b>記下想問導師的問題，1-on-1 前可複製清單或匯出 Excel；拿到答案再填回存起來。</p>
 
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
