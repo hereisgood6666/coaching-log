@@ -268,8 +268,8 @@ textarea { resize: vertical; min-height: 46px; }
     </div>
 
     <div class="card">
-      <label>ACC 標記 Checklist <span class="hint">只勾「說得出具體事例」的職能，並在備註寫下事例</span></label>
-      <div class="privacy-tip" style="margin-bottom:10px">想更客觀？<button class="mini-link" onclick="copyAccPrompt()">複製「逐字稿 AI 分析」提示詞</button>，貼到你慣用的 AI 並附上<b>去識別化</b>的逐字稿，讓 AI 判斷八項職能哪些到位，再回來勾選。（錄音／逐字稿請先取得客戶同意，且不要存進本工具）</div>
+      <label>ICF 八大核心職能 Checklist <span class="hint">ACC 標記；只勾「說得出具體事例」的職能，並在備註寫下事例</span></label>
+      <button class="btn btn-ghost" style="width:100%;margin:6px 0 12px;background:#fbeee2;color:#a4693c" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
       <div id="acc-list"></div>
     </div>
 
@@ -393,15 +393,16 @@ textarea { resize: vertical; min-height: 46px; }
 <div class="toast" id="toast"></div>
 
 <script>
+/* ICF 八大核心職能（2025 版架構；分四領域：基礎、共創關係、有效溝通、培養學習與成長） */
 const ACC = [
-  ["1 · 提問和探詢", "教練非導師和諮商"],
-  ["2 · 存在狀態", "being"],
-  ["3 · 共創明確協議", "打約四題"],
-  ["4 · 信任和安全感", "認可、同理、支持、接納"],
-  ["5 · 臨在狀態", "專注、開放、接納、好奇（沈默是得分）"],
-  ["6 · 積極聆聽", "5W1H、覆述、情緒/非語言、標籤/用字"],
-  ["7 · 啟發式探詢", "例外？轉換地點/時間？外在資源？反向思考？奇蹟問句、GROW Model"],
-  ["8 · 促進客戶成長", "收尾題目、認可、結束會話"]
+  ["1 · 提問和探詢", "開放式提問、簡短清晰、一次一問；不給建議、不教導、不諮商"],
+  ["2 · 存在狀態", "being——以夥伴身分同在，相信客戶有自己的答案，不急著解決問題"],
+  ["3 · 共創明確協議", "打約四題：想談什麼？想帶走什麼/如何知道達到了？為何重要？遇到什麼阻礙？"],
+  ["4 · 信任和安全感", "認可、同理、支持、接納；允許客戶表達情緒與脆弱，不評判"],
+  ["5 · 臨在狀態", "專注、開放、好奇、有彈性；自在面對沉默與不知道（沈默是得分）"],
+  ["6 · 積極聆聽", "覆述、摘要、反映情緒/非語言、用客戶的字；聽出沒說出口的"],
+  ["7 · 啟發式探詢", "例外、轉換時空/視角、外在資源、反向思考、奇蹟問句、隱喻、GROW"],
+  ["8 · 促進客戶成長", "邀請客戶總結學習、自主設計行動與問責、認可進展、好好收尾"]
 ];
 const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
@@ -442,6 +443,22 @@ function migrateClients() {
   if (cCh) localStorage.setItem(CKEY, JSON.stringify(cs));
   if (rCh) localStorage.setItem(KEY, JSON.stringify(recs));
   if (cCh || rCh) schedulePush();
+}
+/* 舊版自訂八項 → ICF 官方八項的勾選轉換：
+   舊1提問探詢+舊7啟發式探詢 → 新7喚起覺察；舊2存在狀態+舊5臨在 → 新5保持臨在；
+   新1道德實踐、新2教練心態為舊版沒有的項目，預設未勾 */
+function migrateAcc(){
+  const recs = load(); let ch = false;
+  recs.forEach(r=>{
+    if (r.accv === 2 || !Array.isArray(r.acc) || r.acc.length !== 8) return;
+    const o = r.acc;
+    const one = i => ({ on: !!(o[i]&&o[i].on), note: (o[i]&&o[i].note)||'' });
+    const merge = (a,b) => ({ on: !!(o[a]&&o[a].on) || !!(o[b]&&o[b].on),
+      note: [o[a]&&o[a].note, o[b]&&o[b].note].filter(Boolean).join('；') });
+    r.acc = [ {on:false,note:''}, {on:false,note:''}, one(2), one(3), merge(1,4), one(5), merge(0,6), one(7) ];
+    r.accv = 2; ch = true;
+  });
+  if (ch) { localStorage.setItem(KEY, JSON.stringify(recs)); schedulePush(); }
 }
 
 /* ===== 雲端同步（Firebase，選用；沒有填設定時自動用本機模式）===== */
@@ -538,7 +555,7 @@ async function syncPull(){
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
   } catch(e){}
-  migrateQ(); migrateClients(); buildClientSel(''); updateCount(); updateAskCount();
+  migrateQ(); migrateClients(); migrateAcc(); buildClientSel(''); updateCount(); updateAskCount();
 }
 function schedulePush(){
   if (!fb.db || !currentUser) return;
@@ -943,7 +960,7 @@ function restoreJSON(e) {
         d.clients.forEach(x=>{ if(!cids.has(x.id)) ccur.push(x); });
         storeC(ccur);
       }
-      migrateClients(); buildClientSel(''); buildHistFilter();
+      migrateClients(); migrateAcc(); buildClientSel(''); buildHistFilter();
       updateCount(); renderHist(); renderChart();
       toast('已還原，新增 '+added+' 筆');
     } catch(err){ toast('檔案格式錯誤'); }
@@ -1091,7 +1108,8 @@ function saveRecord() {
     insight: document.getElementById('f-insight').value.trim(),
     improve: getItems('improve-list'),
     special: getItems('special-list'),
-    acc: getAcc()
+    acc: getAcc(),
+    accv: 2
   };
   if (!rec.client && !rec.instant) { toast('請至少填客戶或問題'); return; }
   const arr = load();
@@ -1497,22 +1515,23 @@ function copyAdvicePrompt(){
   copyText(text, '已複製，貼到你慣用的 AI 取得建議');
 }
 function copyAccPrompt(){
-  const text = `你是一位 ICF（國際教練聯盟）資深考官與導師教練（Mentor Coach）。我會在最後貼上一段教練會談逐字稿（已去識別化，「教練」是我，「客戶」是對方）。請依下列 ACC 八項核心職能逐一評估：
+  const text = `你是一位 ICF（國際教練聯盟）資深考官與導師教練（Mentor Coach），熟悉 ICF 核心職能（含 2025 更新版）。我會在最後貼上一段教練會談逐字稿（已去識別化，「教練」是我，「客戶」是對方）。請以 ACC 級別的期待，依下列八項職能逐一評估（這是我培訓使用的架構，括號內為對應的 ICF 官方職能，請以 ICF 的行為指標為評估依據）：
 
-1 提問和探詢：以開放式提問引導，而非給建議、教導或諮商
-2 存在狀態（being）：以夥伴身分與客戶同在，不急於解決問題
-3 共創明確協議：會談開始時有確認主題、目標、成功指標與對客戶的意義
-4 信任和安全感：認可、同理、支持、接納客戶
-5 臨在狀態：專注、開放、好奇，允許沉默
-6 積極聆聽：覆述、摘要、反映情緒與非語言訊息、使用客戶的用字
-7 啟發式探詢：例外問句、轉換視角／時空、奇蹟問句、GROW 等擴展客戶思考
-8 促進客戶成長：收尾時邀請客戶總結學習、設計行動、給予認可
+1 提問和探詢（對應 ICF「喚起覺察」）：開放式提問、簡短清晰、一次只問一題；不給建議、不教導、不做諮商或治療
+2 存在狀態 being（對應 ICF「體現教練心態」）：以夥伴身分與客戶同在，相信客戶有自己的答案；不急著解決問題、不展現自己
+3 共創明確協議（對應 ICF「建立並維持協議」）：開場有打約四題——想談什麼、想帶走什麼／如何知道達到了、這對客戶為何重要、遇到什麼阻礙；中途偏離時有回頭核對
+4 信任和安全感（對應 ICF「培養信任與安全感」）：認可客戶的努力、特質與進展；同理、支持、接納；允許客戶表達情緒與脆弱，不評判
+5 臨在狀態（對應 ICF「保持臨在」）：專注、開放、好奇、有彈性；自在面對沉默與「不知道」；跟隨客戶的節奏而非自己的議程
+6 積極聆聽（對應 ICF「積極聆聽」）：覆述、摘要、反映情緒與非語言訊息；使用客戶的關鍵用字；聽出客戶的信念、價值觀與沒說出口的部分
+7 啟發式探詢（對應 ICF「喚起覺察」）：例外問句、轉換時間／空間／視角、外在資源、反向思考、奇蹟問句、隱喻比擬、GROW 等，擴展客戶的思考
+8 促進客戶成長（對應 ICF「促進客戶成長」）：邀請客戶總結學習與新覺察、由客戶自主設計行動與問責方式、認可進展、好好結束會談
 
 請輸出：
-一、總表：每項職能標示「到位／部分到位／未見」
-二、逐項評估：各引用 1–2 句逐字稿原文作為證據（沒有就寫「無」）
-三、最值得改進的 2 項職能：各給一個具體練習建議，和一句下次會談可直接使用的示範句
+一、總表：每項標示「到位／部分到位／未見／無法從逐字稿判斷」（看不出來就標「無法從逐字稿判斷」，不要猜）
+二、逐項評估：各引用 1–2 句逐字稿原文作為證據（沒有就寫「無」），並簡短說明判斷理由
+三、最值得改進的 2 項：各給一個具體練習方法，和一句下次會談可直接使用的示範句
 四、整體回饋：1 個最大亮點、1 個最優先的成長點
+五、倫理提醒（對應 ICF「展現道德實踐」）：若逐字稿中有涉及倫理界線的地方——如提供諮商／醫療／法律建議、過度自我揭露、替客戶做決定——請特別指出；沒有就寫「無」
 
 以下是逐字稿：
 `;
@@ -1565,7 +1584,7 @@ const HELP_HTML = `
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
 
 <h3>ACC 想評得更客觀？</h3>
-<p>自己勾 ACC 容易全勾。在「新增紀錄」的 ACC 區塊按「複製逐字稿 AI 分析提示詞」，貼到你慣用的 AI（ChatGPT／Claude）再附上會談逐字稿，AI 會逐項判斷哪些職能到位並引用原文佐證，再回來勾選。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
+<p>自己勾 ACC 容易全勾。在「新增紀錄」的 ACC 區塊按「🎯 用 AI 分析逐字稿」，照彈窗的三步驟做：AI 會逐項判斷哪些職能到位並引用原文佐證，再回來勾選。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
@@ -1578,6 +1597,18 @@ function openModal(html){
   document.getElementById('legal-content').innerHTML = html;
   document.getElementById('legal-modal').classList.add('show');
 }
+const ACC_AI_HTML = `
+<h2>用 AI 分析逐字稿</h2>
+<div class="lp-sub">讓 AI 依 ACC 八項職能判斷哪些到位，比自己勾更客觀</div>
+
+<h3>怎麼用（3 步驟）</h3>
+<p><b>1. 準備逐字稿：</b>把會談錄音轉成文字，並先「去識別化」——客戶名字、公司等可辨識資訊改成代號。</p>
+<p><b>2. 複製提示詞：</b>按下方按鈕複製，貼到你慣用的 AI（ChatGPT、Claude、Gemini 都可以），接著在後面貼上逐字稿送出。</p>
+<p><b>3. 回來勾選：</b>AI 會逐項判斷八項職能「到位／部分到位／未見」並引用原文佐證。照結果回來勾 ACC，把佐證抄進備註。</p>
+
+<div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
+<button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
+function openAccAnalyze(){ openModal(ACC_AI_HTML); }
 function openLegal(){ openModal(LEGAL_HTML); }
 function openHelp(){ openModal(HELP_HTML); }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
@@ -1585,6 +1616,7 @@ function closeLegal(){ document.getElementById('legal-modal').classList.remove('
 /* init */
 migrateQ();
 migrateClients();
+migrateAcc();
 resetForm();
 updateCount();
 updateAskCount();
