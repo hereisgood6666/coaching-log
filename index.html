@@ -18,6 +18,11 @@ body {
 .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
 h1 { font-size: 20px; margin: 4px 0 2px; }
 .sub { color: #8a8378; font-size: 13px; margin-bottom: 14px; }
+.stats-line {
+  display: inline-block; background: #f4efe8; color: #a07d55;
+  font-size: 12.5px; border-radius: 8px; padding: 4px 11px; margin: -6px 0 14px;
+}
+.stats-line:empty { display: none; margin: 0; }
 .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
 .tab {
   flex: 1; padding: 10px 6px; border: none; border-radius: 10px;
@@ -221,7 +226,8 @@ textarea { resize: vertical; min-height: 46px; }
 <body>
 <div class="wrap" id="app">
   <h1>會談後快速記錄</h1>
-  <div class="sub">會談結束了嗎？花 15 分鐘，陪自己回顧這一場。<span id="stats-line"></span></div>
+  <div class="sub">會談結束了嗎？花 15 分鐘，陪自己回顧這一場。</div>
+  <div class="stats-line" id="stats-line"></div>
 
   <div class="acct-bar hidden" id="acct-bar">
     <span id="acct-email"></span>
@@ -331,6 +337,16 @@ textarea { resize: vertical; min-height: 46px; }
       <span class="fl">客戶篩選</span>
       <select id="hist-filter" onchange="onHistFilter()"></select>
     </div>
+    <div class="card">
+      <label style="margin-top:0">匯出與分享 <span class="hint">上方選了客戶，就只會匯出那一位的完整紀錄</span></label>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
+        <button class="btn btn-ghost" onclick="exportAllText()">匯出文字</button>
+      </div>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
+      </div>
+    </div>
     <div class="card phrase-card">
       <div class="phrase-head" onclick="toggleInsight()">
         <label style="margin:0;cursor:pointer">洞察 <span class="hint">強項與待改進彙整</span></label>
@@ -353,19 +369,12 @@ textarea { resize: vertical; min-height: 46px; }
       </div>
       <div id="reflect-body"></div>
     </div>
-    <div class="actions" style="margin-bottom:14px">
+    <div id="hist-list"></div>
+    <div class="actions" style="margin:10px 0 14px">
       <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
       <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
       <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
     </div>
-    <div class="actions" style="margin:-6px 0 14px">
-      <button class="btn btn-ghost" onclick="exportAllText()">匯出全部文字</button>
-      <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
-    </div>
-    <div class="actions" style="margin:-6px 0 14px">
-      <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
-    </div>
-    <div id="hist-list"></div>
   </div>
 
   <!-- ===== CLIENTS ===== -->
@@ -1297,9 +1306,9 @@ function updateStats(){
   if (!recs.length) { el.textContent = ''; return; }
   const goods = recs.reduce((s,r)=>s+((r.good||[]).length),0);
   const mins = recs.reduce((s,r)=>s+(parseInt(r.mins,10)||0),0);
-  el.textContent = '　·　已累積 '+recs.length+' 次會談'
-    + (mins ? '、'+(Math.round(mins/60*10)/10)+' 小時' : '')
-    + (goods ? '、'+goods+' 條強項' : '');
+  el.textContent = '🌱 已累積 '+recs.length+' 次會談'
+    + (mins ? ' · '+(Math.round(mins/60*10)/10)+' 小時' : '')
+    + (goods ? ' · '+goods+' 條強項' : '');
 }
 /* 教練時數破關儀表板（客戶頁）：原生 CSS 進度條 */
 function renderHours(){
