@@ -191,17 +191,9 @@ textarea { resize: vertical; min-height: 46px; }
   padding:32px 26px 20px; text-align:center;
   box-shadow: 0 10px 40px rgba(176,137,104,.14), 0 1px 3px rgba(0,0,0,.05);
 }
-.auth-logo {
-  width:58px; height:58px; border-radius:17px; margin:0 auto 14px;
-  background: linear-gradient(135deg, #c9a27e, #a87f5c);
-  display:flex; align-items:center; justify-content:center;
-  color:#fff; font-size:26px; font-weight:700;
-  box-shadow: 0 4px 14px rgba(176,137,104,.35);
-}
 .auth-greet { font-size:15px; color:#a07d55; font-weight:600; margin-bottom:6px; }
 .auth-box h2 { font-size:22px; margin:0 0 4px; letter-spacing:.5px; }
 .auth-box .sub { margin-bottom:20px; }
-.auth-features { display:flex; justify-content:center; gap:16px; color:#a39b8e; font-size:12px; margin:16px 0 4px; flex-wrap:wrap; }
 .auth-msg { color:#b3541e; font-size:13px; min-height:18px; margin:8px 0 0; }
 .btn { transition: transform .1s, box-shadow .15s; }
 .btn:active { transform: scale(.98); }
@@ -447,19 +439,15 @@ textarea { resize: vertical; min-height: 46px; }
 
 <div class="wrap hidden" id="auth-screen">
   <div class="auth-box">
-    <div class="auth-logo">記</div>
     <div class="auth-greet" id="auth-greet">你好。</div>
     <h2>會談後快速記錄</h2>
-    <div class="sub">給教練的會談後反思空間。登入後，你的紀錄會在手機和電腦之間安靜地同步——這裡只屬於你。</div>
+    <div style="height:14px"></div>
     <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
     <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
     <div class="auth-hint" id="inapp-hint" style="display:none;text-align:left;margin-top:12px">
-      <b>先換個瀏覽器，馬上就好 🙂</b><br>
-      你現在是從 LINE／FB 的內建視窗打開的，Google 基於安全規定不允許在這裡登入——<b>不是你操作錯了</b>。<br><br>
-      請點右上角「⋯」或分享鍵 → 選「<b>用 Safari／Chrome 開啟</b>」，我們在那裡等你。
-    </div>
-    <div class="auth-features">
-      <span>🔒 客戶代號制</span><span>☁️ 跨裝置同步</span><span>📱 免安裝</span>
+      <b>先換瀏覽器打開網頁喔！</b><br><br>
+      1. 請點右上角或是右下角的「 . . . 」<br><br>
+      2. 點選「<b>在瀏覽器中開啟</b>」
     </div>
     <div class="footer" style="padding:10px 0 4px"><a onclick="openHelp()">使用說明</a>　·　登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
   </div>
