@@ -29,6 +29,8 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .filter-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
 .filter-bar .fl { font-size: 13px; color: #8a7c68; font-weight: 600; flex-shrink: 0; }
 .filter-bar select { flex: 1; width: auto; }
+.insight-item { font-size: 14px; margin-bottom: 7px; }
+.insight-item .qctx { display: inline; margin-left: 6px; }
 .card {
   background: #fff; border-radius: 14px; padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
@@ -208,7 +210,11 @@ textarea { resize: vertical; min-height: 46px; }
       </div>
       <label>客戶</label>
       <select id="f-client-sel" onchange="onClientSelChange()"></select>
-      <input type="text" id="f-client-new" class="hidden" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
+      <div id="f-client-newbox" class="hidden">
+        <input type="text" id="f-client-new" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
+        <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
+        <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
+      </div>
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
 
       <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
@@ -262,12 +268,13 @@ textarea { resize: vertical; min-height: 46px; }
     </div>
 
     <div class="card">
-      <label>ACC 標記 Checklist <span class="hint">這次有做到的職能，勾選並可加註</span></label>
+      <label>ACC 標記 Checklist <span class="hint">只勾「說得出具體事例」的職能，並在備註寫下事例</span></label>
+      <div class="privacy-tip" style="margin-bottom:10px">想更客觀？<button class="mini-link" onclick="copyAccPrompt()">複製「逐字稿 AI 分析」提示詞</button>，貼到你慣用的 AI 並附上<b>去識別化</b>的逐字稿，讓 AI 判斷八項職能哪些到位，再回來勾選。（錄音／逐字稿請先取得客戶同意，且不要存進本工具）</div>
       <div id="acc-list"></div>
     </div>
 
     <div class="actions">
-      <button class="btn btn-ghost" onclick="resetForm()">清空</button>
+      <button class="btn btn-ghost" onclick="confirmReset()">清空</button>
       <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">儲存紀錄</button>
     </div>
     <div style="height:24px"></div>
@@ -278,6 +285,13 @@ textarea { resize: vertical; min-height: 46px; }
     <div class="card filter-bar">
       <span class="fl">客戶篩選</span>
       <select id="hist-filter" onchange="onHistFilter()"></select>
+    </div>
+    <div class="card phrase-card">
+      <div class="phrase-head" onclick="toggleInsight()">
+        <label style="margin:0;cursor:pointer">洞察 <span class="hint">強項與待改進彙整</span></label>
+        <span class="arrow" id="insight-arrow">展開 ▾</span>
+      </div>
+      <div class="phrase-body collapsed" id="insight-body"></div>
     </div>
     <div class="card" id="chart-card">
       <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受 <span id="chart-hint"></span></span></label>
@@ -717,9 +731,12 @@ function recordAccHTML(r){
     <div class="accsub">沒做到（${undone.length}）</div>${undone.length?undone.join(''):'<div>—</div>'}`;
 }
 function exportPDF(){
-  const arr = load().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  let arr = load();
+  const fc = histFilter ? clientById(histFilter) : null;
+  if (fc) arr = arr.filter(r=>r.clientId===histFilter);
+  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
   if (!arr.length) { toast('沒有紀錄'); return; }
-  printRecordsPDF(arr, '會談後快速紀錄_'+todayStr());
+  printRecordsPDF(arr, '會談後快速紀錄_'+(fc?fc.code+'_':'')+todayStr());
 }
 function exportRecordPDF(id){
   const r = load().find(x=>x.id===id);
@@ -935,16 +952,19 @@ function restoreJSON(e) {
   reader.readAsText(file);
 }
 function exportAllText() {
-  const arr = load().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  let arr = load();
+  const fc = histFilter ? clientById(histFilter) : null;
+  if (fc) arr = arr.filter(r=>r.clientId===histFilter);
+  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
   if (!arr.length) { toast('沒有紀錄'); return; }
   const blocks = arr.map(r => recordToText(r));
   const text = blocks.join('\n\n──────────\n\n');
   const blob = new Blob([text], {type:'text/plain'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = '會談紀錄_全部_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.download = '會談紀錄_' + (fc?fc.code:'全部') + '_' + new Date().toISOString().slice(0,10) + '.txt';
   a.click(); URL.revokeObjectURL(a.href);
-  toast('已匯出全部文字');
+  toast(fc ? '已匯出（'+fc.code+'）' : '已匯出全部文字');
 }
 function recordToText(r) {
   const lines = [];
@@ -1045,7 +1065,11 @@ function saveRecord() {
     if (clientCode) {
       const cs = loadC();
       let c = cs.find(x=>(x.code||'').trim().toLowerCase()===clientCode.toLowerCase());
-      if (!c) { c = { id:'c'+Date.now(), code:clientCode, status:'active', preSessions:0, goal:'', note:'', created:todayStr() }; cs.push(c); storeC(cs); }
+      if (!c) {
+        const pre = parseInt(document.getElementById('f-client-pre').value,10)||0;
+        c = { id:'c'+Date.now(), code:clientCode, status:'active', preSessions:pre, goal:'', note:'', created:todayStr() };
+        cs.push(c); storeC(cs);
+      }
       clientId = c.id; clientCode = c.code;
     }
   } else if (selVal) {
@@ -1086,11 +1110,16 @@ function saveRecord() {
   showView('hist');
 }
 
+function confirmReset() {
+  if (!confirm('清空目前填寫的內容？')) return;
+  resetForm();
+}
 function resetForm() {
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-session').value = '';
   lastAutoSession = '';
   document.getElementById('f-client-new').value = '';
+  document.getElementById('f-client-pre').value = '0';
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
@@ -1239,11 +1268,21 @@ function buildClientSel(selId){
 }
 function onClientSelChange(){
   const sel = document.getElementById('f-client-sel');
-  const inp = document.getElementById('f-client-new');
-  if (!sel || !inp) return;
-  inp.classList.toggle('hidden', sel.value !== '__new__');
-  if (sel.value === '__new__') { inp.focus(); return; }
+  const box = document.getElementById('f-client-newbox');
+  if (!sel || !box) return;
+  box.classList.toggle('hidden', sel.value !== '__new__');
+  if (sel.value === '__new__') { document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
+}
+/* 新客戶：依「之前已談次數」帶入下一次編號 */
+function newClientPreChange(){
+  if (editId) return;
+  const sess = document.getElementById('f-session');
+  const cur = sess.value.trim();
+  if (cur && cur !== lastAutoSession) return;
+  const pre = parseInt(document.getElementById('f-client-pre').value,10)||0;
+  sess.value = '第' + numToCh(pre+1) + '次';
+  lastAutoSession = sess.value;
 }
 /* 自動算第幾次：以「此日期之前最近一筆有編號的紀錄」為基準往下接，
    所以中間有沒記到的會談時，只要把某一筆的次數手動改對，之後就會接著正確編號。
@@ -1385,6 +1424,99 @@ function buildHistFilter(){
 function onHistFilter(){
   histFilter = document.getElementById('hist-filter').value;
   renderHist(); renderChart();
+  if (insightOpen) renderInsight();
+}
+
+/* ---- insight (strengths / improvements) ---- */
+let insightOpen = false;
+let _insightImps = [], _insightGoods = [];
+function toggleInsight(){
+  insightOpen = !insightOpen;
+  document.getElementById('insight-body').classList.toggle('collapsed', !insightOpen);
+  document.getElementById('insight-arrow').textContent = insightOpen ? '收合 ▴' : '展開 ▾';
+  if (insightOpen) renderInsight();
+}
+function renderInsight(){
+  let arr = load();
+  if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
+  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  _insightGoods = []; _insightImps = [];
+  arr.forEach(r=>{
+    (r.good||[]).forEach(t=>_insightGoods.push({t, r}));
+    (r.improve||[]).forEach(t=>_insightImps.push({t, r}));
+  });
+  const meta = r => `<span class="qctx">${esc(r.client)||''}　${r.date||''}</span>`;
+  const gHtml = _insightGoods.length
+    ? _insightGoods.map(x=>`<div class="insight-item">✓ ${esc(x.t)}${meta(x.r)}</div>`).join('')
+    : '<div class="acc-none">還沒有內容</div>';
+  const iHtml = _insightImps.length
+    ? _insightImps.map((x,i)=>`<div class="insight-item">△ ${esc(x.t)}${meta(x.r)}　<button class="mini-link" onclick="askImprove(${i})">＋問導師</button></div>`).join('')
+    : '<div class="acc-none">還沒有內容</div>';
+  document.getElementById('insight-body').innerHTML =
+    `<div class="ask-sub" style="margin-top:2px">我的強項（${_insightGoods.length}）</div>` + gHtml +
+    `<div class="ask-sub" style="margin-top:14px">待改進（${_insightImps.length}）</div>` + iHtml +
+    `<div class="actions" style="margin-top:12px">
+      <button class="btn btn-ghost" onclick="copyStrengths()">複製強項清單</button>
+      <button class="btn btn-primary" onclick="copyAdvicePrompt()">複製求建議提示詞</button>
+    </div>`;
+}
+function askImprove(i){
+  const x = _insightImps[i]; if (!x) return;
+  const q = '如何改進：' + x.t;
+  const arr = loadQ();
+  if (arr.some(y=>y.q===q)) { toast('這題已加過了'); return; }
+  arr.push({ id: Date.now(), q, ctx: buildCtx(x.r), answer:'', answered:false, created: todayStr() });
+  storeQ(arr); updateAskCount(); toast('已加入導師提問清單');
+}
+function copyText(text, ok){
+  navigator.clipboard.writeText(text).then(()=>toast(ok),()=>{
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');toast(ok);}catch(e){toast('複製失敗');} ta.remove();
+  });
+}
+function copyStrengths(){
+  if (!_insightGoods.length) { renderInsight(); }
+  if (!_insightGoods.length) { toast('還沒有強項紀錄'); return; }
+  const text = '我做得好的（教練會談自我記錄彙整）：\n\n' +
+    _insightGoods.map((x,i)=>(i+1)+'. '+x.t+'（'+(x.r.client||'')+' '+(x.r.date||'')+'）').join('\n');
+  copyText(text, '強項清單已複製');
+}
+function copyAdvicePrompt(){
+  if (!_insightImps.length) { renderInsight(); }
+  if (!_insightImps.length) { toast('還沒有待改進紀錄'); return; }
+  const items = _insightImps.slice(0, 20);
+  const text = `你是一位 ICF（國際教練聯盟）資深導師教練（Mentor Coach）。以下是我（教練）最近會談後自我記錄的「可以改進的部分」清單。請：
+
+一、把這些項目歸納成 2–4 個主題
+二、每個主題給具體改進建議，和一個可立即開始的練習方法
+三、每個主題附一句下次會談可以直接使用的示範句
+四、指出其中最優先處理的一項，說明原因
+
+清單：
+` + items.map((x,i)=>(i+1)+'. '+x.t+(x.r.date?'（'+x.r.date+'）':'')).join('\n');
+  copyText(text, '已複製，貼到你慣用的 AI 取得建議');
+}
+function copyAccPrompt(){
+  const text = `你是一位 ICF（國際教練聯盟）資深考官與導師教練（Mentor Coach）。我會在最後貼上一段教練會談逐字稿（已去識別化，「教練」是我，「客戶」是對方）。請依下列 ACC 八項核心職能逐一評估：
+
+1 提問和探詢：以開放式提問引導，而非給建議、教導或諮商
+2 存在狀態（being）：以夥伴身分與客戶同在，不急於解決問題
+3 共創明確協議：會談開始時有確認主題、目標、成功指標與對客戶的意義
+4 信任和安全感：認可、同理、支持、接納客戶
+5 臨在狀態：專注、開放、好奇，允許沉默
+6 積極聆聽：覆述、摘要、反映情緒與非語言訊息、使用客戶的用字
+7 啟發式探詢：例外問句、轉換視角／時空、奇蹟問句、GROW 等擴展客戶思考
+8 促進客戶成長：收尾時邀請客戶總結學習、設計行動、給予認可
+
+請輸出：
+一、總表：每項職能標示「到位／部分到位／未見」
+二、逐項評估：各引用 1–2 句逐字稿原文作為證據（沒有就寫「無」）
+三、最值得改進的 2 項職能：各給一個具體練習建議，和一句下次會談可直接使用的示範句
+四、整體回饋：1 個最大亮點、1 個最優先的成長點
+
+以下是逐字稿：
+`;
+  copyText(text, '已複製，記得逐字稿要先去識別化');
 }
 
 /* ---- 使用條款・隱私政策 ---- */
@@ -1426,11 +1558,14 @@ const HELP_HTML = `
 
 <h3>四個分頁</h3>
 <p><b>新增紀錄：</b>選客戶（或選「＋新增客戶」填代號）、填日期、自評分數、做得好與可改進、ACC 標記，填完按「儲存」。選好客戶後，會依「日期」自動算出這是第幾次會談（含補登舊日期）。</p>
-<p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖，可用上方「客戶篩選」只看某一位；可匯出 PDF 或全部文字。</p>
+<p><b>歷史紀錄：</b>回顧每一筆、看自評趨勢圖，可用上方「客戶篩選」只看某一位；匯出 PDF／文字會跟著篩選走（選了某位客戶就只匯出他的）。展開「洞察」可彙整所有強項與待改進——強項可複製成清單，待改進可一鍵加入導師提問，或複製「求建議提示詞」貼給 AI 取得具體建議。</p>
 <p><b>客戶：</b>管理客戶代號、目標與狀態（進行中／已結案）；點進單一客戶可看專屬趨勢圖和全部會談紀錄。若用這工具之前已和某位客戶談過幾次，在「開始記錄前已談次數」填上次數，編號就會接著算；補登舊會談後可按「依日期重新編號」一次修正全部編號。</p>
 <p><b>導師提問：</b>記下想問導師的問題，1-on-1 前可複製清單或匯出 Excel；拿到答案再填回存起來。</p>
 
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
+
+<h3>ACC 想評得更客觀？</h3>
+<p>自己勾 ACC 容易全勾。在「新增紀錄」的 ACC 區塊按「複製逐字稿 AI 分析提示詞」，貼到你慣用的 AI（ChatGPT／Claude）再附上會談逐字稿，AI 會逐項判斷哪些職能到位並引用原文佐證，再回來勾選。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
