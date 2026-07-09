@@ -430,6 +430,25 @@ function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(a)); schedulePush
 const CKEY = "coachingClients_v1";
 function loadC() { try { return JSON.parse(localStorage.getItem(CKEY)) || []; } catch(e){ return []; } }
 function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(a)); schedulePush(); }
+const DKEY = "coachingDeleted_v1";   // 刪除墓碑：避免另一台裝置把已刪的資料「復活」
+const SKEY = "coachingSyncedAt_v1";  // 上次看到的雲端 updated_at
+function loadDel(){ try { const d = JSON.parse(localStorage.getItem(DKEY)); return (d && d.r) ? d : {r:[],q:[],c:[]}; } catch(e){ return {r:[],q:[],c:[]}; } }
+function storeDel(d){ localStorage.setItem(DKEY, JSON.stringify(d)); }
+function markDeleted(kind, id){ const d = loadDel(); if (!d[kind].includes(id)) { d[kind].push(id); storeDel(d); } }
+/* 把雲端資料併進本機：id 聯集、本機優先、排除墓碑 */
+function mergeCloud(p){
+  const del = loadDel();
+  if (p.deleted) { ['r','q','c'].forEach(k=>{ (p.deleted[k]||[]).forEach(id=>{ if (!del[k].includes(id)) del[k].push(id); }); }); storeDel(del); }
+  const mergeArr = (localArr, cloudArr, delList) => {
+    const ids = new Set(localArr.map(x=>x.id));
+    (cloudArr||[]).forEach(x=>{ if (!ids.has(x.id) && !delList.includes(x.id)) localArr.push(x); });
+    return localArr.filter(x=>!delList.includes(x.id));
+  };
+  localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r)));
+  localStorage.setItem(QKEY, JSON.stringify(mergeArr(loadQ(), p.questions, del.q)));
+  localStorage.setItem(CKEY, JSON.stringify(mergeArr(loadC(), p.clients,   del.c)));
+  migrateClients(); updateCount(); updateAskCount();
+}
 function clientById(id) { return loadC().find(c=>c.id===id); }
 function clientRecs(id) { return load().filter(r=>r.clientId===id); }
 /* 把舊紀錄的 client 字串轉成客戶實體（去重：忽略大小寫與前後空白） */
@@ -500,6 +519,7 @@ async function initSync(){
 function startLocal(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  maybeOnboard();
 }
 function isInAppBrowser(){
   const ua = navigator.userAgent || '';
@@ -542,11 +562,13 @@ async function onLogin(user){
   document.getElementById('acct-bar').classList.remove('hidden');
   await syncPull();
   showView('new');
+  maybeOnboard();
 }
 async function doLogout(){
   if (fb.auth){ try { await fb.authMod.signOut(fb.auth); } catch(e){} }
   currentUser = null;
   localStorage.removeItem(KEY); localStorage.removeItem(QKEY); localStorage.removeItem(CKEY);
+  localStorage.removeItem(DKEY); localStorage.removeItem(SKEY);
   updateCount(); updateAskCount();
   document.getElementById('acct-bar').classList.add('hidden');
   showAuth();
@@ -561,6 +583,8 @@ async function syncPull(){
       if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
       if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
       if (Array.isArray(p.clients))   localStorage.setItem(CKEY, JSON.stringify(p.clients));
+      if (p.deleted && p.deleted.r)   storeDel(p.deleted);
+      localStorage.setItem(SKEY, String(snap.data().updated_at || Date.now()));
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
@@ -576,7 +600,17 @@ async function pushCloud(){
   if (!fb.db || !currentUser) return;
   try {
     const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
-    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC() }), updated_at: Date.now() });
+    // 防止互相覆蓋：若雲端有這台裝置沒看過的更新（另一台寫的），先併進本機再寫回
+    const lastSynced = parseInt(localStorage.getItem(SKEY), 10) || 0;
+    try {
+      const snap = await fb.fsMod.getDoc(ref);
+      if (snap.exists() && (snap.data().updated_at || 0) > lastSynced && snap.data().payload){
+        mergeCloud(JSON.parse(snap.data().payload));
+      }
+    } catch(e){}
+    const now = Date.now();
+    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(), deleted: loadDel() }), updated_at: now });
+    localStorage.setItem(SKEY, String(now));
   } catch(e){}
 }
 
@@ -650,6 +684,7 @@ function reopenQuestion(id) {
 }
 function deleteQuestion(id) {
   if (!confirm('刪除這個問題？')) return;
+  markDeleted('q', id);
   storeQ(loadQ().filter(x=>x.id!==id));
   updateAskCount(); renderAsk(); toast('已刪除');
 }
@@ -1303,6 +1338,7 @@ function editCurrent() {
 
 function deleteCurrent() {
   if (!confirm('確定刪除這筆紀錄？')) return;
+  markDeleted('r', currentId);
   store(load().filter(x=>x.id!==currentId));
   updateCount();
   toast('已刪除');
@@ -1496,6 +1532,7 @@ function renumberClient(id){
 function deleteClient(id){
   if (clientRecs(id).length) { toast('已有會談紀錄，請改用「已結案」'); return; }
   if (!confirm('刪除這位客戶？')) return;
+  markDeleted('c', id);
   storeC(loadC().filter(c=>c.id!==id));
   buildClientSel('');
   toast('已刪除'); showView('clients');
@@ -1700,6 +1737,22 @@ const ACC_AI_HTML = `
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
 <button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
+/* 首次使用 30 秒引導 */
+const OKEY = "coachingOnboarded_v1";
+const ONBOARD_HTML = `
+<h2>歡迎使用 👋</h2>
+<div class="lp-sub">30 秒看懂怎麼用</div>
+<p><b>1. 新增紀錄：</b>會談結束 15 分鐘內，選客戶、拉分數、寫下做得好與可改進。會談次數會自動編號。</p>
+<p><b>2. 歷史紀錄：</b>看自評趨勢圖、展開「洞察」彙整你的強項與待改進，可匯出 PDF。</p>
+<p><b>3. 客戶：</b>管理客戶與教練時數統計（申請 ICF 認證用得上）。</p>
+<p><b>4. 導師提問：</b>記下想問導師的問題，1-on-1 前一鍵匯出。</p>
+<div class="lp-note"><b>唯一要記住的規則：</b>客戶一律用「代號」，不要輸入真名或任何可辨識的資訊。</div>
+<button class="btn btn-primary" style="width:100%" onclick="closeLegal()">開始使用</button>`;
+function maybeOnboard(){
+  if (localStorage.getItem(OKEY)) return;
+  localStorage.setItem(OKEY, '1');
+  openModal(ONBOARD_HTML);
+}
 function openLegal(){ openModal(LEGAL_HTML); }
 function openHelp(){ openModal(HELP_HTML); }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
