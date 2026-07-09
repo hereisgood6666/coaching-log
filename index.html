@@ -31,6 +31,38 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .filter-bar select { flex: 1; width: auto; }
 .insight-item { font-size: 14px; margin-bottom: 7px; }
 .insight-item .qctx { display: inline; margin-left: 6px; }
+/* progress bars (ICF 時數破關) */
+.pb-row { margin-bottom: 13px; }
+.pb-row:last-of-type { margin-bottom: 2px; }
+.pb-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 5px; }
+.pb-name { font-weight: 600; color: #6b655c; }
+.pb-val { color: #a07d55; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pb-val .done-tag { color: #5a9e5f; font-size: 12px; }
+.pb-track { height: 10px; background: #f0ece5; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
+.pb-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #c9a27e, #b08968); transition: width .7s cubic-bezier(.22,.9,.35,1); }
+.pb-fill.done { background: linear-gradient(90deg, #7ab07f, #5a9e5f); }
+.pb-note { color: #a39b8e; font-size: 12px; margin-top: 8px; }
+/* mentor pack */
+.mentor-pre {
+  background: #faf6f0; border: 1px solid #eadfce; border-radius: 10px;
+  padding: 12px 14px; font-size: 13px; line-height: 1.65; color: #3a352f;
+  white-space: pre-wrap; word-break: break-word; max-height: 42vh; overflow-y: auto;
+  font-family: inherit; margin: 4px 0 0;
+}
+/* reflect report */
+.reflect-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+.pchip { border: 1px solid #e3d6c2; background: #fff; color: #8a7c68; border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
+.pchip.on { background: #b08968; color: #fff; border-color: #b08968; }
+.reflect-scores { display: flex; gap: 10px; margin: 12px 0 4px; }
+.reflect-score { flex: 1; background: #faf6f0; border: 1px solid #eadfce; border-radius: 10px; padding: 10px 4px; text-align: center; }
+.reflect-score .rs-num { font-size: 22px; font-weight: 700; color: #b08968; }
+.reflect-score .rs-name { font-size: 12px; color: #8a8378; margin-top: 2px; }
+.reflect-line { font-size: 14px; margin: 12px 0 0; line-height: 1.7; }
+.reflect-line b { color: #966b43; }
+.energy-tag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 700; margin-right: 6px; }
+.energy-good { background: #eaf3ea; color: #4d8752; }
+.energy-mid  { background: #f4efe8; color: #a07d55; }
+.energy-low  { background: #fbeee2; color: #a4693c; }
 .card {
   background: #fff; border-radius: 14px; padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
@@ -246,7 +278,7 @@ textarea { resize: vertical; min-height: 46px; }
         <span class="score-val" id="clientfeelVal">7</span>
       </div>
       <label>因為 <span class="hint">為什麼覺得客戶是這個感受</span></label>
-      <textarea id="f-because" placeholder="是什麼讓你這樣感覺客戶的狀態？"></textarea>
+      <textarea id="f-because" placeholder="例：客戶談到轉職時聲音變亮、身體往前傾"></textarea>
     </div>
 
     <div class="card">
@@ -302,6 +334,17 @@ textarea { resize: vertical; min-height: 46px; }
       <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受 <span id="chart-hint"></span></span></label>
       <div class="chart-box" id="trendChart"></div>
     </div>
+    <div class="card" id="reflect-card" style="display:none">
+      <div class="reflect-head">
+        <label style="margin:0">教練反思統計</label>
+        <span>
+          <button class="pchip" data-d="7"  onclick="setReflectPeriod(7)">近 7 天</button>
+          <button class="pchip" data-d="30" onclick="setReflectPeriod(30)">近 30 天</button>
+          <button class="pchip" data-d="0"  onclick="setReflectPeriod(0)">全部</button>
+        </span>
+      </div>
+      <div id="reflect-body"></div>
+    </div>
     <div class="actions" style="margin-bottom:14px">
       <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
       <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
@@ -311,14 +354,17 @@ textarea { resize: vertical; min-height: 46px; }
       <button class="btn btn-ghost" onclick="exportAllText()">匯出全部文字</button>
       <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
     </div>
+    <div class="actions" style="margin:-6px 0 14px">
+      <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
+    </div>
     <div id="hist-list"></div>
   </div>
 
   <!-- ===== CLIENTS ===== -->
   <div id="view-clients" class="hidden">
     <div class="card" id="hours-card" style="display:none">
-      <label style="margin-top:0">教練時數 <span class="hint">ICF ACC 需 100 小時／8 位客戶，其中 25 小時在申請前 18 個月內</span></label>
-      <div id="hours-stats" style="font-size:14px;line-height:1.8"></div>
+      <label style="margin-top:0">ICF ACC 時數破關 <span class="hint">認證申請門檻</span></label>
+      <div id="hours-stats" style="margin-top:10px"></div>
       <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="exportHoursCSV()">匯出時數表（CSV）</button>
     </div>
     <div class="card">
@@ -588,7 +634,7 @@ async function syncPull(){
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
-  } catch(e){}
+  } catch(e){ toast('⚠️ 無法讀取雲端資料，目前顯示本機內容'); }
   migrateQ(); migrateClients(); migrateAcc(); buildClientSel(''); updateCount(); updateAskCount();
 }
 function schedulePush(){
@@ -611,8 +657,12 @@ async function pushCloud(){
     const now = Date.now();
     await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(), deleted: loadDel() }), updated_at: now });
     localStorage.setItem(SKEY, String(now));
-  } catch(e){}
+    pushFailed = false;
+  } catch(e){
+    if (!pushFailed) { pushFailed = true; toast('⚠️ 雲端同步失敗，資料仍保存在本機'); }
+  }
 }
+let pushFailed = false;
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1114,7 +1164,7 @@ function showView(v) {
   document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
   document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
-  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); }
+  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); renderReflect(); }
   if (v==='ask') renderAsk();
   if (v==='clients') { renderHours(); renderClients(); }
 }
@@ -1222,23 +1272,39 @@ function updateStats(){
     + (mins ? '、'+(Math.round(mins/60*10)/10)+' 小時' : '')
     + (goods ? '、'+goods+' 條強項' : '');
 }
-/* 教練時數（客戶頁） */
+/* 教練時數破關儀表板（客戶頁）：原生 CSS 進度條 */
 function renderHours(){
   const card = document.getElementById('hours-card');
   const recs = load();
-  const withMins = recs.filter(r=>parseInt(r.mins,10)>0);
   if (!recs.length) { card.style.display = 'none'; return; }
   card.style.display = '';
-  const totalMins = withMins.reduce((s,r)=>s+parseInt(r.mins,10),0);
+  const withMins = recs.filter(r=>parseInt(r.mins,10)>0);
   const cut = new Date(); cut.setMonth(cut.getMonth()-18);
   const cutStr = cut.getFullYear()+'-'+String(cut.getMonth()+1).padStart(2,'0')+'-'+String(cut.getDate()).padStart(2,'0');
-  const recentMins = withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10),0);
-  const nClients = new Set(recs.map(r=>r.clientId).filter(Boolean)).size;
   const h = m => Math.round(m/60*10)/10;
+  const totalH  = h(withMins.reduce((s,r)=>s+parseInt(r.mins,10),0));
+  const recentH = h(withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10),0));
+  const nClients = new Set(recs.map(r=>r.clientId).filter(Boolean)).size;
+  const bar = (name, val, goal, unit) => {
+    const pct = Math.min(100, goal ? val/goal*100 : 0);
+    const done = val >= goal;
+    return `<div class="pb-row">
+      <div class="pb-head">
+        <span class="pb-name">${name}</span>
+        <span class="pb-val">${val} / ${goal} ${unit}${done?'　<span class="done-tag">✓ 達標</span>':''}</span>
+      </div>
+      <div class="pb-track"><div class="pb-fill${done?' done':''}" data-w="${pct.toFixed(1)}" style="width:0%"></div></div>
+    </div>`;
+  };
   document.getElementById('hours-stats').innerHTML =
-    '總計：<b>'+h(totalMins)+' 小時</b>（'+recs.length+' 次會談，'+nClients+' 位客戶）<br>'
-    + '近 18 個月：<b>'+h(recentMins)+' 小時</b>'
-    + (withMins.length < recs.length ? '<br><span class="hint">有 '+(recs.length-withMins.length)+' 筆未填時長，未計入時數</span>' : '');
+    bar('總時數', totalH, 100, '小時') +
+    bar('近 18 個月', recentH, 25, '小時') +
+    bar('不重複客戶', nClients, 8, '位') +
+    (withMins.length < recs.length ? '<div class="pb-note">有 '+(recs.length-withMins.length)+' 筆未填時長，未計入時數</div>' : '');
+  // 微互動：下一個 frame 再設寬度，讓 transition 從 0 長出來
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('#hours-stats .pb-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
+  }));
 }
 function exportHoursCSV(){
   const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
@@ -1548,7 +1614,7 @@ function buildHistFilter(){
 }
 function onHistFilter(){
   histFilter = document.getElementById('hist-filter').value;
-  renderHist(); renderChart();
+  renderHist(); renderChart(); renderReflect();
   if (insightOpen) renderInsight();
 }
 
@@ -1737,6 +1803,111 @@ const ACC_AI_HTML = `
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
 <button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
+/* 教練反思統計報告（歷史頁）：平均分數、能量對齊指數、最常展現的職能 */
+let reflectDays = 30;
+function setReflectPeriod(d){ reflectDays = d; renderReflect(); }
+function renderReflect(){
+  const card = document.getElementById('reflect-card');
+  if (!card) return;
+  if (!load().length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.querySelectorAll('#reflect-card .pchip').forEach(b=>
+    b.classList.toggle('on', parseInt(b.dataset.d,10) === reflectDays));
+  let arr = load();
+  if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
+  if (reflectDays > 0){
+    const c = new Date(Date.now() - reflectDays*86400000);
+    const cutStr = c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+String(c.getDate()).padStart(2,'0');
+    arr = arr.filter(r=>(r.date||'') >= cutStr);
+  }
+  const body = document.getElementById('reflect-body');
+  if (!arr.length){ body.innerHTML = '<div class="empty" style="padding:14px 0">這段期間沒有紀錄</div>'; return; }
+  const avg = vals => { const v = vals.filter(x=>!isNaN(x)); return v.length ? Math.round(v.reduce((s,x)=>s+x,0)/v.length*10)/10 : null; };
+  const aPerf = avg(arr.map(r=>parseFloat(r.perf)));
+  const aFeel = avg(arr.map(r=>parseFloat(r.feel)));
+  const aCf   = avg(arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):NaN));
+  // 能量對齊指數：每筆三分數的最大差距，取平均（差距越小＝越同頻）
+  const spreads = arr.map(r=>{
+    const v = [parseFloat(r.perf), parseFloat(r.feel), r.clientfeel!=null?parseFloat(r.clientfeel):NaN].filter(x=>!isNaN(x));
+    return v.length >= 2 ? Math.max(...v) - Math.min(...v) : null;
+  }).filter(x=>x!=null);
+  let energyHtml = '<span class="hint">填入分數的紀錄不足，暫時無法計算</span>';
+  if (spreads.length){
+    const sp = Math.round(spreads.reduce((s,x)=>s+x,0)/spreads.length*10)/10;
+    let tag, cls, msg;
+    if (sp <= 1)      { tag='高度同頻'; cls='energy-good'; msg='你、你的表現與客戶幾乎在同一個頻率上，臨在狀態很穩，繼續保持。'; }
+    else if (sp <= 2) { tag='大致同頻'; cls='energy-good'; msg='多數會談中你和客戶的狀態接近，偶有落差——留意那幾次發生了什麼。'; }
+    else if (sp <= 3) { tag='偶有落差'; cls='energy-mid';  msg='你的感受和客戶感受常不同步，會談中可以多做一次狀態核對（「你現在感覺如何？」）。'; }
+    else              { tag='落差偏大'; cls='energy-low';  msg='分數間的落差偏大，建議直接和客戶核對感受，並把觀察到的證據寫進「因為」欄位。'; }
+    energyHtml = '<span class="energy-tag '+cls+'">'+tag+'</span>平均差距 <b>'+sp+'</b> 分。'+msg;
+  }
+  // 最常勾選的核心職能（前三）
+  const cnt = ACC.map(()=>0);
+  arr.forEach(r=>(r.acc||[]).forEach((x,i)=>{ if (x.on) cnt[i]++; }));
+  const top = cnt.map((n,i)=>({n,i})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n || a.i-b.i).slice(0,3);
+  const accHtml = top.length
+    ? '這段期間你最穩定展現的是：' + top.map(x=>'<b>'+ACC[x.i][0].replace(/^\d+ · /,'')+'</b>（'+x.n+'/'+arr.length+' 次）').join('、')
+      + '。這是你教練風格的底色，值得肯定。'
+    : '<span class="hint">這段期間還沒有勾選職能標記</span>';
+  const cell = (n,name) => '<div class="reflect-score"><div class="rs-num">'+(n!=null?n:'–')+'</div><div class="rs-name">'+name+'</div></div>';
+  body.innerHTML =
+    '<div class="reflect-scores">' + cell(aPerf,'平均自評表現') + cell(aFeel,'平均自評感受') + cell(aCf,'平均客戶感受') + '</div>'
+    + '<div class="reflect-line">⚡ <b>能量對齊：</b>' + energyHtml + '</div>'
+    + '<div class="reflect-line">🌟 <b>職能亮點：</b>' + accHtml + '</div>'
+    + '<div class="reflect-line" style="color:#a39b8e;font-size:12px">共 ' + arr.length + ' 筆紀錄'
+    + (histFilter && clientById(histFilter) ? '（客戶：'+esc(clientById(histFilter).code)+'）' : '') + '</div>';
+}
+
+/* 導師督導包：彙整待問問題 + 浮現的問題 + 待改進，去識別化打包 */
+let _mentorPack = '';
+function buildMentorPack(){
+  let recs = load();
+  const fc = histFilter ? clientById(histFilter) : null;
+  if (fc) recs = recs.filter(r=>r.clientId===histFilter);
+  recs = recs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id).slice(0, 10);
+  const pend = loadQ().filter(x=>!x.answered).sort((a,b)=>a.id-b.id);
+  const ctx = r => ((r.client||'')+' '+formatSession(r.session||'')).trim();
+  const L = [];
+  L.push('# 導師督導包');
+  L.push('產生日期：'+todayStr()+(fc ? '　範圍：客戶 '+fc.code : '　範圍：全部客戶'));
+  L.push('資料：最近 '+recs.length+' 次會談（客戶均為代號，無可辨識個資）');
+  L.push('');
+  L.push('---');
+  L.push('');
+  L.push('## 一、想問導師的問題（待回答 '+pend.length+' 題）');
+  L.push('');
+  if (pend.length) pend.forEach((x,i)=>L.push((i+1)+'. '+x.q+(x.ctx?'（情境：'+x.ctx+'）':'')));
+  else L.push('（目前沒有待問的問題）');
+  L.push('');
+  L.push('## 二、會談後馬上浮現的問題');
+  L.push('');
+  const insts = recs.filter(r=>r.instant);
+  if (insts.length) insts.forEach(r=>L.push('- '+(r.date||'')+'（'+ctx(r)+'）：'+r.instant));
+  else L.push('（無）');
+  L.push('');
+  L.push('## 三、我覺得可以改進的部分');
+  L.push('');
+  const imps = [];
+  recs.forEach(r=>(r.improve||[]).forEach(t=>imps.push({t, r})));
+  if (imps.length) imps.forEach(x=>L.push('- '+(x.r.date||'')+'（'+(x.r.client||'')+'）：'+x.t));
+  else L.push('（無）');
+  L.push('');
+  L.push('---');
+  L.push('（本文件由「會談後快速記錄」產生；客戶一律使用代號）');
+  return L.join('\n');
+}
+function openMentorPack(){
+  if (!load().length && !loadQ().some(x=>!x.answered)) { toast('還沒有可打包的內容'); return; }
+  _mentorPack = buildMentorPack();
+  openModal(`
+<h2>導師督導包</h2>
+<div class="lp-sub">已彙整：待問問題、會談後浮現的問題、待改進（去識別化）</div>
+<div class="lp-note"><b>寄出前請掃一眼：</b>確認內文沒有不小心寫進客戶真名或可辨識細節（工具只存代號，但自由文字欄位以你輸入的為準）。</div>
+<pre class="mentor-pre">${esc(_mentorPack)}</pre>
+<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="copyMentorPack()">一鍵複製整篇文字</button>`);
+}
+function copyMentorPack(){ if (_mentorPack) copyText(_mentorPack, '督導包已複製，貼給導師吧'); }
+
 /* 首次使用 30 秒引導 */
 const OKEY = "coachingOnboarded_v1";
 const ONBOARD_HTML = `
