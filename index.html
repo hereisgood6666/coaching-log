@@ -186,10 +186,26 @@ textarea { resize: vertical; min-height: 46px; }
 /* chart */
 .chart-box { width: 100%; }
 /* auth */
-.auth-box { max-width: 360px; margin: 40px auto; background:#fff; border-radius:14px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
-.auth-box h2 { font-size:18px; margin:0 0 4px; }
-.auth-box .sub { margin-bottom:16px; }
-.auth-msg { color:#c0392b; font-size:13px; min-height:18px; margin:6px 0; }
+.auth-box {
+  max-width: 400px; margin: 7vh auto 0; background:#fff; border-radius:18px;
+  padding:32px 26px 20px; text-align:center;
+  box-shadow: 0 10px 40px rgba(176,137,104,.14), 0 1px 3px rgba(0,0,0,.05);
+}
+.auth-logo {
+  width:58px; height:58px; border-radius:17px; margin:0 auto 14px;
+  background: linear-gradient(135deg, #c9a27e, #a87f5c);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:26px; font-weight:700;
+  box-shadow: 0 4px 14px rgba(176,137,104,.35);
+}
+.auth-greet { font-size:15px; color:#a07d55; font-weight:600; margin-bottom:6px; }
+.auth-box h2 { font-size:22px; margin:0 0 4px; letter-spacing:.5px; }
+.auth-box .sub { margin-bottom:20px; }
+.auth-features { display:flex; justify-content:center; gap:16px; color:#a39b8e; font-size:12px; margin:16px 0 4px; flex-wrap:wrap; }
+.auth-msg { color:#b3541e; font-size:13px; min-height:18px; margin:8px 0 0; }
+.btn { transition: transform .1s, box-shadow .15s; }
+.btn:active { transform: scale(.98); }
+.btn-primary { box-shadow: 0 3px 10px rgba(176,137,104,.3); }
 .auth-hint { background:#fbeee2; border:1px solid #eadaca; border-radius:8px; padding:9px 11px; font-size:12px; color:#a4693c; line-height:1.6; margin-top:8px; }
 .auth-hint b { color:#8a5a2e; }
 .acct-bar { display:flex; justify-content:space-between; align-items:center; background:#f2ede5; border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:#6b655c; }
@@ -431,11 +447,21 @@ textarea { resize: vertical; min-height: 46px; }
 
 <div class="wrap hidden" id="auth-screen">
   <div class="auth-box">
+    <div class="auth-logo">記</div>
+    <div class="auth-greet" id="auth-greet">你好。</div>
     <h2>會談後快速記錄</h2>
-    <div class="sub">歡迎。用 Google 登入後，你的紀錄會在手機和電腦之間安靜地同步——這裡只屬於你。</div>
+    <div class="sub">給教練的會談後反思空間。登入後，你的紀錄會在手機和電腦之間安靜地同步——這裡只屬於你。</div>
     <button class="btn btn-primary" style="width:100%" onclick="doGoogleLogin()">使用 Google 登入</button>
     <div class="auth-msg" id="auth-msg" style="text-align:center"></div>
-    <div class="footer" style="margin-top:16px"><a onclick="openHelp()">使用說明</a><br>登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
+    <div class="auth-hint" id="inapp-hint" style="display:none;text-align:left;margin-top:12px">
+      <b>先換個瀏覽器，馬上就好 🙂</b><br>
+      你現在是從 LINE／FB 的內建視窗打開的，Google 基於安全規定不允許在這裡登入——<b>不是你操作錯了</b>。<br><br>
+      請點右上角「⋯」或分享鍵 → 選「<b>用 Safari／Chrome 開啟</b>」，我們在那裡等你。
+    </div>
+    <div class="auth-features">
+      <span>🔒 客戶代號制</span><span>☁️ 跨裝置同步</span><span>📱 免安裝</span>
+    </div>
+    <div class="footer" style="padding:10px 0 4px"><a onclick="openHelp()">使用說明</a>　·　登入即表示同意 <a onclick="openLegal()">使用條款・隱私政策</a></div>
   </div>
 </div>
 
@@ -574,13 +600,27 @@ function isInAppBrowser(){
 function showAuth(){
   document.getElementById('app').classList.add('hidden');
   document.getElementById('auth-screen').classList.remove('hidden');
-  authMsg('');   // 開啟時不顯示提示，按下登入才視情況顯示
+  authMsg('');   // 開啟時不顯示錯誤訊息
+  // 依時段問候
+  const g = document.getElementById('auth-greet');
+  if (g){
+    const h = new Date().getHours();
+    g.textContent = h < 5  ? '夜深了。記完這一場，就好好休息。'
+                  : h < 11 ? '早安。新的一天，從安靜的回顧開始。'
+                  : h < 18 ? '午安。忙碌之間，也記得回頭看看自己。'
+                  :          '晚安。今天也辛苦了。';
+  }
+  // 在 App 內建瀏覽器時，主動顯示引導（不等使用者按了才報錯）
+  const hint = document.getElementById('inapp-hint');
+  if (hint) hint.style.display = isInAppBrowser() ? '' : 'none';
 }
 function authMsg(m){ const el=document.getElementById('auth-msg'); if(el) el.textContent = m || ''; }
 async function doGoogleLogin(){
   if (!fb.auth){ authMsg('雲端尚未設定'); return; }
   if (isInAppBrowser()){
-    authMsg('目前是 App 內建瀏覽器，Google 不允許在此登入。請點右上角「⋯」或分享鍵，選「用 Safari／Chrome 開啟」後再登入。');
+    const hint = document.getElementById('inapp-hint');
+    if (hint) hint.style.display = '';
+    authMsg('');
     return;
   }
   authMsg('開啟 Google 登入…');
