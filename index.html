@@ -393,6 +393,7 @@ const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
 let currentId = null;   // record shown in detail
 let detailFrom = 'hist';        // where detail view was opened from ('hist' | 'client')
+let lastAutoSession = '';       // last auto-filled session value (only overwrite our own value)
 let currentClientId = null;     // client shown in client detail
 let histFilter = '';            // history view: filter by clientId ('' = all)
 
@@ -621,7 +622,37 @@ function exportPending() {
   });
 }
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function numToCh(n){ const m=['零','一','二','三','四','五','六','七','八','九','十']; const i=parseInt(n,10); return (i>=0&&i<=10)?m[i]:String(n); }
+function numToCh(n){
+  const m=['零','一','二','三','四','五','六','七','八','九'];
+  const i=parseInt(n,10);
+  if (isNaN(i)||i<0) return String(n);
+  if (i<10) return m[i];
+  if (i===10) return '十';
+  if (i<20) return '十'+m[i%10];
+  if (i<100) return m[Math.floor(i/10)]+'十'+(i%10? m[i%10]:'');
+  return String(i);
+}
+function chToNum(s){
+  const m = {'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+  if (/^\d+$/.test(s)) return parseInt(s,10);
+  if (!/^[零一二三四五六七八九十]+$/.test(s)) return null;
+  if (s === '十') return 10;
+  const i = s.indexOf('十');
+  if (i < 0) return s.length===1 ? m[s] : null;
+  const tens = i===0 ? 1 : m[s[0]];
+  const ones = i===s.length-1 ? 0 : m[s[s.length-1]];
+  if (tens==null || ones==null) return null;
+  return tens*10 + ones;
+}
+/* 從會談次數欄位解析出數字：'第三次'、'第3次會談'、'三'、'3' → 3；解析不了回 null */
+function parseSessionNum(s){
+  s = (s||'').trim();
+  if (!s) return null;
+  const m = s.match(/^第\s*([0-9零一二三四五六七八九十]+)\s*次/);
+  if (m) return chToNum(m[1]);
+  if (/^[0-9]+$/.test(s) || /^[零一二三四五六七八九十]+$/.test(s)) return chToNum(s);
+  return null;
+}
 function formatSession(s){
   s = (s||'').trim();
   if (!s) return '';
@@ -1058,6 +1089,7 @@ function saveRecord() {
 function resetForm() {
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-session').value = '';
+  lastAutoSession = '';
   document.getElementById('f-client-new').value = '';
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
@@ -1093,7 +1125,7 @@ function renderHist() {
         <span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span>
         <span class="rec-date">${r.date||''}</span>
       </div>
-      <div class="rec-meta">${esc(r.session)||''} · 自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}
+      <div class="rec-meta">${esc(formatSession(r.session))||''} · 自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}
         <span class="badge">ACC ${accN}/8</span></div>
     </div>`;
   }).join('');
@@ -1213,20 +1245,29 @@ function onClientSelChange(){
   if (sel.value === '__new__') { inp.focus(); return; }
   autoSessionFill();
 }
-/* 依「該客戶在此日期（含）之前的紀錄數 + 開始記錄前已談次數」自動算第幾次
-   僅在欄位空白或仍是自動格式（第Ｎ次）時覆蓋，不動使用者手改過的值 */
+/* 自動算第幾次：以「此日期之前最近一筆有編號的紀錄」為基準往下接，
+   所以中間有沒記到的會談時，只要把某一筆的次數手動改對，之後就會接著正確編號。
+   找不到基準時退回「開始記錄前已談次數 + 紀錄數 + 1」。
+   只覆蓋空白或自己剛帶入的值，不動使用者手改過的值。 */
 function autoSessionFill(){
   if (editId) return;
   const sel = document.getElementById('f-client-sel');
   if (!sel || !sel.value || sel.value === '__new__') return;
   const sess = document.getElementById('f-session');
   const cur = sess.value.trim();
-  if (cur && !/^第.+次(會談)?$/.test(cur)) return;
+  if (cur && cur !== lastAutoSession) return;
   const c = clientById(sel.value); if (!c) return;
   const d = document.getElementById('f-date').value || todayStr();
-  const prior = clientRecs(sel.value).filter(r=>(r.date||'') <= d).length;
-  const n = (parseInt(c.preSessions,10)||0) + prior + 1;
+  const rs = clientRecs(sel.value).filter(r=>(r.date||'') <= d)
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  let n = null;
+  for (let i = rs.length-1; i >= 0; i--){
+    const p = parseSessionNum(rs[i].session);
+    if (p != null){ n = p + (rs.length-1-i) + 1; break; }   // 基準編號 + 基準之後的紀錄數 + 1
+  }
+  if (n == null) n = (parseInt(c.preSessions,10)||0) + rs.length + 1;
   sess.value = '第' + numToCh(n) + '次';
+  lastAutoSession = sess.value;
 }
 function addClient(){
   const code = document.getElementById('new-client-code').value.trim();
@@ -1317,7 +1358,7 @@ function renumberClient(id){
   const off = parseInt(c.preSessions,10)||0;
   const rs = clientRecs(id).sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
   if (!rs.length) { toast('沒有紀錄可編號'); return; }
-  if (!confirm('依日期順序重新編號這位客戶的 '+rs.length+' 筆紀錄？\n（從第'+numToCh(off+1)+'次開始，會覆蓋原本的會談次數欄位）')) return;
+  if (!confirm('依日期順序重新編號這位客戶的 '+rs.length+' 筆紀錄？\n（從第'+numToCh(off+1)+'次開始「連續」編號，會覆蓋原本的會談次數欄位；若中間有沒記到的會談，請不要用這個，改為手動修正該筆次數）')) return;
   const map = {};
   rs.forEach((r,i)=>{ map[r.id] = '第'+numToCh(off+i+1)+'次'; });
   const recs = load();
