@@ -103,13 +103,67 @@ textarea { resize: vertical; min-height: 46px; }
 .acc-item {
   border: 1px solid #ece7de; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
 }
-.acc-head { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-.acc-head input { margin-top: 4px; width: 18px; height: 18px; accent-color: #b08968; flex-shrink: 0; }
+.acc-head { display: flex; align-items: flex-start; gap: 10px; }
 .acc-title { font-weight: 600; font-size: 14px; }
+.acc-alt { font-weight: 500; font-size: 12px; color: #a4693c; margin-left: 6px; }
 .acc-desc { color: #9a9184; font-size: 12px; margin-top: 2px; }
-.acc-item.checked { background: #f6f1ea; border-color: #d9c9b4; }
-.acc-note { margin-top: 8px; display: none; }
-.acc-item.checked .acc-note { display: block; }
+/* 四態：尚未評估／未到位／部分到位／到位 */
+.acc-item[data-st="2"] { background: #f6f1ea; border-color: #d9c9b4; }
+.acc-item[data-st="1"] { background: #fdf6ec; border-color: #e6d3ae; }
+.acc-item[data-st="-1"] { border-style: dashed; }
+.seg { display: flex; gap: 5px; margin-top: 9px; }
+.seg button {
+  flex: 1; padding: 7px 2px; border: 1px solid #ddd6ca; background: #fff; color: #8a8378;
+  border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.seg button.on { color: #fff; border-color: transparent; font-weight: 600; }
+.seg button[data-v="-1"].on { background: #cdc5b8; }
+.seg button[data-v="0"].on { background: #9a8f7e; }
+.seg button[data-v="1"].on { background: #d99a4e; }
+.seg button[data-v="2"].on { background: #b08968; }
+.acc-progress { font-size: 12.5px; color: #a4693c; background: #fdf3e6; border-radius: 7px; padding: 6px 9px; margin-bottom: 10px; }
+.acc-progress.done { color: #4e7a58; background: #eaf3ec; }
+.acc-field { margin-top: 9px; }
+.acc-flabel { font-size: 12px; color: #8a7c68; margin-bottom: 4px; font-weight: 600; }
+.acc-field input, .acc-field textarea {
+  width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #e2ddd3;
+  border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: #2c2a28;
+}
+.acc-field textarea { resize: vertical; min-height: 38px; }
+.mk-toggle {
+  margin-top: 10px; width: 100%; padding: 7px; border: 1px dashed #cdc5b8; background: transparent;
+  color: #8a7c68; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.mk-box { margin-top: 8px; border-top: 1px solid #ece7de; padding-top: 8px; }
+.mk-box.hidden { display: none; }
+.mk-rule { font-size: 11.5px; color: #a4693c; background: #fdf3e6; border-radius: 6px; padding: 5px 8px; margin-bottom: 8px; }
+.mk-row { margin-bottom: 10px; }
+.mk-top { display: flex; align-items: flex-start; gap: 8px; }
+.mk-top input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: #b08968; flex-shrink: 0; }
+.mk-top input[type=checkbox]:disabled { opacity: .4; }
+.mk-code { font-family: monospace; font-weight: 700; font-size: 13px; color: #6b655c; margin-right: 5px; }
+.mk-txt { font-size: 12.5px; color: #6b655c; line-height: 1.45; }
+.mk-ev { margin-top: 5px; padding-left: 25px; }
+.mk-ev input {
+  width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid #e2ddd3;
+  border-radius: 7px; font-size: 13px; font-family: inherit; background: #fff; color: #2c2a28;
+}
+.mk-hint { font-size: 11.5px; color: #b3ab9d; margin-top: 3px; padding-left: 25px; }
+.mk-hint.warn { color: #c47b3f; }
+.mk-row.hidden { display: none; }
+.mk-plain { font-size: 11.5px; color: #a39b8e; margin-top: 2px; line-height: 1.45; }
+.mk-badge {
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .3px;
+  background: #b08968; color: #fff; border-radius: 4px; padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
+}
+.mk-warn, .mk-tip { font-size: 11.5px; line-height: 1.5; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+.mk-warn { color: #a8503c; background: #fbeae6; }
+.mk-tip  { color: #4e7a58; background: #eaf3ec; }
+.mk-scope-row {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b655c;
+  font-weight: 500; margin: 0 0 12px; cursor: pointer;
+}
+.mk-scope-row input { width: 17px; height: 17px; accent-color: #b08968; }
 .actions { display: flex; gap: 10px; margin-top: 6px; }
 .btn {
   flex: 1; padding: 12px; border: none; border-radius: 11px; font-size: 15px;
@@ -319,8 +373,11 @@ textarea { resize: vertical; min-height: 46px; }
     </div>
 
     <div class="card">
-      <label>ICF 八大核心職能 Checklist <span class="hint">ACC 標記；只勾「說得出具體事例」的職能，並在備註寫下事例</span></label>
-      <button class="btn btn-ghost" style="width:100%;margin:6px 0 12px;background:#fbeee2;color:#a4693c" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
+      <label>ICF 八大核心職能 Checklist <span class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</span></label>
+      <button class="btn btn-ghost" style="width:100%;margin:6px 0 10px;background:#fbeee2;color:#a4693c" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
+      <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
+        只顯示 ACC 必備標記<span class="hint" id="mk-scope-hint"></span></label>
+      <div class="acc-progress" id="acc-progress"></div>
       <div id="acc-list"></div>
     </div>
 
@@ -442,7 +499,7 @@ textarea { resize: vertical; min-height: 46px; }
   </div>
 
   <div class="footer">
-    <a onclick="openHelp()">使用說明</a> · <a onclick="openLegal()">使用條款・隱私政策</a><br>© 2026 李懿恩
+    <a onclick="openHelp()">使用說明</a> · <a onclick="openLegal()">使用條款・隱私政策</a><br>© 2026 李懿恩　<span id="app-ver"></span>
   </div>
 </div>
 
@@ -470,15 +527,96 @@ textarea { resize: vertical; min-height: 46px; }
 <script>
 /* ICF 八大核心職能（2025 版架構；分四領域：基礎、共創關係、有效溝通、培養學習與成長） */
 const ACC = [
-  ["1 · 提問和探詢", "保持教練角色：以提問與探詢著眼當下與未來；不做顧問（給指示）、不做治療（聚焦過去情緒）"],
-  ["2 · 存在狀態", "being——教練一貫的存在方式：開放、好奇、以客戶為中心，相信客戶有自己的答案"],
-  ["3 · 共創明確協議", "打約四題：想談什麼？想帶走什麼/如何知道達到了？為何重要？遇到什麼阻礙？全程跟隨客戶議程"],
-  ["4 · 信任和安全感", "當下承認並肯定客戶的洞察與學習；探索其情感、觀點與信念；關心客戶這個人，而非只有問題"],
-  ["5 · 臨在狀態", "全程保持好奇；承認客戶提出的情境；允許客戶引導對話方向，在對話與沉默中為反思創造空間"],
-  ["6 · 積極聆聽", "用摘要與轉述確認理解；提出觀察幫客戶建立新聯想；聽語氣、能量、情緒與肢體的多層次訊息"],
-  ["7 · 啟發式探詢", "用提問、探索、沉默支持新覺察與轉換觀點（例外、奇蹟問句、GROW）；避免引導式或帶預設答案的提問"],
-  ["8 · 促進客戶成長", "與客戶共同把覺察化為具體行動與可衡量成果；承認進展、支持客戶結束會談；不強加行動"]
+  ["1 · 提問和探詢", "保持教練角色：以提問與探詢著眼當下與未來；不做顧問（給指示）、不做治療（聚焦過去情緒）", "展現道德規範"],
+  ["2 · 存在狀態", "being——教練一貫的存在方式：開放、好奇、以客戶為中心，相信客戶有自己的答案", "體現教練心態"],
+  ["3 · 共創明確協議", "打約四題：想談什麼？想帶走什麼/如何知道達到了？為何重要？遇到什麼阻礙？全程跟隨客戶議程", "建立和維持合約"],
+  ["4 · 信任和安全感", "當下承認並肯定客戶的洞察與學習；探索其情感、觀點與信念；關心客戶這個人，而非只有問題", "培養信任和安全感"],
+  ["5 · 臨在狀態", "全程保持好奇；承認客戶提出的情境；允許客戶引導對話方向，在對話與沉默中為反思創造空間", "維持臨在狀態"],
+  ["6 · 積極聆聽", "用摘要與轉述確認理解；提出觀察幫客戶建立新聯想；聽語氣、能量、情緒與肢體的多層次訊息", "積極聆聽"],
+  ["7 · 啟發式探詢", "用提問、探索、沉默支持新覺察與轉換觀點（例外、奇蹟問句、GROW）；避免引導式或帶預設答案的提問", "喚起覺察"],
+  ["8 · 促進客戶成長", "與客戶共同把覺察化為具體行動與可衡量成果；承認進展、支持客戶結束會談；不強加行動", "促進客戶成長"]
 ];
+/* ICF PCC Markers（2021 官方版）完整 39 條；acc:true 者為 ACC 評量會看的最低標準技能
+   c 編號／t 官方條目／p 白話／acc 是否屬 ACC 最低標準 */
+const MK = [
+  [{c:"1.1", d:"合格項1", t:"教練展現與 ICF 道德準則的一致性", p:"守住教練的位子：聚焦當下與未來，不當顧問、不做治療。開場保密聲明就是這一條的展現", acc:true}],
+  [{c:"2.1", d:"合格項2", t:"持續展現教練角色的一致性（若無「反證」則視為通過）", p:"開放、好奇、彈性、以客戶為中心。ACC 主要由筆試評量，錄音不評分", acc:true}],
+  [{c:"3.1", t:"與客戶確認（或再確認）本次會談想達成什麼", p:"議題是什麼？——要客戶親口說，且教練口頭確認", acc:true},
+   {c:"3.2", t:"與客戶定義（或再確認）成功的衡量標準", p:"談到什麼程度，你會覺得今天值得？——最常被跳過的一件", acc:true},
+   {c:"3.3", t:"探詢這個議題對客戶為何重要、有何意義", p:"為什麼是這件事、為什麼是現在？議題還沒定就跳到這裡＝順序錯了"},
+   {c:"3.4", t:"與客戶定義：要達成目標，他們認為需要處理什麼", p:"你覺得卡住的關鍵是什麼？"}],
+  [{c:"4.1", t:"認可並尊重客戶獨特的才能、洞見與投入", p:"看見他做了什麼、他是誰，說出來", acc:true},
+   {c:"4.2", t:"對客戶展現支持、同理或關心", p:"同理一定是短的，一長就變詮釋", acc:true},
+   {c:"4.3", t:"認可並支持客戶表達感受、觀點、擔憂、信念", p:"他表達什麼都接得住，不評判", acc:true},
+   {c:"4.4", t:"邀請客戶對教練的貢獻做任何回應，並接受其回應", p:"說完你的觀察要問「你怎麼看？」——他不同意也 OK"}],
+  [{c:"5.1", t:"回應客戶這個完整的「人」（who）", p:"回應的是他，不只是他的事"},
+   {c:"5.2", t:"回應客戶在本次會談想達成的（what）", p:"不忘議題，繞遠了要帶回來", acc:true},
+   {c:"5.3", t:"與客戶夥伴同行，支持客戶選擇這場會談發生什麼", p:"方向盤在客戶手上", acc:true},
+   {c:"5.4", t:"展現想更瞭解客戶的好奇", p:"真的好奇，不是套流程", acc:true},
+   {c:"5.5", t:"允許沉默、停頓與反思", p:"問完深問題就閉嘴等。沉默是客戶在工作"}],
+  [{c:"6.1", t:"提問與觀察依「這位客戶是誰」與其處境客製", p:"問題長在他身上，不是問題庫抽的", acc:true},
+   {c:"6.2", t:"探詢客戶使用的字詞", p:"撿他的關鍵字問——「怎麼樣的殘害？」就是好例子"},
+   {c:"6.3", t:"探詢客戶的情緒", p:"聽到情緒詞就問，不要滑過去"},
+   {c:"6.4", t:"探索客戶的能量轉變、非語言訊息與其他行為", p:"語速變慢、停頓變長、聲音變小——都值得問一句"},
+   {c:"6.5", t:"探詢客戶目前如何看待自己與他的世界", p:"他的自我敘事是什麼", acc:true},
+   {c:"6.6", t:"讓客戶把話說完，除非有明說的教練目的才介入", p:"介入是允許的，但要有目的、要說出來（「我在這邊打斷一下」）"},
+   {c:"6.7", t:"簡潔地反映或總結客戶所傳達的，以確保理解一致", p:"複述三原則——用客戶的字、長變短、零詮釋", acc:true}],
+  [{c:"7.1", t:"詢問客戶目前的思考、感受、價值觀、需求、想要、信念或行為", p:"問「現在的他」", acc:true},
+   {c:"7.2", t:"提問幫客戶探索超越目前的思考／感受——關於他自己（who）", p:"讓他看見自己沒看過的自己"},
+   {c:"7.3", t:"提問幫客戶探索超越目前的思考／感受——關於他的情境（what）", p:"換個角度看這件事", acc:true},
+   {c:"7.4", t:"提問幫客戶朝他想要的成果，探索超越目前的思考、感受或行為", p:"往他要去的地方問（如時間跳躍：70 歲的你怎麼看？）", acc:true},
+   {c:"7.5", t:"無執著地分享觀察、直覺、想法或感受，並邀請客戶探索", p:"分享可以，但不執著於你是對的，之後必接問句：「你聽完想說什麼？」"},
+   {c:"7.6", t:"問清晰、直接、以開放式為主的問題，一次一個，節奏留給客戶思考與感受", p:"一次一個！連問兩個客戶只會答後面那個", acc:true},
+   {c:"7.7", t:"使用大致清晰、簡潔的語言", p:"大白話。冰山、渴望這些流派術語，客戶沒學過就是黑話"},
+   {c:"7.8", t:"讓客戶說大部分的話", p:"說話佔比，教練越少越好（兩成上下很健康）"}],
+  [{c:"8.1", t:"邀請客戶探索朝本次目標的進展", p:"「今天進展到哪了？」"},
+   {c:"8.2", t:"邀請客戶陳述或探索本次關於「自己」的學習（who）", p:"「你對自己有什麼新發現？」"},
+   {c:"8.3", t:"邀請客戶陳述或探索本次關於「情境」的學習（what）", p:"「對這件事有什麼新看見？」", acc:true},
+   {c:"8.4", t:"邀請客戶思考如何運用本次的新學習", p:"學了要帶去哪"},
+   {c:"8.5", t:"與客戶共同設計會後的思考、反思或行動", p:"下一步他設計，你陪", acc:true},
+   {c:"8.6", t:"與客戶共同思考如何前進——資源、支持、潛在障礙", p:"「什麼會幫到你？什麼可能卡住你？」"},
+   {c:"8.7", t:"與客戶共同設計最適合他自己的當責方式", p:"他自己決定怎麼跟自己交代"},
+   {c:"8.8", t:"慶祝客戶的進展與學習", p:"真誠地慶祝，不是敷衍的「很棒」"},
+   {c:"8.9", t:"與客戶共同決定如何結束這場會談", p:"「還有想說的嗎？我們可以在這裡結束嗎？」", acc:true}]
+];
+/* 每項職能的評分提醒：紅＝直接扣分行為，綠＝導師常提醒的重點 */
+const CC_NOTE = [
+  {x:"告訴客戶該做什麼（顧問模式）；長時間停留在情緒性的過去（治療模式）；違反 ICF 倫理守則。",
+   o:"開場保密聲明是這一條的展現；「下指導棋」「往過去治療」是反思表裡自查的正確方向。"},
+  {x:"", o:"這條主要由筆試（ACC Exam）評量，不在錄音評分。"},
+  {x:"教練選題；沒有口頭確認議題與成果；客戶中途轉向而教練沒確認要不要跟。",
+   o:"「沒有議題，後面談的都白搭。」客戶說不出議題時換角度問：「如果一定要定一個，會是什麼？」——不給選項，讓他自己蹦出來。"},
+  {x:"客戶有激烈情緒（哭、哽咽）而教練沒有回應；評判、不尊重；錯過認可時機。",
+   o:"激烈情緒出現 → 停 2–3 秒、關注、再探詢「剛剛發生了什麼？」。忍住的情緒和潰堤的情緒接法不同；「你還好嗎？」有憐憫味，少用。"},
+  {x:"主導而非共創；急著填滿沉默；聚焦在自己的表現。", o:""},
+  {x:"複述冗長；用自己的字（＝詮釋）；總結後不邀請客戶確認。",
+   o:"「超級」「一定」這種極端詞就是你的字，不是客戶的字。也別一直總結——總結不是提問，促進不了思考；客戶長敘述後才需要 6.7。"},
+  {x:"引導式／封閉式／預設答案的問句佔多數；給選項（「是 A 還是 B？」）；問句反映的是教練的議程。", o:""},
+  {x:"教練指定行動；教練單方面決定收尾的時間與方式。", o:"學習要由客戶自己說出口才算數。"}
+];
+/* 這三項職能（4 培養信任、5 保持臨在、7 喚起覺察）的 ACC 必備標記，每條需兩個以上證據才能勾選 */
+const MK_TWO = [false, false, false, true, true, false, true, false];
+function needsTwo(i, m){ return MK_TWO[i] && !!m.acc; }
+const ACC_MK_N = MK.reduce((s,g)=>s+g.filter(m=>m.acc).length, 0);
+/* 四態：-1 尚未評估（預設）／0 未到位／1 部分到位／2 到位
+   「沒有填」和「判定未到位」是兩件事，不可混為一談 */
+const ST_NE = -1;
+const ST_LIST  = [ST_NE, 0, 1, 2];
+const ST_LABEL = { '-1':'尚未評估', '0':'未到位', '1':'部分到位', '2':'到位' };
+const ST_MARK  = { '-1':'—',       '0':'✗',      '1':'△',        '2':'✓' };
+function stLabel(st){ return ST_LABEL[String(st)] || ST_LABEL['-1']; }
+function stMark(st){ return ST_MARK[String(st)] || ST_MARK['-1']; }
+/* 舊資料（只有 on/note）：勾過的是到位，沒勾的一律視為尚未評估，不替使用者判定未到位 */
+function accSt(x){ return x ? (x.st != null ? x.st : (x.on ? 2 : ST_NE)) : ST_NE; }
+/* 證據個數：以逗號、頓號、分號、空白切分；單獨的 no／無／x 不算證據 */
+function evCount(s){
+  return String(s||'').split(/[,，、;；\s\n]+/).map(t=>t.trim())
+    .filter(t => t && !/^(no|none|x|無|沒有)[.。]?$/i.test(t)).length;
+}
+function mkId(i, code){ return i + '_' + code.replace('.', '_'); }
+/* 標記顯示範圍：true = 只顯示 ACC 必備標記 */
+let mkAccOnly = false;
+const APP_VER = "v3.0";   // 頁尾顯示；使用者回報問題時用來確認版本
 const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
 let currentId = null;   // record shown in detail
@@ -488,7 +626,27 @@ let currentClientId = null;     // client shown in client detail
 let histFilter = '';            // history view: filter by clientId ('' = all)
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
-function store(a) { localStorage.setItem(KEY, JSON.stringify(a)); schedulePush(); }
+function store(a) { localStorage.setItem(KEY, JSON.stringify(a)); saveRich(a); schedulePush(); }
+
+/* ===== 更新保護 =====
+   PREV3KEY：第一次跑 accv 3 遷移前，把當下資料原樣留一份，使用者可從「使用說明」還原
+   RKEY    ：狀態／改善筆記／marker 的影子副本。若使用者在另一台還沒更新的裝置上編輯同一筆，
+             舊版程式只會寫回 on/note，這份副本可以把被清掉的 imp 與 mk 補回來 */
+const PREV3KEY = "coachingBackup_preV3";
+const RKEY = "coachingAccRich_v3";
+function loadRich(){ try { return JSON.parse(localStorage.getItem(RKEY)) || {}; } catch(e){ return {}; } }
+function saveRich(recs){
+  try {
+    const m = {};
+    (recs||[]).forEach(r=>{
+      if (r.accv >= 4 && Array.isArray(r.acc)){
+        const keep = r.acc.map(x=>({ st: accSt(x), imp: (x&&x.imp)||'', mk: (x&&x.mk)||{} }));
+        if (keep.some(x=>x.st !== ST_NE || x.imp || Object.keys(x.mk||{}).length)) m[r.id] = keep;
+      }
+    });
+    localStorage.setItem(RKEY, JSON.stringify(m));   // 整份重建，刪掉的紀錄自動清除
+  } catch(e){}
+}
 const QKEY = "coachingQuestions_v1";
 function loadQ() { try { return JSON.parse(localStorage.getItem(QKEY)) || []; } catch(e){ return []; } }
 function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(a)); schedulePush(); }
@@ -512,7 +670,7 @@ function mergeCloud(p){
   localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r)));
   localStorage.setItem(QKEY, JSON.stringify(mergeArr(loadQ(), p.questions, del.q)));
   localStorage.setItem(CKEY, JSON.stringify(mergeArr(loadC(), p.clients,   del.c)));
-  migrateClients(); updateCount(); updateAskCount();
+  migrateClients(); migrateAcc(); migrateAcc3(); updateCount(); updateAskCount();
 }
 function clientById(id) { return loadC().find(c=>c.id===id); }
 function clientRecs(id) { return load().filter(r=>r.clientId===id); }
@@ -553,6 +711,53 @@ function migrateAcc(){
     r.accv = 2; ch = true;
   });
   if (ch) { localStorage.setItem(KEY, JSON.stringify(recs)); schedulePush(); }
+}
+/* v2（勾／不勾 + 備註）→ v4（四態 + 改善筆記 + marker 證據）
+   勾 → 到位(2)、沒勾 → 未到位(0)；備註原樣保留，marker 留空待補 */
+function migrateAcc3(){
+  const raw = localStorage.getItem(KEY);
+  const recs = load(); let ch = false;
+  const todo = recs.filter(r=>r.accv < 4 && Array.isArray(r.acc) && r.acc.length === 8);
+  if (!todo.length) return;
+  // 第一次遷移前留一份原樣快照，之後不再覆寫
+  if (!localStorage.getItem(PREV3KEY)){
+    try { localStorage.setItem(PREV3KEY, JSON.stringify({ at: todayStr(), raw: raw })); } catch(e){}
+  }
+  const rich = loadRich();
+  recs.forEach(r=>{
+    if (r.accv >= 4 || !Array.isArray(r.acc) || r.acc.length !== 8) return;
+    const sh = rich[r.id];              // 這筆之前有沒有填過狀態／改善筆記／marker
+    r.acc = r.acc.map((x,i)=>{
+      const s = sh && sh[i];
+      const on = !!(x && x.on);
+      let st;
+      if (on) st = 2;                             // 舊版勾過 → 到位
+      else if (x && x.st != null && x.st !== 0) st = x.st;   // 本來就是四態資料，原樣保留
+      else if (s) st = (s.st === 2 ? 0 : s.st);   // 舊版把勾取消掉＝明確表示沒做到
+      else st = ST_NE;                            // 沒勾也沒填過 → 尚未評估，不替使用者判定
+      return {
+        st: st,
+        on: st === 2,                    // 保留給舊版頁面讀，避免多裝置同步時看不到
+        note: (x && x.note) || '',
+        imp: (x && x.imp) || (s && s.imp) || '',  // 舊版覆寫掉的改善筆記補回來
+        mk:  (x && x.mk && Object.keys(x.mk).length ? x.mk : (s && s.mk) || {})
+      };
+    });
+    r.accv = 4; ch = true;
+  });
+  if (ch) { localStorage.setItem(KEY, JSON.stringify(recs)); saveRich(recs); schedulePush(); }
+}
+/* 從更新前的快照還原（「使用說明」裡的按鈕） */
+function restorePreV3(){
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem(PREV3KEY)); } catch(e){}
+  if (!snap || !snap.raw) { toast('沒有找到更新前的備份'); return; }
+  if (!confirm('這會把紀錄還原成 ' + (snap.at||'更新前') + ' 的狀態。\n更新後才填的狀態、改善筆記與 marker 會消失，確定嗎？')) return;
+  localStorage.setItem(KEY, snap.raw);
+  localStorage.removeItem(RKEY);
+  localStorage.removeItem(PREV3KEY);
+  toast('已還原，重新載入中…');
+  setTimeout(()=>location.reload(), 800);
 }
 
 /* ===== 雲端同步（Firebase，選用；沒有填設定時自動用本機模式）===== */
@@ -668,7 +873,7 @@ async function syncPull(){
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
   } catch(e){ toast('⚠️ 無法讀取雲端資料，目前顯示本機內容'); }
-  migrateQ(); migrateClients(); migrateAcc(); buildClientSel(''); updateCount(); updateAskCount();
+  migrateQ(); migrateClients(); migrateAcc(); migrateAcc3(); buildClientSel(''); updateCount(); updateAskCount();
 }
 function schedulePush(){
   if (!fb.db || !currentUser) return;
@@ -864,16 +1069,22 @@ function recordMainHTML(r){
     ${list('這次的特殊狀況', r.special)}`;
 }
 function recordAccHTML(r){
-  const done=[], undone=[];
+  const g = {}; ST_LIST.forEach(s=>g[s]=[]);
   (r.acc||[]).forEach((x,i)=>{
-    const mark = x.on?'✓':'✗';
-    const h = `<div class="accitem">${mark} 核心職能 ${ACC[i][0]}${x.on&&x.note?`<div class="accnote">${esc(x.note)}</div>`:''}</div>`;
-    (x.on?done:undone).push(h);
+    const st = accSt(x);
+    const mkl = mkLines(x, i);
+    const h = `<div class="accitem">${stMark(st)} 核心職能 ${ACC[i][0]}
+      ${x.note?`<div class="accnote">${esc(x.note)}</div>`:''}
+      ${x.imp?`<div class="accnote accimp">需要改善：${esc(x.imp)}</div>`:''}
+      ${mkl.length?`<div class="accnote">${mkl.map(esc).join('<br>')}</div>`:''}</div>`;
+    g[st].push(h);
   });
+  const ne = g[ST_NE].length;
   return `
     <div class="acc-page-head"><h2 style="margin:0">ACC 標記</h2><span class="date">客戶：${esc(r.client)||'（未填）'}　${r.date||''}</span></div>
-    <div class="accsub">有做到（${done.length}）</div>${done.length?done.join(''):'<div>—</div>'}
-    <div class="accsub">沒做到（${undone.length}）</div>${undone.length?undone.join(''):'<div>—</div>'}`;
+    ${ne ? `<div class="accnote" style="margin-bottom:8pt">本場有 ${ne} 項尚未評估——未評估不等於未到位。</div>` : ''}
+    ${[2,1,0,ST_NE].map(s=>
+      `<div class="accsub">${stLabel(s)}（${g[s].length}）</div>${g[s].length?g[s].join(''):'<div>—</div>'}`).join('')}`;
 }
 function exportPDF(){
   let arr = load();
@@ -916,6 +1127,7 @@ const PRINT_CSS = `
 #print-root .accsub{ font-weight:bold; font-size:11pt; color:#6b655c; margin:10pt 0 5pt; }
 #print-root .accitem{ margin:0 0 6pt; font-size:12pt; }
 #print-root .accnote{ color:#9a9184; font-size:10.5pt; padding-left:18pt; margin-top:2pt; }
+#print-root .accimp{ color:#a4693c; }
 `;
 function printRecordsPDF(records, fname){
   const pages = records.map(r =>
@@ -1088,7 +1300,7 @@ function restoreJSON(e) {
         d.clients.forEach(x=>{ if(!cids.has(x.id)) ccur.push(x); });
         storeC(ccur);
       }
-      migrateClients(); migrateAcc(); buildClientSel(''); buildHistFilter();
+      migrateClients(); migrateAcc(); migrateAcc3(); buildClientSel(''); buildHistFilter();
       updateCount(); renderHist(); renderChart();
       toast('已還原，新增 '+added+' 筆');
     } catch(err){ toast('這個檔案讀不出來，請確認是本工具下載的備份檔'); }
@@ -1126,13 +1338,21 @@ function recordToText(r) {
   if(r.insight) lines.push('客戶受到啟發／頓悟的時刻：'+r.insight);
   if(r.improve&&r.improve.length){ lines.push('我可以改進的部分：'); r.improve.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
   if(r.special&&r.special.length){ lines.push('這次的特殊狀況：'); r.special.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
-  const accDone = (r.acc||[]).map((x,i)=>x.on?('    ✓ 核心職能 '+ACC[i][0]+(x.note?'　—　'+x.note:'')):'').filter(Boolean);
-  const accUndone = (r.acc||[]).map((x,i)=>!x.on?('    ✗ 核心職能 '+ACC[i][0]):'').filter(Boolean);
+  const g = {}; ST_LIST.forEach(s=>g[s]=[]);
+  (r.acc||[]).forEach((x,i)=>{
+    const st = accSt(x);
+    const sub = [];
+    sub.push('    '+stMark(st)+' 核心職能 '+ACC[i][0]+(x.note?'　—　'+x.note:''));
+    if (x.imp) sub.push('        需要改善：'+x.imp);
+    mkLines(x,i).forEach(l=>sub.push('        '+l));
+    g[st].push(sub.join('\n'));
+  });
   lines.push('ACC 標記：');
-  lines.push('  有做到（'+accDone.length+'）：');
-  if(accDone.length) accDone.forEach(l=>lines.push(l)); else lines.push('    —');
-  lines.push('  沒做到（'+accUndone.length+'）：');
-  if(accUndone.length) accUndone.forEach(l=>lines.push(l)); else lines.push('    —');
+  if (g[ST_NE].length) lines.push('  （本場有 '+g[ST_NE].length+' 項尚未評估——未評估不等於未到位）');
+  [2,1,0,ST_NE].forEach(st=>{
+    lines.push('  '+stLabel(st)+'（'+g[st].length+'）：');
+    if (g[st].length) g[st].forEach(l=>lines.push(l)); else lines.push('    —');
+  });
   return lines.join('\n');
 }
 
@@ -1161,28 +1381,165 @@ function buildAcc() {
   ACC.forEach((a, i) => {
     const item = document.createElement('div');
     item.className = 'acc-item'; item.id = 'acc-'+i;
+    item.dataset.st = '0';
+    const mkRows = (MK[i]||[]).map(m=>`
+      <div class="mk-row${m.acc?' is-acc':''}" id="mk-row-${mkId(i,m.c)}">
+        <div class="mk-top">
+          <input type="checkbox" id="mk-chk-${mkId(i,m.c)}">
+          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${m.acc?'<span class="mk-badge">ACC</span>':''}${m.t}
+            ${m.p?`<div class="mk-plain">${m.p}</div>`:''}</div>
+        </div>
+        <div class="mk-ev"><input type="text" id="mk-ev-${mkId(i,m.c)}"
+          placeholder="證據時間戳，例：10:08、11:31（沒有就寫 No）"></div>
+        <div class="mk-hint" id="mk-hint-${mkId(i,m.c)}"></div>
+      </div>`).join('');
+    const n = CC_NOTE[i] || {};
+    const noteHTML = (n.x?`<div class="mk-warn"><b>直接扣分：</b>${n.x}</div>`:'')
+                   + (n.o?`<div class="mk-tip"><b>導師提醒：</b>${n.o}</div>`:'');
     item.innerHTML = `
       <div class="acc-head">
-        <input type="checkbox" id="acc-chk-${i}">
         <div>
-          <div class="acc-title">核心職能 ${a[0]}</div>
+          <div class="acc-title">核心職能 ${a[0]}${a[2] && a[2] !== a[0].replace(/^\d+ · /,'') ? `<span class="acc-alt">${a[2]}</span>` : ''}</div>
           <div class="acc-desc">${a[1]}</div>
         </div>
       </div>
-      <div class="acc-note"><input type="text" id="acc-note-${i}" placeholder="這項的具體事例／備註（選填）"></div>`;
-    const chk = item.querySelector('input[type=checkbox]');
-    item.querySelector('.acc-head').onclick = (e) => {
-      if (e.target.tagName !== 'INPUT') chk.checked = !chk.checked;
-      item.classList.toggle('checked', chk.checked);
-    };
+      <div class="seg" id="acc-seg-${i}">
+        <button type="button" data-v="-1">尚未評估</button>
+        <button type="button" data-v="0">未到位</button>
+        <button type="button" data-v="1">部分到位</button>
+        <button type="button" data-v="2">到位</button>
+      </div>
+      <div class="acc-field">
+        <div class="acc-flabel">具體事例／證據</div>
+        <input type="text" id="acc-note-${i}" placeholder="做到的地方與時間戳（選填）">
+      </div>
+      <div class="acc-field">
+        <div class="acc-flabel">需要改善的地方</div>
+        <textarea id="acc-imp-${i}" rows="1" placeholder="這項要往哪裡練——不必勾選也可以寫（選填）"></textarea>
+      </div>
+      <button type="button" class="mk-toggle" id="mk-tog-${i}" onclick="toggleMk(${i})">
+        展開 ACC 標記（${(MK[i]||[]).length} 條）▾</button>
+      <div class="mk-box hidden" id="mk-box-${i}">
+        ${noteHTML}
+        ${MK_TWO[i] ? '<div class="mk-rule">這項職能的 ACC 必備標記，每條需要 2 個以上證據才能勾選</div>' : ''}
+        ${mkRows}
+      </div>`;
     box.appendChild(item);
+    item.querySelectorAll('#acc-seg-'+i+' button').forEach(b=>{
+      b.onclick = () => setAccSt(i, parseInt(b.dataset.v,10));
+    });
+    (MK[i]||[]).forEach(m=>{
+      const ev = document.getElementById('mk-ev-'+mkId(i,m.c));
+      ev.oninput = () => refreshMk(i, m.c);
+      refreshMk(i, m.c);
+    });
+    setAccSt(i, ST_NE);
+  });
+  const sh = document.getElementById('mk-scope-hint');
+  if (sh) sh.textContent = '（' + ACC_MK_N + ' 條；不勾則顯示全部 ' + MK.reduce((s,g)=>s+g.length,0) + ' 條 PCC Markers）';
+  applyMkScope();
+}
+/* 切換「只看 ACC 必備標記 / 全部 PCC Markers」——只影響顯示，已填的資料都留著 */
+function toggleMkScope(){
+  mkAccOnly = document.getElementById('mk-scope').checked;
+  applyMkScope();
+}
+function applyMkScope(){
+  MK.forEach((g,i)=>g.forEach(m=>{
+    const row = document.getElementById('mk-row-'+mkId(i,m.c));
+    if (row) row.classList.toggle('hidden', mkAccOnly && !m.acc);
+  }));
+  MK.forEach((g,i)=>{
+    const tog = document.getElementById('mk-tog-'+i);
+    const box = document.getElementById('mk-box-'+i);
+    if (!tog || !box) return;
+    const n = mkAccOnly ? g.filter(m=>m.acc).length : g.length;
+    if (box.classList.contains('hidden')) tog.textContent = '展開 ACC 標記（'+n+' 條）▾';
   });
 }
+function setAccSt(i, v){
+  const item = document.getElementById('acc-'+i);
+  item.dataset.st = String(v);
+  item.querySelectorAll('#acc-seg-'+i+' button').forEach(b=>
+    b.classList.toggle('on', parseInt(b.dataset.v,10) === v));
+  updateAccProgress();
+}
+/* 已評估幾項——提醒使用者哪些還沒看過，避免「沒填」被當成「未到位」 */
+function updateAccProgress(){
+  const el = document.getElementById('acc-progress');
+  if (!el) return;
+  let ne = 0;
+  ACC.forEach((a,i)=>{
+    const it = document.getElementById('acc-'+i);
+    if (it && parseInt(it.dataset.st,10) === ST_NE) ne++;
+  });
+  el.textContent = ne === 0 ? '八項都評過了'
+                 : ne === 8 ? '八項都還沒評估'
+                 : '已評 ' + (8-ne) + '/8，還有 ' + ne + ' 項尚未評估';
+  el.className = 'acc-progress' + (ne ? '' : ' done');
+}
+function toggleMk(i){
+  const box = document.getElementById('mk-box-'+i);
+  const open = box.classList.toggle('hidden') === false;
+  const n = mkAccOnly ? (MK[i]||[]).filter(m=>m.acc).length : (MK[i]||[]).length;
+  document.getElementById('mk-tog-'+i).textContent =
+    (open ? '收合 ACC 標記 ▴' : '展開 ACC 標記（'+n+' 條）▾');
+}
+/* 兩個證據的規則：不擋輸入，只擋勾選 */
+function refreshMk(i, code){
+  const id = mkId(i, code);
+  const ev = document.getElementById('mk-ev-'+id);
+  const chk = document.getElementById('mk-chk-'+id);
+  const hint = document.getElementById('mk-hint-'+id);
+  if (!ev || !chk) return;
+  const n = evCount(ev.value);
+  const m = (MK[i]||[]).find(x=>x.c === code) || {};
+  if (needsTwo(i, m)){
+    const ok = n >= 2;
+    chk.disabled = !ok;
+    if (!ok && chk.checked) chk.checked = false;
+    hint.textContent = ok ? ('證據 '+n+' 個，可勾選') : ('這項需要 2 個以上證據才能勾選（目前 '+n+' 個）');
+    hint.className = 'mk-hint' + (ok ? '' : ' warn');
+  } else {
+    chk.disabled = false;
+    hint.textContent = n ? ('證據 '+n+' 個') : '';
+    hint.className = 'mk-hint';
+  }
+}
 function getAcc() {
-  return ACC.map((a,i)=>({
-    on: document.getElementById('acc-chk-'+i).checked,
-    note: document.getElementById('acc-note-'+i).value.trim()
-  }));
+  return ACC.map((a,i)=>{
+    const st = parseInt(document.getElementById('acc-'+i).dataset.st||String(ST_NE), 10);
+    const mk = {};
+    (MK[i]||[]).forEach(m=>{
+      const id = mkId(i, m.c);
+      const on = document.getElementById('mk-chk-'+id).checked;
+      const evv = document.getElementById('mk-ev-'+id).value.trim();
+      if (on || evv) mk[m.c] = { on, ev: evv };
+    });
+    return {
+      st,
+      on: st === 2,                                        // 給舊版頁面讀
+      note: document.getElementById('acc-note-'+i).value.trim(),
+      imp:  document.getElementById('acc-imp-'+i).value.trim(),
+      mk
+    };
+  });
+}
+/* 把一筆紀錄的 marker 整理成可讀的行（給詳情、PDF、文字匯出共用） */
+/* 列表上的 ACC 徽章：全部沒評過就直說沒評過，不要顯示 0/8 讓人誤以為八項都沒做到 */
+function accBadgeText(r){
+  const acc = r.acc || [];
+  if (!acc.length) return 'ACC 未評估';
+  const n2 = acc.filter(x=>accSt(x)===2).length;
+  const n1 = acc.filter(x=>accSt(x)===1).length;
+  const ne = acc.filter(x=>accSt(x)===ST_NE).length;
+  if (ne === acc.length) return 'ACC 未評估';
+  return 'ACC ' + n2 + '/8' + (n1 ? '　部分 '+n1 : '') + (ne ? '　未評 '+ne : '');
+}
+function mkLines(x, i){
+  const mk = (x && x.mk) || {};
+  return (MK[i]||[]).filter(m=>mk[m.c] && (mk[m.c].on || mk[m.c].ev))
+    .map(m=>(mk[m.c].on ? '✓' : '·') + ' ' + (m.d||m.c) + (mk[m.c].ev ? '　' + mk[m.c].ev : ''));
 }
 
 /* ---- views ---- */
@@ -1239,7 +1596,7 @@ function saveRecord() {
     improve: getItems('improve-list'),
     special: getItems('special-list'),
     acc: getAcc(),
-    accv: 2
+    accv: 4
   };
   if (!rec.client && !rec.instant) { toast('請至少填客戶或問題'); return; }
   const arr = load();
@@ -1356,14 +1713,14 @@ function renderHist() {
   arr = arr.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
   if (!arr.length) { list.innerHTML = histFilter ? '<div class="empty">這位客戶還沒有紀錄</div>' : '<div class="empty">這裡還空著。<br>第一筆紀錄，就從今天的會談開始吧 🌱</div>'; return; }
   list.innerHTML = arr.map(r=>{
-    const accN = (r.acc||[]).filter(x=>x.on).length;
+    const accBadge = accBadgeText(r);
     return `<div class="rec" onclick="openDetail(${r.id})">
       <div class="rec-top">
         <span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span>
         <span class="rec-date">${r.date||''}</span>
       </div>
       <div class="rec-meta">${esc(formatSession(r.session))||''} · 自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}
-        <span class="badge">ACC ${accN}/8</span></div>
+        <span class="badge">${accBadge}</span></div>
     </div>`;
   }).join('');
 }
@@ -1376,11 +1733,18 @@ function openDetail(id, from) {
   if (!r) return;
   const listBlock = (title, items) => items && items.length
     ? `<div class="detail-field"><div class="detail-label">${title}</div><div class="detail-val"><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul></div></div>` : '';
-  const done = [], undone = [];
+  const groups = {};   // 依四態分組
+  ST_LIST.forEach(s=>groups[s] = []);
   (r.acc||[]).forEach((x,i)=>{
-    const mark = x.on ? '✓' : '✗';
-    const html = `<div class="acc-detail"><div class="acc-detail-title"><span class="acc-mark">${mark}</span>核心職能 ${ACC[i][0]}</div>${x.on&&x.note?`<div class="acc-detail-note">${esc(x.note)}</div>`:''}</div>`;
-    (x.on?done:undone).push(html);
+    const st = accSt(x);
+    const mkl = mkLines(x, i);
+    const html = `<div class="acc-detail">
+        <div class="acc-detail-title"><span class="acc-mark">${stMark(st)}</span>核心職能 ${ACC[i][0]}</div>
+        ${x.note?`<div class="acc-detail-note">${esc(x.note)}</div>`:''}
+        ${x.imp?`<div class="acc-detail-note" style="color:#c47b3f">需要改善：${esc(x.imp)}</div>`:''}
+        ${mkl.length?`<div class="acc-detail-note">${mkl.map(esc).join('<br>')}</div>`:''}
+      </div>`;
+    groups[st].push(html);
   });
   document.getElementById('detail-body').innerHTML = `
     <div class="rec-top"><span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span><span class="rec-date">${r.date||''}</span></div>
@@ -1397,10 +1761,9 @@ function openDetail(id, from) {
     ${listBlock('這次的特殊狀況', r.special)}
     <div class="detail-field">
       <div class="detail-label">ACC 標記</div>
-      <div class="acc-sub">有做到（${done.length}）</div>
-      <div class="acc-group">${done.length?done.join(''):'<div class="acc-none">—</div>'}</div>
-      <div class="acc-sub">沒做到（${undone.length}）</div>
-      <div class="acc-group">${undone.length?undone.join(''):'<div class="acc-none">—</div>'}</div>
+      ${[2,1,0,ST_NE].map(s=>`
+      <div class="acc-sub">${stLabel(s)}（${groups[s].length}）</div>
+      <div class="acc-group">${groups[s].length?groups[s].join(''):'<div class="acc-none">—</div>'}</div>`).join('')}
     </div>
   `;
   showView('detail');
@@ -1428,8 +1791,21 @@ function editCurrent() {
   (r.special&&r.special.length?r.special:['']).forEach(v=>addItem('special-list',v));
   buildAcc();
   (r.acc||[]).forEach((x,i)=>{
-    if(x.on){ document.getElementById('acc-chk-'+i).checked=true; document.getElementById('acc-'+i).classList.add('checked'); }
-    if(x.note) document.getElementById('acc-note-'+i).value = x.note;
+    setAccSt(i, accSt(x));
+    if (x.note) document.getElementById('acc-note-'+i).value = x.note;
+    if (x.imp)  document.getElementById('acc-imp-'+i).value  = x.imp;
+    const mk = x.mk || {};
+    let hasMk = false;
+    (MK[i]||[]).forEach(m=>{
+      const d = mk[m.c]; if (!d) return;
+      const id = mkId(i, m.c);
+      document.getElementById('mk-ev-'+id).value = d.ev || '';
+      refreshMk(i, m.c);
+      if (d.on && !document.getElementById('mk-chk-'+id).disabled)
+        document.getElementById('mk-chk-'+id).checked = true;
+      if (d.on || d.ev) hasMk = true;
+    });
+    if (hasMk) toggleMk(i);   // 有填過就直接展開，不用再找一次
   });
   editId = r.id;
   document.getElementById('saveBtn').textContent = '更新紀錄';
@@ -1594,7 +1970,7 @@ function openClient(id){
   document.getElementById('client-recs').innerHTML = rl.length
     ? '<div class="ask-sub">會談紀錄（'+rl.length+'）</div>' + rl.map(r=>`<div class="rec" onclick="openDetail(${r.id},'client')">
         <div class="rec-top"><span class="rec-client">${esc(formatSession(r.session))||'會談'}</span><span class="rec-date">${r.date||''}</span></div>
-        <div class="rec-meta">自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}<span class="badge">ACC ${(r.acc||[]).filter(x=>x.on).length}/8</span></div>
+        <div class="rec-meta">自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}<span class="badge">${accBadgeText(r)}</span></div>
       </div>`).join('')
     : '<div class="empty">這位客戶還沒有紀錄</div>';
   showView('clientdetail');
@@ -1669,6 +2045,8 @@ function renderInsight(){
   arr.forEach(r=>{
     (r.good||[]).forEach(t=>_insightGoods.push({t, r}));
     (r.improve||[]).forEach(t=>_insightImps.push({t, r}));
+    // ACC 標記裡寫的「需要改善的地方」也一起彙整進來
+    (r.acc||[]).forEach((x,i)=>{ if (x && x.imp) _insightImps.push({t: ACC[i][0].replace(/^\d+ · /,'') + '：' + x.imp, r}); });
   });
   const meta = r => `<span class="qctx">${esc(r.client)||''}　${r.date||''}</span>`;
   const gHtml = _insightGoods.length
@@ -1811,8 +2189,12 @@ const HELP_HTML = `
 
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
 
-<h3>ACC 想評得更客觀？</h3>
-<p>自己勾 ACC 容易全勾。在「新增紀錄」的 ACC 區塊按「🎯 用 AI 分析逐字稿」，照彈窗的三步驟做：AI 會逐項判斷哪些職能到位並引用原文佐證，再回來勾選。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
+<h3>ACC 標記怎麼填</h3>
+<p><b>四態：</b>每項職能選「尚未評估／未到位／部分到位／到位」。預設是「尚未評估」——沒去看的職能就讓它留著尚未評估，不要讓工具替你判成「未到位」，這兩件事不一樣。「具體事例／證據」和「需要改善的地方」兩個欄位隨時都能寫，不必先選狀態——導師判「部分到位」的那幾項，改善筆記就寫在這裡，會自動彙整進歷史頁的「洞察 → 待改進」和導師督導包。</p>
+<p><b>ACC 標記：</b>每項職能下方按「展開 ACC 標記」，裡面是 ICF PCC Markers（2021 官方版）完整 39 條，每條可填證據時間戳，編號跟導師回饋表對得起來。標了 <b>ACC</b> 徽章的 20 條是 ACC 評量會直接看的最低標準技能；其餘是 PCC 才要求的，先填著當練功地圖。上方勾「只顯示 ACC 必備標記」可以把畫面收成 20 條——只是隱藏，已填的資料不會不見。</p>
+<p><b>兩個證據的規則：</b>培養信任(4)、保持臨在(5)、喚起覺察(7) 這三項的 ACC 必備標記，ICF 規定每條要有 2 個以上證據才能勾選，工具會自動數——證據不足時勾選鍵鎖住，但文字欄位一直都能打字。沒有證據就照導師的寫法填 No（No 不計入證據數）。</p>
+<p><b>紅字綠字：</b>展開後每項職能上方會列出「直接扣分」的行為和導師提醒，錄音送評前掃一遍。</p>
+<p><b>想評得更客觀？</b>自己評容易全給到位。在 ACC 區塊按「🎯 用 AI 分析逐字稿」，照彈窗三步驟做。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
@@ -1832,7 +2214,7 @@ const ACC_AI_HTML = `
 <h3>怎麼用（3 步驟）</h3>
 <p><b>1. 準備逐字稿：</b>把會談錄音轉成文字，並先「去識別化」——客戶名字、公司等可辨識資訊改成代號。</p>
 <p><b>2. 複製提示詞：</b>按下方按鈕複製，貼到你慣用的 AI（ChatGPT、Claude、Gemini 都可以），接著在後面貼上逐字稿送出。</p>
-<p><b>3. 回來勾選：</b>AI 會逐項判斷八項職能「到位／部分到位／未見」並引用原文佐證。照結果回來勾 ACC，把佐證抄進備註。</p>
+<p><b>3. 回來標記：</b>AI 會逐項判斷八項職能「到位／部分到位／未見」並引用原文佐證。照結果回來選狀態，把佐證抄進「具體事例／證據」，把要練的地方寫進「需要改善的地方」。</p>
 
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
 <button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
@@ -1876,18 +2258,25 @@ function renderReflect(){
     energyHtml = '<span class="energy-tag '+cls+'">'+tag+'</span>平均差距 <b>'+sp+'</b> 分。'+msg;
   }
   // 最常勾選的核心職能（前三）
-  const cnt = ACC.map(()=>0);
-  arr.forEach(r=>(r.acc||[]).forEach((x,i)=>{ if (x.on) cnt[i]++; }));
+  const cnt = ACC.map(()=>0), cntP = ACC.map(()=>0);
+  arr.forEach(r=>(r.acc||[]).forEach((x,i)=>{ const s = accSt(x); if (s===2) cnt[i]++; else if (s===1) cntP[i]++; }));
+  const nm = i => ACC[i][0].replace(/^\d+ · /,'');
   const top = cnt.map((n,i)=>({n,i})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n || a.i-b.i).slice(0,3);
   const accHtml = top.length
-    ? '這段期間你最穩定展現的是：' + top.map(x=>'<b>'+ACC[x.i][0].replace(/^\d+ · /,'')+'</b>（'+x.n+'/'+arr.length+' 次）').join('、')
+    ? '這段期間你最穩定展現的是：' + top.map(x=>'<b>'+nm(x.i)+'</b>（'+x.n+'/'+arr.length+' 次）').join('、')
       + '。這是你教練風格的底色，值得肯定。'
-    : '<span class="hint">這段期間還沒有勾選職能標記</span>';
+    : '<span class="hint">這段期間還沒有標記到位的職能</span>';
+  const topP = cntP.map((n,i)=>({n,i})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n || a.i-b.i).slice(0,3);
+  const growHtml = topP.length
+    ? '最常落在「部分到位」的是：' + topP.map(x=>'<b>'+nm(x.i)+'</b>（'+x.n+'/'+arr.length+' 次）').join('、')
+      + '。反覆出現的那一項，就是下一階段的練功重點。'
+    : '<span class="hint">這段期間沒有標記為部分到位的職能</span>';
   const cell = (n,name) => '<div class="reflect-score"><div class="rs-num">'+(n!=null?n:'–')+'</div><div class="rs-name">'+name+'</div></div>';
   body.innerHTML =
     '<div class="reflect-scores">' + cell(aPerf,'平均自評表現') + cell(aFeel,'平均自評感受') + cell(aCf,'平均客戶感受') + '</div>'
     + '<div class="reflect-line">⚡ <b>能量對齊：</b>' + energyHtml + '</div>'
     + '<div class="reflect-line">🌟 <b>職能亮點：</b>' + accHtml + '</div>'
+    + '<div class="reflect-line">🌱 <b>成長重點：</b>' + growHtml + '</div>'
     + '<div class="reflect-line" style="color:#a39b8e;font-size:12px">共 ' + arr.length + ' 筆紀錄'
     + (histFilter && clientById(histFilter) ? '（客戶：'+esc(clientById(histFilter).code)+'）' : '') + '</div>';
 }
@@ -1926,6 +2315,23 @@ function buildMentorPack(){
   if (imps.length) imps.forEach(x=>L.push('- '+(x.r.date||'')+'（'+(x.r.client||'')+'）：'+x.t));
   else L.push('（無）');
   L.push('');
+  L.push('## 四、ACC 標記自評（部分到位／未到位）');
+  L.push('');
+  const accRows = [];
+  recs.forEach(r=>{
+    (r.acc||[]).forEach((x,i)=>{
+      const st = accSt(x);
+      if (st === ST_NE && !x.imp) return;      // 沒評估又沒筆記的，不進督導包
+      if (st === 2 && !x.imp) return;
+      if (!x.imp && st === 0) return;          // 只標未到位、沒寫改善筆記的略過，避免洗版
+      accRows.push('- '+(r.date||'')+'（'+ctx(r)+'）核心職能 '+ACC[i][0]+'　'+stLabel(st)
+        + (x.imp ? '\n　需要改善：'+x.imp : '')
+        + (mkLines(x,i).length ? '\n　'+mkLines(x,i).join('\n　') : ''));
+    });
+  });
+  if (accRows.length) accRows.forEach(l=>L.push(l));
+  else L.push('（無）');
+  L.push('');
   L.push('---');
   L.push('（本文件由「會談後快速記錄」產生；客戶一律使用代號）');
   return L.join('\n');
@@ -1959,13 +2365,27 @@ function maybeOnboard(){
   openModal(ONBOARD_HTML);
 }
 function openLegal(){ openModal(LEGAL_HTML); }
-function openHelp(){ openModal(HELP_HTML); }
+function openHelp(){
+  let extra = '';
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem(PREV3KEY)); } catch(e){}
+  if (snap && snap.raw){
+    extra = `<h3>還原到更新前</h3>
+<p>這個版本（${APP_VER}）把 ACC 標記從「打勾」改成四態自評，更新時自動幫你留了一份更新前的資料（${esc(snap.at||'')}）。
+用起來覺得不對勁的話可以還原回去——更新後才填的狀態、改善筆記與 marker 會一併消失，還原前建議先按「備份全部（下載檔）」。</p>
+<button class="btn btn-ghost" style="width:100%" onclick="restorePreV3()">還原到更新前的資料</button>`;
+  }
+  openModal(HELP_HTML + extra);
+}
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
 
 /* init */
+const _ver = document.getElementById('app-ver');
+if (_ver) _ver.textContent = APP_VER;
 migrateQ();
 migrateClients();
 migrateAcc();
+migrateAcc3();
 resetForm();
 updateCount();
 updateAskCount();
