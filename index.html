@@ -5,34 +5,74 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>會談後快速記錄</title>
 <style>
+/* ===== §6 色彩系統：一組變數，不留散落硬編碼色碼 =====
+   暖色（陶土 #A6604A）＝要你動手：主按鈕、選中狀態、焦點卡、每天填寫的那一面
+   冷色（深青 #16748C）＝事實與成績：時數、分數、已完成職能、統計圖表、洞察頁與匯出
+   底色用有色調的白，不用純白純黑 */
+:root {
+  color-scheme: light;          /* 深色系統下維持自家淺色配色，不讓瀏覽器反轉造成對比爆掉 */
+  --bg:        #FAF8F4;
+  --surface:   #FFFCF8;
+  --surface-2: #F6F1EA;
+  --ink:       #2C2A28;
+  --ink-2:     #5F5850;
+  --ink-3:     #7C746A;
+  --ink-4:     #948B80;
+  --line:      #E0DBD2;
+  --line-2:    #ECE7DE;
+  --line-3:    #F0ECE5;
+  --line-dash: #CDC5B8;
+  --warm:      #A6604A;
+  --warm-2:    #C08A6E;
+  --warm-d:    #8E4F3B;
+  --warm-ink:  #8A4630;
+  --warm-bg:   #F6EBE5;
+  --warm-bg-2: #FBEEE6;
+  --warm-line: #E8D2C7;
+  --cool:      #16748C;
+  --cool-2:    #4E9DB2;
+  --cool-d:    #0F5A6D;
+  --cool-ink:  #0F5A6D;
+  --cool-bg:   #E7F1F4;
+  --cool-line: #C0DAE2;
+  --amber:     #B57A26;
+  --ok:        #3F7A48;
+  --ok-2:      #6FA675;
+  --ok-bg:     #E9F2E9;
+  --danger:    #B03225;
+  --danger-soft: #C08080;
+}
+
 :root { color-scheme: light; }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
-  background: #f7f5f2;
-  color: #2c2a28;
+  background: var(--bg);
+  color: var(--ink);
   line-height: 1.65;
   font-size: 16px;
 }
 .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
 h1 { font-size: 20px; margin: 4px 0 2px; }
-.sub { color: #8a8378; font-size: 13px; margin-bottom: 14px; }
+.sub { color: var(--ink-3); font-size: 13px; margin-bottom: 14px; }
 .stats-line {
-  display: inline-block; background: #f4efe8; color: #a07d55;
+  display: inline-block; background: var(--cool-bg); color: var(--cool-d);
   font-size: 12.5px; border-radius: 8px; padding: 4px 11px; margin: -6px 0 14px;
 }
 .stats-line:empty { display: none; margin: 0; }
-.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.t-short { display: none; }   /* 只有 1024–1180px 的窄側欄才用短標籤 */
 .tab {
-  flex: 1; padding: 10px 6px; border: none; border-radius: 10px;
-  background: #ebe7e0; color: #6b655c; font-size: 14px; font-weight: 600;
+  flex: 1 1 30%; min-width: 0; padding: 10px 6px; border: none; border-radius: 10px;
+  background: var(--line-3); color: var(--ink-2); font-size: 14px; font-weight: 600;
   cursor: pointer; transition: .15s; white-space: nowrap;
 }
-.tab.active { background: #b08968; color: #fff; }
+.tab.active { background: var(--warm); color: var(--surface); }
 @media (max-width: 420px) { .tab { font-size: 13px; padding: 10px 2px; } }
+@media (max-width: 560px) { .tab { flex: 1 1 30%; } }
 .filter-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
-.filter-bar .fl { font-size: 13px; color: #8a7c68; font-weight: 600; flex-shrink: 0; }
+.filter-bar .fl { font-size: 13px; color: var(--ink-2); font-weight: 600; flex-shrink: 0; }
 .filter-bar select { flex: 1; width: auto; }
 .insight-item { font-size: 14px; margin-bottom: 7px; }
 .insight-item .qctx { display: inline; margin-left: 6px; }
@@ -40,44 +80,44 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .pb-row { margin-bottom: 13px; }
 .pb-row:last-of-type { margin-bottom: 2px; }
 .pb-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 5px; }
-.pb-name { font-weight: 600; color: #6b655c; }
-.pb-val { color: #a07d55; font-weight: 700; font-variant-numeric: tabular-nums; }
-.pb-val .done-tag { color: #5a9e5f; font-size: 12px; }
-.pb-track { height: 10px; background: #f0ece5; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
-.pb-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #c9a27e, #b08968); transition: width .7s cubic-bezier(.22,.9,.35,1); }
-.pb-fill.done { background: linear-gradient(90deg, #7ab07f, #5a9e5f); }
-.pb-note { color: #a39b8e; font-size: 12px; margin-top: 8px; }
+.pb-name { font-weight: 600; color: var(--ink-2); }
+.pb-val { color: var(--cool-d); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pb-val .done-tag { color: var(--ok); font-size: 12px; }
+.pb-track { height: 10px; background: var(--line-3); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
+.pb-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cool-2), var(--cool)); transition: width .7s cubic-bezier(.22,.9,.35,1); }
+.pb-fill.done { background: linear-gradient(90deg, var(--ok-2), var(--ok)); }
+.pb-note { color: var(--ink-4); font-size: 12px; margin-top: 8px; }
 /* mentor pack */
 .mentor-pre {
-  background: #faf6f0; border: 1px solid #eadfce; border-radius: 10px;
-  padding: 12px 14px; font-size: 13px; line-height: 1.65; color: #3a352f;
+  background: var(--surface-2); border: 1px solid var(--warm-line); border-radius: 10px;
+  padding: 12px 14px; font-size: 13px; line-height: 1.65; color: var(--ink);
   white-space: pre-wrap; word-break: break-word; max-height: 42vh; overflow-y: auto;
   font-family: inherit; margin: 4px 0 0;
 }
 /* reflect report */
 .reflect-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
-.pchip { border: 1px solid #e3d6c2; background: #fff; color: #8a7c68; border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
-.pchip.on { background: #b08968; color: #fff; border-color: #b08968; }
+.pchip { border: 1px solid var(--warm-line); background: var(--surface); color: var(--ink-2); border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
+.pchip.on { background: var(--warm); color: var(--surface); border-color: var(--warm); }
 .reflect-scores { display: flex; gap: 10px; margin: 12px 0 4px; }
-.reflect-score { flex: 1; background: #faf6f0; border: 1px solid #eadfce; border-radius: 10px; padding: 10px 4px; text-align: center; }
-.reflect-score .rs-num { font-size: 22px; font-weight: 700; color: #b08968; }
-.reflect-score .rs-name { font-size: 12px; color: #8a8378; margin-top: 2px; }
+.reflect-score { flex: 1; background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 10px 4px; text-align: center; }
+.reflect-score .rs-num { font-size: 22px; font-weight: 700; color: var(--cool); }
+.reflect-score .rs-name { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 .reflect-line { font-size: 14px; margin: 12px 0 0; line-height: 1.7; }
-.reflect-line b { color: #966b43; }
+.reflect-line b { color: var(--cool-d); }
 .energy-tag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 700; margin-right: 6px; }
-.energy-good { background: #eaf3ea; color: #4d8752; }
-.energy-mid  { background: #f4efe8; color: #a07d55; }
-.energy-low  { background: #fbeee2; color: #a4693c; }
+.energy-good { background: var(--ok-bg); color: var(--ok); }
+.energy-mid  { background: var(--warm-bg); color: var(--warm-d); }
+.energy-low  { background: var(--warm-bg-2); color: var(--warm-ink); }
 .card {
-  background: #fff; border-radius: 14px; padding: 16px;
+  background: var(--surface); border-radius: 14px; padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
 }
 label { display: block; font-weight: 600; margin: 12px 0 5px; font-size: 14px; }
-label .hint { font-weight: 400; color: #a39b8e; font-size: 12px; }
-.privacy-tip { margin-top: 6px; background: #fbeee2; border: 1px solid #eadaca; border-radius: 8px; padding: 7px 10px; font-size: 12px; color: #a4693c; line-height: 1.5; }
+label .hint { font-weight: 400; color: var(--ink-4); font-size: 12px; }
+.privacy-tip { margin-top: 6px; background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--warm-ink); line-height: 1.5; }
 input[type=text], input[type=date], textarea, select {
-  width: 100%; padding: 10px 12px; border: 1px solid #e0dbd2; border-radius: 9px;
-  font-size: 16px; font-family: inherit; background: #fdfcfa; color: #2c2a28;
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px;
+  font-size: 16px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
 input[type=date] { -webkit-appearance: none; appearance: none; text-align: left; min-height: 42px; }
 textarea { resize: vertical; min-height: 46px; }
@@ -85,196 +125,314 @@ textarea { resize: vertical; min-height: 46px; }
 .row > div { flex: 1; min-width: 0; }
 @media (max-width: 480px) { .row { flex-direction: column; gap: 0; } }
 .score-wrap { display: flex; align-items: center; gap: 12px; }
-.score-wrap input[type=range] { flex: 1; accent-color: #b08968; }
+.score-wrap input[type=range] { flex: 1; accent-color: var(--warm); }
 .score-val {
   min-width: 42px; text-align: center; font-weight: 700; font-size: 17px;
-  color: #b08968; background: #f4efe8; border-radius: 8px; padding: 3px 0;
+  color: var(--cool-d); background: var(--cool-bg); border-radius: 8px; padding: 3px 0;
 }
 .multi-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
 .multi-item textarea { flex: 1; }
 .mini-btn {
-  border: none; background: #f0ece5; color: #8a8378; border-radius: 8px;
+  border: none; background: var(--line-3); color: var(--ink-3); border-radius: 8px;
   width: 34px; min-height: 40px; font-size: 18px; cursor: pointer; flex-shrink: 0;
 }
 .add-btn {
-  border: 1px dashed #cdc5b8; background: transparent; color: #8a7c68;
+  border: 1px dashed var(--line-dash); background: transparent; color: var(--ink-2);
   border-radius: 9px; padding: 8px; width: 100%; cursor: pointer; font-size: 14px; margin-top: 4px;
 }
 .acc-item {
-  border: 1px solid #ece7de; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
 }
 .acc-head { display: flex; align-items: flex-start; gap: 10px; }
 .acc-title { font-weight: 600; font-size: 14px; }
-.acc-alt { font-weight: 500; font-size: 12px; color: #a4693c; margin-left: 6px; }
-.acc-desc { color: #9a9184; font-size: 12px; margin-top: 2px; }
+.acc-alt { font-weight: 500; font-size: 12px; color: var(--warm-ink); margin-left: 6px; }
+.acc-desc { color: var(--ink-4); font-size: 12px; margin-top: 2px; }
 /* 四態：尚未評估／未到位／部分到位／到位 */
-.acc-item[data-st="2"] { background: #f6f1ea; border-color: #d9c9b4; }
-.acc-item[data-st="1"] { background: #fdf6ec; border-color: #e6d3ae; }
+.acc-item[data-st="2"] { background: var(--cool-bg); border-color: var(--cool-line); }
+.acc-item[data-st="1"] { background: var(--warm-bg-2); border-color: var(--warm-line); }
 .acc-item[data-st="-1"] { border-style: dashed; }
 .seg { display: flex; gap: 5px; margin-top: 9px; }
 .seg button {
-  flex: 1; padding: 7px 2px; border: 1px solid #ddd6ca; background: #fff; color: #8a8378;
+  flex: 1; padding: 7px 2px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-3);
   border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap;
 }
-.seg button.on { color: #fff; border-color: transparent; font-weight: 600; }
-.seg button[data-v="-1"].on { background: #cdc5b8; }
-.seg button[data-v="0"].on { background: #9a8f7e; }
-.seg button[data-v="1"].on { background: #d99a4e; }
-.seg button[data-v="2"].on { background: #b08968; }
-.acc-progress { font-size: 12.5px; color: #a4693c; background: #fdf3e6; border-radius: 7px; padding: 6px 9px; margin-bottom: 10px; }
-.acc-progress.done { color: #4e7a58; background: #eaf3ec; }
+.seg button.on { color: var(--surface); border-color: transparent; font-weight: 600; }
+.seg button[data-v="-1"].on { background: var(--line-dash); }
+.seg button[data-v="0"].on { background: var(--ink-3); }
+.seg button[data-v="1"].on { background: var(--amber); }
+.seg button[data-v="2"].on { background: var(--cool); }
+.acc-progress { font-size: 12.5px; color: var(--cool-d); background: var(--cool-bg); border-radius: 7px; padding: 6px 9px; margin-bottom: 10px; }
+.acc-progress.done { color: var(--ok); background: var(--ok-bg); }
 .acc-field { margin-top: 9px; }
-.acc-flabel { font-size: 12px; color: #8a7c68; margin-bottom: 4px; font-weight: 600; }
+.acc-flabel { font-size: 12px; color: var(--ink-2); margin-bottom: 4px; font-weight: 600; }
 .acc-field input, .acc-field textarea {
-  width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #e2ddd3;
-  border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: #2c2a28;
+  width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--line);
+  border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
 .acc-field textarea { resize: vertical; min-height: 38px; }
 .mk-toggle {
-  margin-top: 10px; width: 100%; padding: 7px; border: 1px dashed #cdc5b8; background: transparent;
-  color: #8a7c68; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit;
+  margin-top: 10px; width: 100%; padding: 7px; border: 1px dashed var(--line-dash); background: transparent;
+  color: var(--ink-2); border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit;
 }
-.mk-box { margin-top: 8px; border-top: 1px solid #ece7de; padding-top: 8px; }
+.mk-box { margin-top: 8px; border-top: 1px solid var(--line-2); padding-top: 8px; }
 .mk-box.hidden { display: none; }
-.mk-rule { font-size: 11.5px; color: #a4693c; background: #fdf3e6; border-radius: 6px; padding: 5px 8px; margin-bottom: 8px; }
+.mk-rule { font-size: 11.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 5px 8px; margin-bottom: 8px; }
 .mk-row { margin-bottom: 10px; }
 .mk-top { display: flex; align-items: flex-start; gap: 8px; }
-.mk-top input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: #b08968; flex-shrink: 0; }
+.mk-top input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--warm); flex-shrink: 0; }
 .mk-top input[type=checkbox]:disabled { opacity: .4; }
-.mk-code { font-family: monospace; font-weight: 700; font-size: 13px; color: #6b655c; margin-right: 5px; }
-.mk-txt { font-size: 12.5px; color: #6b655c; line-height: 1.45; }
+.mk-code { font-family: monospace; font-weight: 700; font-size: 13px; color: var(--ink-2); margin-right: 5px; }
+.mk-txt { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
 .mk-ev { margin-top: 5px; padding-left: 25px; }
 .mk-ev input {
-  width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid #e2ddd3;
-  border-radius: 7px; font-size: 13px; font-family: inherit; background: #fff; color: #2c2a28;
+  width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid var(--line);
+  border-radius: 7px; font-size: 13px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
-.mk-hint { font-size: 11.5px; color: #b3ab9d; margin-top: 3px; padding-left: 25px; }
-.mk-hint.warn { color: #c47b3f; }
+.mk-hint { font-size: 11.5px; color: var(--ink-4); margin-top: 3px; padding-left: 25px; }
+.mk-hint.warn { color: var(--warm-ink); }
 .mk-row.hidden { display: none; }
-.mk-plain { font-size: 11.5px; color: #a39b8e; margin-top: 2px; line-height: 1.45; }
+.mk-plain { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.45; }
 .mk-badge {
   display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .3px;
-  background: #b08968; color: #fff; border-radius: 4px; padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
+  background: var(--warm); color: var(--surface); border-radius: 4px; padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
 }
 .mk-warn, .mk-tip { font-size: 11.5px; line-height: 1.5; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
-.mk-warn { color: #a8503c; background: #fbeae6; }
-.mk-tip  { color: #4e7a58; background: #eaf3ec; }
+.mk-warn { color: var(--warm-ink); background: var(--warm-bg-2); }
+.mk-tip  { color: var(--ok); background: var(--ok-bg); }
 .mk-scope-row {
-  display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b655c;
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2);
   font-weight: 500; margin: 0 0 12px; cursor: pointer;
 }
-.mk-scope-row input { width: 17px; height: 17px; accent-color: #b08968; }
+.mk-scope-row input { width: 17px; height: 17px; accent-color: var(--warm); }
 .actions { display: flex; gap: 10px; margin-top: 6px; }
 .btn {
   flex: 1; padding: 12px; border: none; border-radius: 11px; font-size: 15px;
   font-weight: 600; cursor: pointer;
 }
-.btn-primary { background: #b08968; color: #fff; }
-.btn-ghost { background: #ebe7e0; color: #6b655c; }
+.btn-primary { background: var(--warm); color: var(--surface); }
+.btn-ghost { background: var(--line-3); color: var(--ink-2); }
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: #2c2a28; color: #fff; padding: 10px 20px; border-radius: 20px;
+  background: var(--ink); color: var(--surface); padding: 10px 20px; border-radius: 20px;
   font-size: 14px; opacity: 0; pointer-events: none; transition: .3s; z-index: 50;
 }
 .toast.show { opacity: 1; }
 /* history */
 .rec {
-  background: #fff; border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
+  background: var(--surface); border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); cursor: pointer;
 }
 .rec-top { display: flex; justify-content: space-between; align-items: baseline; }
 .rec-client { font-weight: 700; font-size: 16px; }
-.rec-date { color: #a39b8e; font-size: 13px; }
-.rec-meta { color: #8a8378; font-size: 13px; margin-top: 3px; }
-.badge { display: inline-block; background: #f4efe8; color: #a07d55; border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 6px; }
-.empty { text-align: center; color: #a39b8e; padding: 40px 0; }
+.rec-date { color: var(--ink-4); font-size: 13px; }
+.rec-meta { color: var(--ink-3); font-size: 13px; margin-top: 3px; }
+.badge { display: inline-block; background: var(--cool-bg); color: var(--cool-d); border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 6px; }
+.empty { text-align: center; color: var(--ink-4); padding: 40px 0; }
 .detail-field { margin-bottom: 12px; }
-.detail-label { font-weight: 700; font-size: 13px; color: #8a7c68; margin-bottom: 3px; }
+.detail-label { font-weight: 700; font-size: 13px; color: var(--ink-2); margin-bottom: 3px; }
 .detail-val { white-space: pre-wrap; }
 .detail-val ul { margin: 4px 0; padding-left: 20px; }
 .score-lines {
-  background: #faf6f0; border: 1px solid #eadfce; border-radius: 12px;
+  background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 12px;
   padding: 13px 15px; margin: 12px 0 18px;
 }
 .score-line { font-size: 15px; margin-bottom: 6px; }
 .score-line:last-child { margin-bottom: 0; }
-.score-line b { color: #b08968; }
+.score-line b { color: var(--cool-d); }
 .because-note {
-  margin: 8px 0 0 4px; padding: 4px 0 4px 11px; border-left: 3px solid #d9c9b0;
-  color: #7a7266; font-size: 14px;
+  margin: 8px 0 0 4px; padding: 4px 0 4px 11px; border-left: 3px solid var(--warm-line);
+  color: var(--ink-2); font-size: 14px;
 }
-.because-note .bl { color: #a89478; font-weight: 700; }
-.acc-sub { font-weight: 700; font-size: 13px; color: #6b655c; margin: 10px 0 5px; }
+.because-note .bl { color: var(--ink-4); font-weight: 700; }
+.acc-sub { font-weight: 700; font-size: 13px; color: var(--ink-2); margin: 10px 0 5px; }
 .acc-group { padding-left: 4px; }
 .acc-detail { margin-bottom: 8px; }
-.acc-detail-title { font-weight: 600; font-size: 14px; color: #2c2a28; }
+.acc-detail-title { font-weight: 600; font-size: 14px; color: var(--ink); }
 .acc-mark { font-weight: 700; margin-right: 6px; font-family: monospace; }
-.acc-detail-note { font-size: 13px; color: #9a9184; margin-top: 2px; padding-left: 22px; }
-.acc-none { color: #b3ab9d; font-size: 14px; }
+.acc-detail-note { font-size: 13px; color: var(--ink-4); margin-top: 2px; padding-left: 22px; }
+.acc-none { color: var(--ink-4); font-size: 14px; }
 /* mentor questions */
-.qcard { background:#fff; border:1px solid #ece7de; border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
-.qcard.done { background:#f6f4ef; }
+.qcard { background:var(--surface); border:1px solid var(--line-2); border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.qcard.done { background:var(--surface-2); }
 .qtext { font-weight:600; font-size:15px; white-space:pre-wrap; }
-.qctx { color:#a39b8e; font-size:13px; margin-top:3px; }
+.qctx { color:var(--ink-4); font-size:13px; margin-top:3px; }
 .qans { margin-top:8px; min-height:44px; }
-.qanswer { margin-top:8px; border-left:3px solid #cdbfa8; padding:5px 10px; font-size:14px; white-space:pre-wrap; }
-.qanswer .alabel { display:block; color:#a89478; font-weight:700; font-size:12px; margin-bottom:2px; }
+.qanswer { margin-top:8px; border-left:3px solid var(--line-dash); padding:5px 10px; font-size:14px; white-space:pre-wrap; }
+.qanswer .alabel { display:block; color:var(--ink-4); font-weight:700; font-size:12px; margin-bottom:2px; }
 .qbtns { margin-top:9px; display:flex; gap:16px; }
-.mini-link { background:none; border:none; color:#a07d55; font-size:13px; cursor:pointer; padding:0; font-weight:600; }
-.mini-link.del-link { color:#c99; }
+.mini-link { background:none; border:none; color:var(--warm-d); font-size:13px; cursor:pointer; padding:0; font-weight:600; }
+.mini-link.del-link { color:var(--danger-soft); }
 .mini-link:hover { text-decoration:underline; }
-.ask-sub { font-weight:700; font-size:14px; color:#6b655c; margin:4px 0 8px; }
+.ask-sub { font-weight:700; font-size:14px; color:var(--ink-2); margin:4px 0 8px; }
 .hidden { display: none; }
 /* phrase cheat sheet */
-.phrase-card { background: #fbf7f0; border: 1px solid #eadfce; }
+.phrase-card { background: var(--surface-2); border: 1px solid var(--warm-line); }
 .phrase-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-.phrase-head .arrow { color: #b08968; font-size: 13px; }
+.phrase-head .arrow { color: var(--warm); font-size: 13px; }
 .phrase-body { margin-top: 10px; }
 .phrase-body.collapsed { display: none; }
 .chip {
-  display: inline-flex; align-items: center; gap: 6px; background: #fff;
-  border: 1px solid #e3d6c2; border-radius: 16px; padding: 5px 6px 5px 12px;
+  display: inline-flex; align-items: center; gap: 6px; background: var(--surface);
+  border: 1px solid var(--warm-line); border-radius: 16px; padding: 5px 6px 5px 12px;
   margin: 4px 5px 0 0; font-size: 14px; cursor: pointer;
 }
-.chip:hover { background: #f6efe4; }
-.chip .del { color: #c9beac; font-weight: 700; padding: 0 3px; }
-.chip .del:hover { color: #c0392b; }
+.chip:hover { background: var(--warm-bg); }
+.chip .del { color: var(--line-dash); font-weight: 700; padding: 0 3px; }
+.chip .del:hover { color: var(--danger); }
 .phrase-add { display: flex; gap: 8px; margin-top: 10px; }
 .phrase-add input { flex: 1; }
-.phrase-add button { border: none; background: #b08968; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 14px; cursor: pointer; }
+.phrase-add button { border: none; background: var(--warm); color: var(--surface); border-radius: 8px; padding: 0 16px; font-size: 14px; cursor: pointer; }
 /* chart */
 .chart-box { width: 100%; }
 /* auth */
 .auth-box {
-  max-width: 400px; margin: 7vh auto 0; background:#fff; border-radius:18px;
+  max-width: 400px; margin: 7vh auto 0; background:var(--surface); border-radius:18px;
   padding:32px 26px 20px; text-align:center;
   box-shadow: 0 10px 40px rgba(176,137,104,.14), 0 1px 3px rgba(0,0,0,.05);
 }
-.auth-greet { font-size:12px; color:#a07d55; font-weight:600; margin-bottom:6px; }
+.auth-greet { font-size:12px; color:var(--warm-d); font-weight:600; margin-bottom:6px; }
 .auth-box h2 { font-size:22px; margin:0 0 4px; letter-spacing:.5px; }
 .auth-box .sub { margin-bottom:20px; }
-.auth-msg { color:#b3541e; font-size:13px; min-height:18px; margin:8px 0 0; }
+.auth-msg { color:var(--warm-ink); font-size:13px; min-height:18px; margin:8px 0 0; }
 .btn { transition: transform .1s, box-shadow .15s; }
 .btn:active { transform: scale(.98); }
 .btn-primary { box-shadow: 0 3px 10px rgba(176,137,104,.3); }
-.auth-hint { background:#fbeee2; border:1px solid #eadaca; border-radius:8px; padding:9px 11px; font-size:12px; color:#a4693c; line-height:1.6; margin-top:8px; }
-.auth-hint b { color:#8a5a2e; }
-.acct-bar { display:flex; justify-content:space-between; align-items:center; background:#f2ede5; border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:#6b655c; }
-.acct-bar button { border:none; background:none; color:#a07d55; font-weight:600; cursor:pointer; font-size:13px; }
+.auth-hint { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:8px; padding:9px 11px; font-size:12px; color:var(--warm-ink); line-height:1.6; margin-top:8px; }
+.auth-hint b { color:var(--warm-ink); }
+.acct-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:var(--ink-2); }
+.acct-bar button { border:none; background:none; color:var(--warm-d); font-weight:600; cursor:pointer; font-size:13px; }
 /* footer + legal */
-.footer { text-align:center; color:#a39b8e; font-size:12px; padding:22px 0 8px; }
-.footer a { color:#a07d55; cursor:pointer; text-decoration:underline; }
+.footer { text-align:center; color:var(--ink-4); font-size:12px; padding:22px 0 8px; }
+.footer a { color:var(--warm-d); cursor:pointer; text-decoration:underline; }
 #legal-modal { position:fixed; inset:0; background:rgba(44,42,40,.5); display:none; align-items:center; justify-content:center; padding:16px; z-index:100; }
 #legal-modal.show { display:flex; }
-.legal-box { background:#fff; border-radius:14px; max-width:640px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 26px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.25); }
-.legal-close { position:absolute; top:12px; right:14px; border:none; background:#f0ece5; color:#8a8378; width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; }
-.legal-box h3 { color:#966b43; font-size:17px; margin:22px 0 8px; }
+.legal-box { background:var(--surface); border-radius:14px; max-width:640px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 26px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.legal-close { position:absolute; top:12px; right:14px; border:none; background:var(--line-3); color:var(--ink-3); width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; }
+.legal-box h3 { color:var(--warm-d); font-size:17px; margin:22px 0 8px; }
 .legal-box h3:first-of-type { margin-top:6px; }
 .legal-box h2 { font-size:20px; margin:0 0 2px; }
-.legal-box .lp-sub { color:#8a8378; font-size:13px; margin-bottom:8px; }
-.legal-box p { font-size:14px; line-height:1.7; color:#3a352f; margin:0 0 9px; }
-.legal-box .lp-note { background:#fbeee2; border:1px solid #e4c4a4; border-radius:10px; padding:10px 12px; color:#8a5a2e; font-size:13px; line-height:1.6; margin-bottom:14px; }
-.legal-box b { color:#2c2a28; }
+.legal-box .lp-sub { color:var(--ink-3); font-size:13px; margin-bottom:8px; }
+.legal-box p { font-size:14px; line-height:1.7; color:var(--ink); margin:0 0 9px; }
+.legal-box .lp-note { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:10px; padding:10px 12px; color:var(--warm-ink); font-size:13px; line-height:1.6; margin-bottom:14px; }
+.legal-box b { color:var(--ink); }
+
+/* ===== §6 分段折疊、進度列、新欄位 ===== */
+.segbar {
+  position: sticky; top: 0; z-index: 20; display: flex; gap: 4px;
+  background: var(--bg); padding: 8px 0 10px; margin-bottom: 4px;
+}
+.segb {
+  flex: 1; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--ink-4);
+  background: var(--line-3); border-radius: 6px; padding: 4px 2px;
+  border-bottom: 3px solid transparent; white-space: nowrap;
+}
+.segb.seg-on { background: var(--cool-bg); color: var(--cool-d); border-bottom-color: var(--cool); }
+.segb.seg-na { opacity: .45; }
+.fold-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: none;
+  padding: 0 0 2px; cursor: pointer; font-family: inherit; text-align: left;
+}
+.fold-title { font-weight: 700; font-size: 15px; color: var(--ink); flex: 1; }
+.fold-state { font-size: 12px; color: var(--ink-4); font-weight: 600; white-space: nowrap; }
+.fold-state.ok { color: var(--ok); }
+.fold-act { font-size: 12px; color: var(--warm-d); font-weight: 600; white-space: nowrap; }
+.fold.folded .fold-body { display: none; }
+.fold .fold-body { margin-top: 4px; }
+.fold .fold-body > label:first-child { margin-top: 8px; }
+.sub-note { font-size: 12px; color: var(--ink-3); line-height: 1.55; margin: 4px 0 2px; }
+.cnt-row { text-align: right; font-size: 11.5px; color: var(--ink-4); margin-top: 4px; }
+/* 焦點卡：頁面裡第二強的元素 */
+.focus-card { border: 2px solid var(--warm); }
+.focus-card .fold-title { color: var(--warm-d); }
+/* §2B 回顧卡：開場第一眼 */
+.review-card { border: 2px solid var(--warm); background: var(--warm-bg); }
+.review-card .fold-title { color: var(--warm-d); }
+.fr-row { display: flex; gap: 8px; align-items: baseline; margin: 6px 0; }
+.fr-row + .fr-row { margin-top: 8px; }
+.fr-lbl { flex: 0 0 auto; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.fr-txt { flex: 1 1 auto; min-width: 0; font-size: 15px; line-height: 1.6; color: var(--ink); word-break: break-word; }
+.fr-q { margin-top: 10px; }
+.fr-q { font-size: 14px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+.fr-btns { display: flex; gap: 6px; }
+.fr-btn {
+  flex: 1; min-height: 44px; padding: 8px 2px; border: 1px solid var(--warm-line);
+  background: var(--surface); color: var(--ink-2); border-radius: 9px;
+  font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap;
+}
+.fr-btn.on { background: var(--warm); border-color: var(--warm); color: #fff; font-weight: 700; }
+.legacy-box { margin-top: 12px; border-left: 3px solid var(--line-dash); padding: 4px 0 4px 11px; }
+.legacy-lbl { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 3px; }
+.legacy-txt { font-size: 13.5px; color: var(--ink-2); white-space: pre-wrap; }
+.submit-cand { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); margin-top: 12px; cursor: pointer; }
+.submit-cand input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--warm); flex-shrink: 0; }
+.mk-legend { font-size: 12px; line-height: 1.55; color: var(--cool-d); background: var(--cool-bg); border-radius: 7px; padding: 7px 9px; margin: 6px 0 10px; }
+/* §4B marker 層級改善筆記 */
+.mk-btns { display: flex; gap: 8px; margin-top: 5px; padding-left: 25px; }
+.mk-addbtn { border: 1px dashed var(--line-dash); background: transparent; color: var(--ink-2); border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.mk-addbtn.on { border-style: solid; border-color: var(--warm); color: var(--warm-d); }
+.mk-imp { margin-top: 5px; padding-left: 25px; }
+.mk-imp textarea {
+  width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid var(--line);
+  border-radius: 7px; font-size: 13px; font-family: inherit; background: var(--surface);
+  color: var(--ink); resize: vertical; min-height: 38px;
+}
+.mk-tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-right: 5px; vertical-align: 1px; }
+.mk-tag.acc { background: var(--cool); color: #fff; }
+.mk-tag.pcc { background: var(--line-3); color: var(--ink-2); }
+.mk-tag.two { background: var(--cool-bg); color: var(--cool-d); border: 1px solid var(--cool-line); }
+/* §4C 認證進度 */
+.cred-wrap { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.cred-axis { margin: 6px 0 4px; }
+.cred-track { position: relative; height: 14px; background: var(--line-3); border-radius: 7px; overflow: hidden; }
+.cred-fill { height: 100%; background: linear-gradient(90deg, var(--cool-2), var(--cool)); border-radius: 7px; }
+.cred-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--warm); }
+.cred-scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-4); margin-top: 5px; }
+.cred-line { font-size: 13.5px; line-height: 1.7; margin-top: 6px; }
+.cred-line b { color: var(--cool-d); }
+.cred-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; margin-top: 8px; }
+.warn-box { background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--warm-ink); line-height: 1.6; margin-top: 10px; }
+.cand-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 7px 0; border-bottom: 1px solid var(--line-2); }
+.cand-row:last-child { border-bottom: none; }
+.cand-row .cr-n { color: var(--cool-d); font-weight: 700; white-space: nowrap; }
+/* 手機優先：輸入框可點區 ≥44px */
+input[type=text], input[type=date], select { min-height: 44px; }
+.mini-btn { min-height: 44px; }
+
+/* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
+@media (min-width: 1024px) {
+  body { font-size: 16px; }
+  .wrap { max-width: 1320px; padding-left: 240px; padding-right: 20px; }
+  .tabs {
+    position: fixed; top: 0; bottom: 0; left: 0; width: 216px; margin: 0;
+    flex-direction: column; gap: 4px; padding: 20px 12px;
+    background: var(--surface-2); border-right: 1px solid var(--line-2); overflow-y: auto; z-index: 30;
+  }
+  .tab { flex: 0 0 auto; text-align: left; padding: 11px 12px; font-size: 14px; }
+  /* 桌機唯一真正的優勢是「同時看得到」：左欄會談內容不動，右欄標職能 */
+  #view-new { display: grid; grid-template-columns: minmax(360px, 470px) minmax(0, 1fr); gap: 0 20px; align-items: start; }
+  #view-new > * { grid-column: 1; }
+  /* segbar 佔第 1 列跨兩欄；ICF 從第 2 列起吃滿右欄。
+     若讓 ICF 從第 1 列開始，跨欄的 segbar 會被擠到 ICF 之後（第 100 列），整頁往下掉。 */
+  #segbar { grid-column: 1 / -1; grid-row: 1; }
+  #view-new > [data-fold="acc"] {
+    grid-column: 2; grid-row: 2 / span 99;
+    position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow-y: auto;
+  }
+  .cred-wrap { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1180px) {
+  /* ICF 攤成 2×4 格子，點「逐條」才展開完整 marker 清單 */
+  #acc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-items: start; }
+  #acc-list .acc-item { margin-bottom: 0; }
+}
+@media (min-width: 1024px) and (max-width: 1179.98px) {
+  /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
+  .wrap { padding-left: 96px; }
+  .tabs { width: 76px; padding: 20px 8px; align-items: stretch; }
+  .tab { text-align: center; padding: 11px 4px; font-size: 12.5px; }
+  .t-full { display: none; }
+  .t-short { display: inline; }
+}
 </style>
 </head>
 <body>
@@ -289,15 +447,26 @@ textarea { resize: vertical; min-height: 46px; }
   </div>
 
   <div class="tabs">
-    <button class="tab active" id="tabNew" onclick="showView('new')">新增紀錄</button>
-    <button class="tab" id="tabHist" onclick="showView('hist')">歷史紀錄 <span id="cnt"></span></button>
-    <button class="tab" id="tabClients" onclick="showView('clients')">客戶</button>
-    <button class="tab" id="tabAsk" onclick="showView('ask')">導師提問 <span id="askCnt"></span></button>
+    <button class="tab active" id="tabNew" onclick="showView('new')"><span class="t-full">新增紀錄</span><span class="t-short">新增</span></button>
+    <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span id="cnt"></span></button>
+    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span></button>
+    <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span></button>
+    <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span id="askCnt"></span></button>
   </div>
 
   <!-- ===== NEW / EDIT FORM ===== -->
   <div id="view-new">
-    <div class="card">
+    <!-- §6 黏著進度列：六段，已填的上色 -->
+    <div class="segbar" id="segbar"></div>
+
+    <!-- 1. 會談基本資料 -->
+    <section class="card fold" data-fold="basic">
+      <button type="button" class="fold-head" onclick="toggleFold('basic')">
+        <span class="fold-title">會談基本資料</span>
+        <span class="fold-state" data-state="basic"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
       <div class="row">
         <div>
           <label>日期</label>
@@ -319,67 +488,152 @@ textarea { resize: vertical; min-height: 46px; }
         <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
         <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
       </div>
-      <div class="privacy-tip hidden" id="f-lastimprove" style="margin-top:8px"></div>
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
+      <label class="submit-cand"><input type="checkbox" id="f-submitcand">
+        這場可以當送審錄音<span class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</span></label>
+      </div>
+    </section>
 
+    <!-- 2. 焦點回顧（§2B）：不符合條件整張卡不渲染 -->
+    <div id="focus-review"></div>
+
+    <!-- 3. 第一個念頭 -->
+    <section class="card fold" data-fold="instant">
+      <button type="button" class="fold-head" onclick="toggleFold('instant')">
+        <span class="fold-title">馬上掉出來的問題</span>
+        <span class="fold-state" data-state="instant"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
       <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
       <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
-    </div>
+      </div>
+    </section>
 
-    <div class="card">
+    <!-- 4. 三個評分 -->
+    <section class="card fold" data-fold="score">
+      <button type="button" class="fold-head" onclick="toggleFold('score')">
+        <span class="fold-title">這一場，打幾分</span>
+        <span class="fold-state" data-state="score"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
       <label>給我自己的表現打幾分 <span class="hint">0–10</span></label>
       <div class="score-wrap">
         <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('perfVal').textContent=this.value">
+               oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="perfVal">7</span>
       </div>
       <label>我自己的感受 <span class="hint">0–10</span></label>
       <div class="score-wrap">
         <input type="range" id="f-feel" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('feelVal').textContent=this.value">
+               oninput="document.getElementById('feelVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="feelVal">7</span>
       </div>
       <label>我覺得客戶的感受 <span class="hint">0–10</span></label>
       <div class="score-wrap">
         <input type="range" id="f-clientfeel" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('clientfeelVal').textContent=this.value">
+               oninput="document.getElementById('clientfeelVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="clientfeelVal">7</span>
       </div>
       <label>因為 <span class="hint">為什麼覺得客戶是這個感受</span></label>
       <textarea id="f-because" placeholder="例：客戶談到轉職時聲音變亮、身體往前傾"></textarea>
-    </div>
+      </div>
+    </section>
 
-    <div class="card">
-      <label>我做得好的（舉出三個）</label>
+    <!-- 5. 下一場只盯這一件事（§2A）：放三個評分之後、ICF 之前 -->
+    <section class="card fold focus-card" data-fold="focus">
+      <button type="button" class="fold-head" onclick="toggleFold('focus')">
+        <span class="fold-title">下一場只盯這一件事</span>
+        <span class="fold-state" data-state="focus"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <label>下一場只盯這一件事
+        <span class="hint">一次只盯一件才練得動。寫成動作，例如「客戶講超過兩分鐘就出手」</span></label>
+      <input type="text" id="f-focus" maxlength="40" placeholder="例：客戶講超過兩分鐘就出手"
+             oninput="updateFocusCount()">
+      <div class="cnt-row"><span id="focus-count">0 / 40</span></div>
+      </div>
+    </section>
+
+    <!-- 6. 客戶那一半（§3） -->
+    <section class="card fold" data-fold="client">
+      <button type="button" class="fold-head" onclick="toggleFold('client')">
+        <span class="fold-title">客戶那一半</span>
+        <span class="fold-state" data-state="client"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <div class="sub-note">只記他說的那個詞或畫面，不記事件細節與人名。</div>
+      <label>他自己說的一句話</label>
+      <input type="text" id="f-clientquote" placeholder="例：32:10「我好像一直在幫別人活」">
+      <label>我注意到但沒接的</label>
+      <textarea id="f-notcaught" rows="2" placeholder="例：他講到媽媽時停了一下，我沒有停下來問"></textarea>
+      <div id="f-insight-legacy" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- 7. ICF 八大核心職能 -->
+    <section class="card fold" data-fold="acc">
+      <button type="button" class="fold-head" onclick="toggleFold('acc')">
+        <span class="fold-title">ICF 八大核心職能</span>
+        <span class="fold-state" data-state="acc"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <label>ICF 八大核心職能 Checklist <span class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</span></label>
+      <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
+      <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
+        先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
+      <div class="acc-progress" id="acc-progress"></div>
+      <div id="acc-list"></div>
+      </div>
+    </section>
+
+    <!-- 8. 反思 -->
+    <section class="card fold" data-fold="reflect">
+      <button type="button" class="fold-head" onclick="toggleFold('reflect')">
+        <span class="fold-title">反思</span>
+        <span class="fold-state" data-state="reflect"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <label>我做得好的（1–3 個）</label>
       <div id="good-list"></div>
       <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
-    </div>
-
-    <div class="card">
-      <label>注意到客戶在哪個時刻受到啟發或頓悟？</label>
-      <textarea id="f-insight" placeholder="描述那個時刻，或客戶當下的反應…"></textarea>
-    </div>
-
-    <div class="card">
       <label>我覺得我可以改進的部分</label>
       <div id="improve-list"></div>
       <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
-    </div>
+      </div>
+    </section>
 
-    <div class="card">
+    <!-- 9. 特殊狀況 -->
+    <section class="card fold" data-fold="special">
+      <button type="button" class="fold-head" onclick="toggleFold('special')">
+        <span class="fold-title">這次的特殊狀況</span>
+        <span class="fold-state" data-state="special"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
       <label>這次的特殊狀況</label>
       <div id="special-list"></div>
       <button class="add-btn" onclick="addItem('special-list')">＋ 再加一項</button>
-    </div>
+      </div>
+    </section>
 
-    <div class="card">
-      <label>ICF 八大核心職能 Checklist <span class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</span></label>
-      <button class="btn btn-ghost" style="width:100%;margin:6px 0 10px;background:#fbeee2;color:#a4693c" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
-      <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
-        只顯示 ACC 必備標記<span class="hint" id="mk-scope-hint"></span></label>
-      <div class="acc-progress" id="acc-progress"></div>
-      <div id="acc-list"></div>
-    </div>
+    <!-- 10. AI 逐字稿（§5.4：入口與三步驟保留，長提示詞縮成一句話＋複製鈕） -->
+    <section class="card fold" data-fold="ai">
+      <button type="button" class="fold-head" onclick="toggleFold('ai')">
+        <span class="fold-title">用 AI 分析逐字稿</span>
+        <span class="fold-state" data-state="ai"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <div class="sub-note">選用。工具本身不接任何 AI，這裡只是幫你把提示詞複製出去。</div>
+      <button class="btn btn-ghost" style="width:100%" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
+      </div>
+    </section>
 
     <div class="actions">
       <button class="btn btn-ghost" onclick="confirmReset()">清空</button>
@@ -429,6 +683,7 @@ textarea { resize: vertical; min-height: 46px; }
     <div id="hist-list"></div>
     <div class="actions" style="margin:10px 0 14px">
       <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
+      <span id="admin-backup-slot"></span>
       <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
       <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
     </div>
@@ -436,11 +691,6 @@ textarea { resize: vertical; min-height: 46px; }
 
   <!-- ===== CLIENTS ===== -->
   <div id="view-clients" class="hidden">
-    <div class="card" id="hours-card" style="display:none">
-      <label style="margin-top:0">ICF ACC 時數破關 <span class="hint">認證申請門檻</span></label>
-      <div id="hours-stats" style="margin-top:10px"></div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="exportHoursCSV()">匯出時數表（CSV）</button>
-    </div>
     <div class="card">
       <label style="margin-top:0">新增客戶 <span class="hint">一律使用代號</span></label>
       <div class="phrase-add" style="margin-top:0">
@@ -449,6 +699,29 @@ textarea { resize: vertical; min-height: 46px; }
       </div>
     </div>
     <div id="client-list"></div>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- ===== 認證進度（§4C） ===== -->
+  <div id="view-cred" class="hidden">
+    <div class="card">
+      <label style="margin-top:0">認證進度 <span class="hint">ACC 與 PCC 同時看得到</span></label>
+      <div class="sub-note">兩個都是同一份時數，不用分開記。ACC 的時數會一起算進 PCC。</div>
+      <div class="cred-axis" id="cred-axis"></div>
+    </div>
+    <div id="cred-warn"></div>
+    <div class="cred-wrap" id="cred-cards"></div>
+    <div class="card">
+      <label style="margin-top:0">送審錄音候選</label>
+      <div class="sub-note">在新增紀錄時勾「這場可以當送審錄音」，就會出現在這裡。ACC 要 1 份、PCC 要 2 份，均 20–60 分並附逐字稿。</div>
+      <div id="cred-cands" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <label style="margin-top:0">匯出 ICF 時數表</label>
+      <div class="sub-note">工具裡只有客戶代號、日期、會談次數、時長。ICF 的時數表另外要求客戶<b>真實姓名、聯絡方式、關係起訖日</b>——
+        這三欄是刻意不放進工具的（去識別化），匯出的 CSV 會留三個空白欄位讓你自己填。</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="exportHoursCSV()">匯出時數表（CSV）</button>
+    </div>
     <div style="height:24px"></div>
   </div>
 
@@ -493,7 +766,7 @@ textarea { resize: vertical; min-height: 46px; }
     </div>
     <div class="actions" style="margin-top:8px">
       <button class="btn btn-primary" onclick="exportRecordPDF(currentId)">匯出 PDF</button>
-      <button class="btn btn-ghost" style="color:#c0392b" onclick="deleteCurrent()">刪除這筆</button>
+      <button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteCurrent()">刪除這筆</button>
     </div>
     <div style="height:24px"></div>
   </div>
@@ -614,9 +887,18 @@ function evCount(s){
     .filter(t => t && !/^(no|none|x|無|沒有)[.。]?$/i.test(t)).length;
 }
 function mkId(i, code){ return i + '_' + code.replace('.', '_'); }
+/* §4B：mk[code] 現在是 {on, ev, imp}。舊資料可能是純字串（只有證據），
+   讀取端一律走這三個 helper，不改寫舊資料、不需要新的 accv 版號。 */
+function mkOn(v){ return typeof v === 'string' ? false : !!(v && v.on); }
+function mkEv(v){ return typeof v === 'string' ? v : String((v && v.ev) || ''); }
+function mkImp(v){ return typeof v === 'string' ? '' : String((v && v.imp) || ''); }
 /* 標記顯示範圍：true = 只顯示 ACC 必備標記 */
 let mkAccOnly = false;
-const APP_VER = "v3.0";   // 頁尾顯示；使用者回報問題時用來確認版本
+const APP_VER = "v5.0";   // 頁尾顯示；使用者回報問題時用來確認版本
+/* 管理者 uid：只有這個帳號看得到「備份所有人」。安全性規則那邊 admin 只有 read、沒有 write，
+   所以這裡刻意不做「還原所有人」——還原是高風險操作，要做請手動在 Console 做。 */
+const ADMIN_UID = 'cNeCrcUHbWXzLrQ9UVv9AVQhvN03';
+function isAdmin(){ return !!(currentUser && currentUser.uid === ADMIN_UID); }
 const KEY = "coachingLogs_v1";
 let editId = null;      // record being edited (null = new)
 let currentId = null;   // record shown in detail
@@ -670,7 +952,7 @@ function mergeCloud(p){
   localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r)));
   localStorage.setItem(QKEY, JSON.stringify(mergeArr(loadQ(), p.questions, del.q)));
   localStorage.setItem(CKEY, JSON.stringify(mergeArr(loadC(), p.clients,   del.c)));
-  migrateClients(); migrateAcc(); migrateAcc3(); updateCount(); updateAskCount();
+  runMigrations(); updateCount(); updateAskCount();
 }
 function clientById(id) { return loadC().find(c=>c.id===id); }
 function clientRecs(id) { return load().filter(r=>r.clientId===id); }
@@ -702,7 +984,9 @@ function migrateClients() {
 function migrateAcc(){
   const recs = load(); let ch = false;
   recs.forEach(r=>{
-    if (r.accv === 2 || !Array.isArray(r.acc) || r.acc.length !== 8) return;
+    /* accv >= 2 一律早退：v3.0 起 saveRecord 寫的是 accv 4，
+       若只擋 === 2，四態紀錄會被當成 v1 舊格式再重排一次職能索引 */
+    if (r.accv >= 2 || !Array.isArray(r.acc) || r.acc.length !== 8) return;
     const o = r.acc;
     const one = i => ({ on: !!(o[i]&&o[i].on), note: (o[i]&&o[i].note)||'' });
     const merge = (a,b) => ({ on: !!(o[a]&&o[a].on) || !!(o[b]&&o[b].on),
@@ -844,7 +1128,10 @@ async function onLogin(user){
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('acct-email').textContent = '已登入：' + (user.displayName || user.email || '');
   document.getElementById('acct-bar').classList.remove('hidden');
-  await syncPull();
+  renderAdminBackup();
+  /* §0B 機制一：遷移／同步之前，先在雲端留一份未遷移的原樣。寫不成功就不往下走。 */
+  const okSnap = await ensureCloudSnapshot(SCHEMA_VER);
+  if (okSnap) await syncPull();
   showView('new');
   maybeOnboard();
 }
@@ -855,6 +1142,7 @@ async function doLogout(){
   localStorage.removeItem(DKEY); localStorage.removeItem(SKEY);
   updateCount(); updateAskCount();
   document.getElementById('acct-bar').classList.add('hidden');
+  renderAdminBackup();
   showAuth();
 }
 async function syncPull(){
@@ -873,15 +1161,20 @@ async function syncPull(){
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
   } catch(e){ toast('⚠️ 無法讀取雲端資料，目前顯示本機內容'); }
-  migrateQ(); migrateClients(); migrateAcc(); migrateAcc3(); buildClientSel(''); updateCount(); updateAskCount();
+  runMigrations();
+  buildClientSel(''); updateCount(); updateAskCount();
 }
 function schedulePush(){
   if (!fb.db || !currentUser) return;
+  /* §0B 機制一＋二：遷移失敗、或雲端快照還沒確認，一律不推。
+     壞資料或未備份狀態下的 setDoc 會直接蓋掉使用者雲端那份。 */
+  if (migrationFailed || !cloudSnapReady) return;
   clearTimeout(pushTimer);
   pushTimer = setTimeout(pushCloud, 800);
 }
 async function pushCloud(){
   if (!fb.db || !currentUser) return;
+  if (migrationFailed || !cloudSnapReady) return;   // §0B：同 schedulePush，最後一道守門
   try {
     const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
     // 防止互相覆蓋：若雲端有這台裝置沒看過的更新（另一台寫的），先併進本機再寫回
@@ -901,6 +1194,146 @@ async function pushCloud(){
   }
 }
 let pushFailed = false;
+
+/* ===== §0B 資料保護 =====
+   雲端那份是「鏡像」不是「備份」：schedulePush 用 setDoc 整份覆蓋，沒有版本歷史。
+   遷移一跑完就 push，若遷移有 bug，使用者什麼都還沒做，雲端原本那份就已經沒了。
+   下面三件事補這個洞：
+     機制一 ensureCloudSnapshot()：每個 schema 版號在雲端留一份「遷移前的原樣」，只寫一次
+     機制二 runMigrations()      ：遷移全程 try/catch，失敗回捲本機、封鎖 push
+     機制三 openCloudRestore()   ：使用說明裡的還原入口，讓使用者自己救
+   SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
+   SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
+const SCHEMA_VER = 5;
+const SNAP_KEEP  = 3;                 // 只留最近 3 個版號，避免 Firestore 單一文件 1MB 上限爆掉
+const SNAP_BUDGET = 900 * 1024;       // 快照總量上限（保守值，留給 payload 本身）
+function snapField(v){ return 'payload_pre_v' + v; }
+function snapVerOf(k){ const m = /^payload_pre_v(\d+)$/.exec(k); return m ? parseInt(m[1],10) : null; }
+
+let migrationFailed = false;   // 機制二：一旦為 true，全面封鎖 push
+let cloudSnapReady  = false;   // 機制一：雲端快照確認完成前，不允許 push
+
+/* 機制二：遷移閘門。任何一步丟例外就把本機回捲到遷移前，並封鎖 push。
+   寧可讓使用者看到錯誤，也不要把壞資料推上雲端。 */
+function runMigrations(){
+  const KEYS = [KEY, QKEY, CKEY, DKEY, RKEY];
+  const before = {};
+  KEYS.forEach(k => { before[k] = localStorage.getItem(k); });
+  try {
+    migrateQ(); migrateClients(); migrateAcc(); migrateAcc3();
+    return true;
+  } catch(e){
+    KEYS.forEach(k => {
+      if (before[k] == null) localStorage.removeItem(k); else localStorage.setItem(k, before[k]);
+    });
+    migrationFailed = true;
+    try { console.error('[migration]', e); } catch(_){}
+    showMigrationError(e);
+    return false;
+  }
+}
+function showMigrationError(e){
+  const msg = (e && e.message) ? e.message : String(e || '未知錯誤');
+  openModal('<h3 style="margin-top:0">資料轉換沒有成功</h3>'
+    + '<p>為了不弄壞你的紀錄，這次的轉換已經中止，你的資料維持原樣，也<b>沒有</b>被寫回雲端。</p>'
+    + '<p>請把下面這行訊息連同你用的裝置與瀏覽器告訴開發者，先不要在這台裝置上新增或編輯紀錄。</p>'
+    + '<pre class="mentor-pre">' + esc(msg) + '</pre>');
+}
+
+/* 機制一：遷移前先在雲端留一份未遷移的原樣 payload。
+   回傳 true 才可以繼續遷移／push；false 一律中止。 */
+async function ensureCloudSnapshot(ver){
+  if (!fb.db || !currentUser) { cloudSnapReady = false; return false; }
+  try {
+    const ref  = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
+    const snap = await fb.fsMod.getDoc(ref);
+    if (!snap.exists() || !snap.data().payload){
+      cloudSnapReady = true;      // 雲端還沒有資料，沒有東西會被蓋掉
+      return true;
+    }
+    const d = snap.data();
+    const field = snapField(ver);
+    if (d[field]){                // 這個版號已經留過，不覆寫（時間戳因此不會變）
+      cloudSnapReady = true;
+      return true;
+    }
+    const patch = {};
+    patch[field] = { payload: d.payload, at: new Date().toISOString(), app: APP_VER };
+    // 只留最近 SNAP_KEEP 個版號（含這次要寫的），更舊的一併刪除
+    const vers = Object.keys(d).map(snapVerOf).filter(v => v != null).concat([ver])
+                   .sort((a,b)=>b-a);
+    let budget = SNAP_BUDGET - String(d.payload || '').length;
+    const keep = [];
+    vers.forEach(v => {
+      if (keep.length >= SNAP_KEEP) return;
+      const sz = v === ver ? String(d.payload||'').length
+                           : String((d[snapField(v)] && d[snapField(v)].payload) || '').length;
+      if (keep.length && budget - sz < 0) return;   // 至少留這次這一份，其餘看預算
+      budget -= sz; keep.push(v);
+    });
+    Object.keys(d).forEach(k => {
+      const v = snapVerOf(k);
+      if (v != null && keep.indexOf(v) === -1) patch[k] = fb.fsMod.deleteField();
+    });
+    await fb.fsMod.setDoc(ref, patch, { merge: true });   // merge：不動 payload 與 updated_at
+    cloudSnapReady = true;
+    return true;
+  } catch(e){
+    cloudSnapReady = false;
+    try { console.error('[snapshot]', e); } catch(_){}
+    toast('⚠️ 無法在雲端留備份，為了保護資料，這台裝置暫停同步');
+    return false;
+  }
+}
+
+/* 機制三：列出雲端現有的快照，讓使用者自己選一份還原 */
+async function openCloudRestore(){
+  if (!fb.db || !currentUser){ toast('要先登入才看得到雲端備份'); return; }
+  openModal('<h3 style="margin-top:0">還原到改版前</h3><p>正在讀取雲端備份…</p>');
+  let list = [];
+  try {
+    const snap = await fb.fsMod.getDoc(fb.fsMod.doc(fb.db, 'user_data', currentUser.uid));
+    const d = snap.exists() ? snap.data() : {};
+    list = Object.keys(d).map(k => ({ k: k, v: snapVerOf(k), o: d[k] }))
+             .filter(x => x.v != null && x.o && x.o.payload)
+             .sort((a,b)=>b.v-a.v);
+  } catch(e){
+    openModal('<h3 style="margin-top:0">還原到改版前</h3><p>讀取雲端備份失敗，請稍後再試。</p>');
+    return;
+  }
+  if (!list.length){
+    openModal('<h3 style="margin-top:0">還原到改版前</h3>'
+      + '<p>雲端目前沒有改版前的備份。這代表你的資料從來沒有經過需要備份的改版，或這是新帳號。</p>');
+    return;
+  }
+  const rows = list.map(x => {
+    let n = 0; try { n = (JSON.parse(x.o.payload).records || []).length; } catch(e){}
+    return '<div class="acc-item"><div class="acc-title">' + esc('改版前（v' + x.v + '）') + '</div>'
+      + '<div class="acc-desc">' + esc((x.o.at || '').slice(0,19).replace('T',' ')) + '　' + n + ' 筆紀錄</div>'
+      + '<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="doCloudRestore(' + x.v + ')">還原這一份</button></div>';
+  }).join('');
+  openModal('<h3 style="margin-top:0">還原到改版前</h3>'
+    + '<p>選一份還原。還原會把這台裝置的紀錄換成該時間點的內容，並同步到雲端。'
+    + '改版後才填的內容會消失，請先確認。</p>' + rows);
+}
+async function doCloudRestore(ver){
+  if (!fb.db || !currentUser) return;
+  if (!confirm('確定要還原成 v' + ver + ' 改版前的資料嗎？\n改版後才填的內容會消失。')) return;
+  try {
+    const snap = await fb.fsMod.getDoc(fb.fsMod.doc(fb.db, 'user_data', currentUser.uid));
+    const o = snap.exists() && snap.data()[snapField(ver)];
+    if (!o || !o.payload){ toast('找不到那一份備份'); return; }
+    const p = JSON.parse(o.payload);
+    if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
+    if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
+    if (Array.isArray(p.clients))   localStorage.setItem(CKEY, JSON.stringify(p.clients));
+    if (p.deleted && p.deleted.r)   storeDel(p.deleted);
+    localStorage.removeItem(RKEY);            // 影子副本屬於改版後，不能拿來「補回」還原掉的內容
+    closeLegal();
+    toast('已還原，正在重新載入');
+    setTimeout(()=>location.reload(), 600);
+  } catch(e){ toast('還原失敗，資料沒有被更動'); }
+}
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1050,6 +1483,12 @@ function downloadBlob(content, filename, mime){
 }
 
 /* ---- export: PDF (history) via print ---- */
+function focusLine(r){
+  const f = String(r.focus||'').trim();
+  const pf = String(r.prevFocus||'').trim();
+  const pr = focusResultLabel(r.prevFocusResult||'');
+  return { focus: f, prev: pf, prevLabel: pr };
+}
 function recordMainHTML(r){
   const list = (title, items) => items&&items.length
     ? `<div class="lbl">${title}</div><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul>` : '';
@@ -1063,6 +1502,10 @@ function recordMainHTML(r){
       ${r.clientfeel!=null?`<div class="score">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because"><b>因為</b>　${esc(r.because)}</div>`:''}`:''}
     </div>
     ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
+    ${r.prevFocus?`<div class="lbl">上次說要盯</div><div>「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div>`:''}
+    ${r.focus?`<div class="lbl">下一場只盯這一件事</div><div>${esc(r.focus)}</div>`:''}
+    ${r.clientQuote?`<div class="lbl">他自己說的一句話</div><div>${esc(r.clientQuote)}</div>`:''}
+    ${r.notCaught?`<div class="lbl">我注意到但沒接的</div><div>${esc(r.notCaught)}</div>`:''}
     ${list('我做得好的', r.good)}
     ${r.insight?`<div class="lbl">客戶受到啟發／頓悟的時刻</div><div>${esc(r.insight)}</div>`:''}
     ${list('可以改進的部分', r.improve)}
@@ -1115,13 +1558,13 @@ const PRINT_CSS = `
 #print-root .doc-date{ color:#8a8378; font-size:10.5pt; margin:0 0 20pt; }
 #print-root .acc-page-head{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 4pt; }
 #print-root .date{ color:#8a8378; font-size:10.5pt; font-weight:normal; }
-#print-root .scorebox{ background:#faf6f0; border:1px solid #eadfce; border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
+#print-root .scorebox{ background:#E7F1F4; border:1px solid #C0DAE2; border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
 #print-root .score{ margin:0 0 6pt; }
 #print-root .score:last-child{ margin-bottom:0; }
-#print-root .score b{ color:#b08968; }
+#print-root .score b{ color:#16748C; }
 #print-root .because{ margin:8pt 0 0 0; padding-left:10pt; border-left:3px solid #d9c9b0; color:#7a7266; }
 #print-root .because b{ color:#a89478; }
-#print-root .lbl{ color:#8a7c68; font-weight:bold; font-size:11.5pt; margin:12pt 0 4pt; }
+#print-root .lbl{ color:#0F5A6D; font-weight:bold; font-size:11.5pt; margin:12pt 0 4pt; }
 #print-root ul{ margin:3pt 0; padding-left:22pt; }
 #print-root li{ margin-bottom:2pt; }
 #print-root .accsub{ font-weight:bold; font-size:11pt; color:#6b655c; margin:10pt 0 5pt; }
@@ -1229,12 +1672,14 @@ function renderChart() {
   if (!histFilter && arr.length > 20) arr = arr.slice(-20);
   const labels = arr.map(r => histFilter ? (r.session || (r.date||'').slice(5) || '') : (r.client || r.date || ''));
   const series = [
-    { name:'自評表現', color:'#b08968', vals: arr.map(r=>parseFloat(r.perf)) },
-    { name:'我的感受', color:'#5a9e5f', vals: arr.map(r=>parseFloat(r.feel)) },
-    { name:'客戶感受', color:'#4f7fb5', vals: arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+    { name:'自評表現', color:CHART.perf, vals: arr.map(r=>parseFloat(r.perf)) },
+    { name:'我的感受', color:CHART.feel, vals: arr.map(r=>parseFloat(r.feel)) },
+    { name:'客戶感受', color:CHART.client, vals: arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
   ];
   document.getElementById('trendChart').innerHTML = svgLineChart(labels, series);
 }
+/* §6 圖表用色：與 CSS 變數同一套，集中在這裡，不散落 */
+const CHART = { perf:'#16748C', feel:'#A6604A', client:'#3F7A48', grid:'#ECE7DE', ink:'#7C746A' };
 function escSvg(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 function svgLineChart(labels, series) {
   const W=600, H=250, padL=26, padR=14, padT=30, padB=44;
@@ -1244,7 +1689,7 @@ function svgLineChart(labels, series) {
   let g='';
   for (let v=0; v<=10; v+=2){
     const yy=Y(v);
-    g+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#ece4d7" stroke-width="1"/>`;
+    g+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="${CHART.grid}" stroke-width="1"/>`;
     g+=`<text x="${padL-5}" y="${yy+3}" font-size="9" fill="#a39b8e" text-anchor="end">${v}</text>`;
   }
   labels.forEach((lb,i)=>{
@@ -1268,6 +1713,43 @@ function svgLineChart(labels, series) {
 }
 
 /* ---- backup / restore / export ---- */
+/* 只有管理者才會有這顆按鈕；其他人連 DOM 節點都不會被建出來 */
+function renderAdminBackup(){
+  const slot = document.getElementById('admin-backup-slot');
+  if (!slot) return;
+  slot.innerHTML = isAdmin()
+    ? '<button class="btn btn-ghost" onclick="backupAllUsers()">備份所有人（管理者）</button>'
+    : '';
+}
+async function backupAllUsers(){
+  if (!isAdmin()){ toast('這個功能只有管理者帳號能用'); return; }
+  if (!fb.db || !fb.fsMod){ toast('⚠️ 雲端沒有連上，請先登入後再試一次'); return; }
+  toast('正在讀取全體資料…');
+  let snap;
+  try {
+    snap = await fb.fsMod.getDocs(fb.fsMod.collection(fb.db, 'user_data'));
+  } catch(e){
+    const code = (e && (e.code || e.message)) || '';
+    const msg = /permission|insufficient/i.test(String(code))
+      ? '⚠️ 權限不足，這個帳號沒有讀取全體資料的權限'
+      : (/unauthenticated|auth/i.test(String(code))
+          ? '⚠️ 登入狀態失效，請重新登入後再試'
+          : '⚠️ 讀取全體資料失敗：' + String(code));
+    toast(msg);
+    try { console.error('[backupAllUsers]', e); } catch(_){}
+    return;
+  }
+  const users = [];
+  snap.forEach(d => {
+    const v = d.data() || {};
+    users.push({ uid: d.id, payload: v.payload != null ? v.payload : null, updated_at: v.updated_at != null ? v.updated_at : null });
+  });
+  if (!users.length){ toast('⚠️ 讀得到集合，但裡面沒有任何使用者資料'); return; }
+  const out = { exportedAt: new Date().toISOString(), exportedBy: currentUser.uid, count: users.length, users };
+  downloadBlob(JSON.stringify(out, null, 2),
+    '全體備份_' + todayStr().replace(/-/g, '') + '.json', 'application/json');
+  toast('已下載全體備份（' + users.length + ' 位使用者）');
+}
 function backupJSON() {
   const data = { records: load(), questions: loadQ(), clients: loadC(), exportedAt: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
@@ -1334,6 +1816,10 @@ function recordToText(r) {
   lines.push('自評感受：'+r.feel);
   if(r.clientfeel!=null) lines.push('我覺得客戶的感受：'+r.clientfeel);
   if(r.because) lines.push('　因為：'+r.because);
+  if(r.prevFocus) lines.push('上次說要盯：'+r.prevFocus+(r.prevFocusResult?'　→　'+focusResultLabel(r.prevFocusResult):''));
+  if(r.focus) lines.push('下一場只盯這一件事：'+r.focus);
+  if(r.clientQuote) lines.push('他自己說的一句話：'+r.clientQuote);
+  if(r.notCaught) lines.push('我注意到但沒接的：'+r.notCaught);
   if(r.good&&r.good.length){ lines.push('我做得好的：'); r.good.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
   if(r.insight) lines.push('客戶受到啟發／頓悟的時刻：'+r.insight);
   if(r.improve&&r.improve.length){ lines.push('我可以改進的部分：'); r.improve.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
@@ -1386,12 +1872,18 @@ function buildAcc() {
       <div class="mk-row${m.acc?' is-acc':''}" id="mk-row-${mkId(i,m.c)}">
         <div class="mk-top">
           <input type="checkbox" id="mk-chk-${mkId(i,m.c)}">
-          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${m.acc?'<span class="mk-badge">ACC</span>':''}${m.t}
+          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${m.acc?'<span class="mk-tag acc">ACC 必備</span>':'<span class="mk-tag pcc">PCC 才要求</span>'}${m.acc&&MK_TWO[i]?'<span class="mk-tag two">PCC 需 2 個證據</span>':''}${m.t}
             ${m.p?`<div class="mk-plain">${m.p}</div>`:''}</div>
         </div>
         <div class="mk-ev"><input type="text" id="mk-ev-${mkId(i,m.c)}"
           placeholder="證據時間戳，例：10:08、11:31（沒有就寫 No）"></div>
         <div class="mk-hint" id="mk-hint-${mkId(i,m.c)}"></div>
+        <div class="mk-btns"><button type="button" class="mk-addbtn" id="mk-impbtn-${mkId(i,m.c)}"
+          onclick="toggleMkImp(${i},'${m.c}')">＋ 要改的</button></div>
+        <div class="mk-imp hidden" id="mk-imp-box-${mkId(i,m.c)}">
+          <textarea id="mk-imp-${mkId(i,m.c)}" rows="1"
+            placeholder="這一條要往哪裡練，例：連問三個問題，沒有等他回答"></textarea>
+        </div>
       </div>`).join('');
     const n = CC_NOTE[i] || {};
     const noteHTML = (n.x?`<div class="mk-warn"><b>直接扣分：</b>${n.x}</div>`:'')
@@ -1414,7 +1906,7 @@ function buildAcc() {
         <input type="text" id="acc-note-${i}" placeholder="做到的地方與時間戳（選填）">
       </div>
       <div class="acc-field">
-        <div class="acc-flabel">需要改善的地方</div>
+        <div class="acc-flabel">需要改善的地方 <span class="hint">跨 marker 的話寫這裡</span></div>
         <textarea id="acc-imp-${i}" rows="1" placeholder="這項要往哪裡練——不必勾選也可以寫（選填）"></textarea>
       </div>
       <button type="button" class="mk-toggle" id="mk-tog-${i}" onclick="toggleMk(${i})">
@@ -1486,6 +1978,16 @@ function toggleMk(i){
     (open ? '收合 ACC 標記 ▴' : '展開 ACC 標記（'+n+' 條）▾');
 }
 /* 兩個證據的規則：不擋輸入，只擋勾選 */
+/* §4B：39 條 × 2 欄 = 78 格，全開會變成一片空格，所以「要改的」點了才長出來 */
+function toggleMkImp(i, code, force){
+  const id = mkId(i, code);
+  const box = document.getElementById('mk-imp-box-'+id);
+  const btn = document.getElementById('mk-impbtn-'+id);
+  if (!box) return;
+  const open = force != null ? force : box.classList.contains('hidden');
+  box.classList.toggle('hidden', !open);
+  if (btn) { btn.classList.toggle('on', open); btn.textContent = open ? '－ 要改的' : '＋ 要改的'; }
+}
 function refreshMk(i, code){
   const id = mkId(i, code);
   const ev = document.getElementById('mk-ev-'+id);
@@ -1514,7 +2016,9 @@ function getAcc() {
       const id = mkId(i, m.c);
       const on = document.getElementById('mk-chk-'+id).checked;
       const evv = document.getElementById('mk-ev-'+id).value.trim();
-      if (on || evv) mk[m.c] = { on, ev: evv };
+      const impEl = document.getElementById('mk-imp-'+id);
+      const impv = impEl ? impEl.value.trim() : '';
+      if (on || evv || impv) mk[m.c] = { on, ev: evv, imp: impv };
     });
     return {
       st,
@@ -1538,8 +2042,16 @@ function accBadgeText(r){
 }
 function mkLines(x, i){
   const mk = (x && x.mk) || {};
-  return (MK[i]||[]).filter(m=>mk[m.c] && (mk[m.c].on || mk[m.c].ev))
-    .map(m=>(mk[m.c].on ? '✓' : '·') + ' ' + (m.d||m.c) + (mk[m.c].ev ? '　' + mk[m.c].ev : ''));
+  const out = [];
+  (MK[i]||[]).forEach(m=>{
+    const v = mk[m.c];
+    if (!v) return;
+    const on = mkOn(v), ev = mkEv(v), imp = mkImp(v);
+    if (!on && !ev && !imp) return;
+    if (on || ev) out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + (ev ? '　' + ev : ''));
+    if (imp) out.push('  ' + m.c + ' 要改的：' + imp);
+  });
+  return out;
 }
 
 /* ---- views ---- */
@@ -1550,16 +2062,139 @@ function showView(v) {
   document.getElementById('view-ask').classList.toggle('hidden', v!=='ask');
   document.getElementById('view-clients').classList.toggle('hidden', v!=='clients');
   document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
+  document.getElementById('view-cred').classList.toggle('hidden', v!=='cred');
   document.getElementById('tabNew').classList.toggle('active', v==='new');
   document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
   document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
-  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); renderReflect(); }
+  document.getElementById('tabCred').classList.toggle('active', v==='cred');
+  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); renderReflect(); renderAdminBackup(); }
   if (v==='ask') renderAsk();
-  if (v==='clients') { renderHours(); renderClients(); }
+  if (v==='clients') renderClients();
+  if (v==='cred') renderCred();
 }
 
 /* ---- save ---- */
+/* ===== §1–§3 新欄位：焦點閉環、客戶那一半、分段折疊 =====
+   五個新欄位一律在紀錄物件頂層，不進 acc：
+   focus / prevFocus / prevFocusResult / clientQuote / notCaught（另加 §4C 的 submitCandidate）
+   舊紀錄沒有這些欄位，所有讀取端一律 ?? ''，畫面上不會出現 undefined。 */
+const FOCUS_RESULTS = [['done','做到'],['partial','部分'],['missed','沒做到'],['forgot','忘了']];
+function focusResultLabel(v){ const f = FOCUS_RESULTS.find(x=>x[0]===v); return f ? f[1] : ''; }
+let _prevFocusText = '', _prevFocusResult = '', _scoreTouched = false;
+let _lastImproveText = '';   // 回顧卡第二行：同一位客戶上次寫的「可以改進的部分」
+let _legacyInsight = '';   // 編輯舊紀錄時保留的 r.insight（表單不再並列這一問，但資料不刪）
+
+function fv(id){ const el = document.getElementById(id); return el ? String(el.value||'').trim() : ''; }
+
+/* 同一位客戶最近一筆有寫 focus 的紀錄 */
+function focusPrevFor(clientId, excludeId){
+  if (!clientId) return '';
+  const rs = load().filter(r => r.clientId === clientId && r.id !== excludeId && String(r.focus||'').trim());
+  if (!rs.length) return '';
+  rs.sort((a,b) => String(a.date||'').localeCompare(String(b.date||'')) || (a.id - b.id));
+  return String(rs[rs.length-1].focus||'').trim();
+}
+/* §2B 回顧卡：一張卡兩行（上次焦點／上次要改）。
+   任一行沒資料就整行不出現；兩行都沒有整張卡不渲染，不留空框。 */
+function renderFocusReview(text, result){
+  _prevFocusText = String(text||'').trim();
+  _prevFocusResult = result || '';
+  const box = document.getElementById('focus-review');
+  if (!box) return;
+  if (!_prevFocusText && !_lastImproveText){ box.innerHTML = ''; updateSegbar(); return; }
+  const row = (lbl, txt) => '<div class="fr-row"><span class="fr-lbl">' + lbl + '</span>'
+    + '<span class="fr-txt">' + txt + '</span></div>';
+  const btns = FOCUS_RESULTS.map(([v,n]) =>
+    '<button type="button" class="fr-btn' + (_prevFocusResult===v ? ' on' : '') +
+    '" onclick="setPrevFocusResult(\'' + v + '\')">' + n + '</button>').join('');
+  /* 沒有上次焦點就沒有可回答的問題，四個按鈕跟著那一行一起消失 */
+  const ask = _prevFocusText
+    ? '<div class="fr-q">做到了嗎？</div>'
+      + '<div class="fr-btns">' + btns + '</div>'
+      + '<div class="sub-note">不選也能存檔。「忘了」跟「沒做到」是兩件不同的事：忘了是流程問題，沒做到是能力問題。</div>'
+    : '';
+  box.innerHTML =
+    '<section class="card fold review-card" data-fold="review">' +
+      '<button type="button" class="fold-head" onclick="toggleFold(\'review\')">' +
+        '<span class="fold-title">上一場留下的</span>' +
+        '<span class="fold-state" data-state="review"></span>' +
+        '<span class="fold-act">收起 ▴</span>' +
+      '</button>' +
+      '<div class="fold-body">' +
+        (_prevFocusText   ? row('上次焦點', '「' + esc(_prevFocusText) + '」') : '') +
+        (_lastImproveText ? row('上次要改', esc(_lastImproveText)) : '') +
+        ask +
+      '</div>' +
+    '</section>';
+  updateFoldHead('review'); updateSegbar();
+}
+function setPrevFocusResult(v){
+  renderFocusReview(_prevFocusText, _prevFocusResult === v ? '' : v);   // 再點一次取消
+}
+function updateFocusCount(){
+  const el = document.getElementById('focus-count');
+  if (el) el.textContent = fv('f-focus').length + ' / 40';
+  updateSegbar();
+}
+/* 依目前選到的客戶重算回顧卡（新增模式才自動帶，編輯模式用紀錄裡存的原文） */
+function refreshFocusReview(){
+  if (editId) return;
+  const sel = document.getElementById('f-client-sel');
+  const v = sel ? sel.value : '';
+  renderFocusReview(v && v !== '__new__' ? focusPrevFor(v, null) : '', '');
+}
+
+/* ===== §6 分段折疊 ===== */
+const SEGS = [['review','回顧'],['instant','問題'],['score','自評'],['focus','焦點'],['client','客戶'],['acc','職能']];
+function accFilledCount(){
+  return document.querySelectorAll('#acc-list .acc-item:not([data-st="-1"])').length;
+}
+/* true 已填／false 未填／null 這一場用不到 */
+function segFilled(k){
+  switch(k){
+    case 'review':  return _prevFocusText ? !!_prevFocusResult : null;
+    case 'instant': return !!fv('f-instant');
+    case 'score':   return _scoreTouched;
+    case 'focus':   return !!fv('f-focus');
+    case 'client':  return !!(fv('f-clientquote') || fv('f-notcaught'));
+    case 'acc':     return accFilledCount() > 0;
+  }
+  return false;
+}
+function markTouched(k){ if (k === 'score') _scoreTouched = true; updateSegbar(); }
+function updateSegbar(){
+  const bar = document.getElementById('segbar');
+  if (!bar) return;
+  bar.innerHTML = SEGS.map(([k,n]) => {
+    const f = segFilled(k);
+    const cls = f === null ? 'seg-na' : (f ? 'seg-on' : '');
+    return '<span class="segb ' + cls + '">' + n + '</span>';
+  }).join('');
+  SEGS.forEach(([k]) => updateFoldHead(k));
+  ['reflect','special','ai','basic'].forEach(updateFoldHead);
+}
+/* 收合標題同時顯示狀態與動作，不只有箭頭 */
+function updateFoldHead(k){
+  const el = document.querySelector('[data-fold="' + k + '"]');
+  if (!el) return;
+  const folded = el.classList.contains('folded');
+  const act = el.querySelector('.fold-act');
+  if (act) act.textContent = folded ? '展開 ▾' : '收起 ▴';
+  const st = el.querySelector('.fold-state');
+  if (st){
+    const f = SEGS.some(x=>x[0]===k) ? segFilled(k) : null;
+    st.textContent = f === true ? '✓ 已填' : (f === false ? '未填' : '');
+    st.className = 'fold-state' + (f === true ? ' ok' : '');
+  }
+}
+function toggleFold(k){
+  const el = document.querySelector('[data-fold="' + k + '"]');
+  if (!el) return;
+  el.classList.toggle('folded');
+  updateFoldHead(k);
+}
+
 function saveRecord() {
   const selVal = document.getElementById('f-client-sel').value;
   let clientId = '', clientCode = '';
@@ -1592,12 +2227,20 @@ function saveRecord() {
     clientfeel: document.getElementById('f-clientfeel').value,
     because: document.getElementById('f-because').value.trim(),
     good: getItems('good-list'),
-    insight: document.getElementById('f-insight').value.trim(),
     improve: getItems('improve-list'),
     special: getItems('special-list'),
     acc: getAcc(),
-    accv: 4
+    accv: 4,
+    /* §1 五個新頂層欄位（不進 acc）＋ §4C 送審錄音候選 */
+    focus: fv('f-focus').slice(0, 40),
+    prevFocus: _prevFocusText,
+    prevFocusResult: _prevFocusResult,
+    clientQuote: fv('f-clientquote'),
+    notCaught: fv('f-notcaught'),
+    submitCandidate: !!(document.getElementById('f-submitcand') || {}).checked
   };
+  /* 表單不再並列「受到啟發／頓悟的時刻」，但舊欄位的資料不刪 */
+  if (_legacyInsight) rec.insight = _legacyInsight;
   if (!rec.client && !rec.instant) { toast('請至少填客戶或問題'); return; }
   const arr = load();
   if (editId) {
@@ -1627,22 +2270,32 @@ function resetForm() {
   lastAutoSession = '';
   document.getElementById('f-client-new').value = '';
   document.getElementById('f-client-pre').value = '0';
-  const li = document.getElementById('f-lastimprove');
-  if (li) { li.classList.add('hidden'); li.innerHTML = ''; }
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
   document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
   document.getElementById('f-because').value = '';
-  document.getElementById('f-insight').value = '';
+  document.getElementById('f-focus').value = '';
+  document.getElementById('f-clientquote').value = '';
+  document.getElementById('f-notcaught').value = '';
+  document.getElementById('f-submitcand').checked = false;
+  _legacyInsight = '';
+  const lg = document.getElementById('f-insight-legacy');
+  if (lg){ lg.classList.add('hidden'); lg.innerHTML = ''; }
   ['good-list','improve-list','special-list'].forEach(id=>document.getElementById(id).innerHTML='');
-  addItem('good-list'); addItem('good-list'); addItem('good-list');
+  addItem('good-list');            /* §5.1 不強制填滿三格 */
   addItem('improve-list');
   addItem('special-list');
   buildAcc();
   editId = null;
   buildClientSel('');
   document.getElementById('saveBtn').textContent = '儲存紀錄';
+  _scoreTouched = false;
+  _lastImproveText = '';
+  renderFocusReview('', '');
+  updateFocusCount();
+  refreshFocusReview();
+  updateSegbar();
 }
 
 /* ---- history list ---- */
@@ -1664,44 +2317,103 @@ function updateStats(){
     + (goods ? ' · '+goods+' 條強項' : '');
 }
 /* 教練時數破關儀表板（客戶頁）：原生 CSS 進度條 */
-function renderHours(){
-  const card = document.getElementById('hours-card');
-  const recs = load();
-  if (!recs.length) { card.style.display = 'none'; return; }
-  card.style.display = '';
-  const withMins = recs.filter(r=>parseInt(r.mins,10)>0);
-  const cut = new Date(); cut.setMonth(cut.getMonth()-18);
-  const cutStr = cut.getFullYear()+'-'+String(cut.getMonth()+1).padStart(2,'0')+'-'+String(cut.getDate()).padStart(2,'0');
+/* ===== §4C ACC 與 PCC 同時看得到 =====
+   不做模式切換：ACC 與 PCC 不是兩個產品，是同一條路上的兩個門檻。
+   門檻數字集中成常數表，ICF 規則會改，不要散在 UI 裡。 */
+const CRED = {
+  acc: { name:'ACC', hours:100, paid:75,  clients:8,  mentor:10, rec:1, recent:25, months:18 },
+  pcc: { name:'PCC', hours:500, paid:450, clients:25, mentor:10, rec:2, recent:25, months:18 }
+};
+const CRED_MENTOR_NOTE = '10 小時（至少 3 個月，其中 3 小時一對一）';
+function monthsAgoStr(n){
+  const d = new Date(); d.setMonth(d.getMonth() - n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function credStats(recs){
+  const withMins = (recs||[]).filter(r=>parseInt(r.mins,10) > 0);
   const h = m => Math.round(m/60*10)/10;
-  const totalH  = h(withMins.reduce((s,r)=>s+parseInt(r.mins,10),0));
-  const recentH = h(withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10),0));
-  const nClients = new Set(recs.map(r=>r.clientId).filter(Boolean)).size;
-  const bar = (name, val, goal, unit) => {
-    const pct = Math.min(100, goal ? val/goal*100 : 0);
-    const done = val >= goal;
-    return `<div class="pb-row">
-      <div class="pb-head">
-        <span class="pb-name">${name}</span>
-        <span class="pb-val">${val} / ${goal} ${unit}${done?'　<span class="done-tag">✓ 達標</span>':''}</span>
-      </div>
-      <div class="pb-track"><div class="pb-fill${done?' done':''}" data-w="${pct.toFixed(1)}" style="width:0%"></div></div>
-    </div>`;
+  const cutStr = monthsAgoStr(CRED.acc.months);
+  return {
+    totalH:  h(withMins.reduce((s,r)=>s+parseInt(r.mins,10), 0)),
+    recentH: h(withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10), 0)),
+    clients: new Set((recs||[]).map(r=>r.clientId).filter(Boolean)).size,
+    noMins:  (recs||[]).length - withMins.length,
+    cands:   (recs||[]).filter(r=>r.submitCandidate)
   };
-  document.getElementById('hours-stats').innerHTML =
-    bar('總時數', totalH, 100, '小時') +
-    bar('近 18 個月', recentH, 25, '小時') +
-    bar('不重複客戶', nClients, 8, '位') +
-    (withMins.length < recs.length ? '<div class="pb-note">有 '+(recs.length-withMins.length)+' 筆未填時長，未計入時數</div>' : '');
-  // 微互動：下一個 frame 再設寬度，讓 transition 從 0 長出來
+}
+function credBar(name, val, goal, unit){
+  const pct = Math.min(100, goal ? val/goal*100 : 0);
+  const done = val >= goal;
+  return '<div class="pb-row"><div class="pb-head">'
+    + '<span class="pb-name">' + name + '</span>'
+    + '<span class="pb-val">' + val + ' / ' + goal + ' ' + unit + (done ? '　<span class="done-tag">✓ 達標</span>' : '') + '</span>'
+    + '</div><div class="pb-track"><div class="pb-fill' + (done ? ' done' : '') + '" data-w="' + pct.toFixed(1) + '" style="width:0%"></div></div></div>';
+}
+function renderCred(){
+  const recs = load();
+  const st = credStats(recs);
+  /* 首頁進度：一條軸、兩個門檻標記（ACC 100 畫一條垂線，PCC 500 是右端） */
+  const pct = Math.min(100, st.totalH / CRED.pcc.hours * 100);
+  const accMark = CRED.acc.hours / CRED.pcc.hours * 100;
+  document.getElementById('cred-axis').innerHTML =
+    '<div class="cred-track"><div class="cred-fill" style="width:' + pct.toFixed(1) + '%"></div>'
+      + '<div class="cred-mark" style="left:' + accMark.toFixed(1) + '%"></div></div>'
+    + '<div class="cred-scale"><span>0</span><span>ACC ' + CRED.acc.hours + '</span><span>PCC ' + CRED.pcc.hours + '</span></div>'
+    + '<div class="cred-line">目前累積 <b>' + st.totalH + '</b> 小時、<b>' + st.clients + '</b> 位不重複客戶。</div>'
+    + ['acc','pcc'].map(k=>{
+        const c = CRED[k];
+        const need = [];
+        if (st.totalH  < c.hours)   need.push('時數還差 ' + Math.round((c.hours - st.totalH)*10)/10 + ' 小時');
+        if (st.clients < c.clients) need.push('客戶還差 ' + (c.clients - st.clients) + ' 位');
+        if (st.recentH < c.recent)  need.push('近 ' + c.months + ' 個月還差 ' + Math.round((c.recent - st.recentH)*10)/10 + ' 小時');
+        need.push('送審錄音 ' + c.rec + ' 份');
+        need.push('導師教練 ' + CRED_MENTOR_NOTE);
+        return '<div class="cred-line"><b>' + c.name + '：</b>' + need.join('、') + '</div>';
+      }).join('')
+    + (st.noMins ? '<div class="pb-note">有 ' + st.noMins + ' 筆未填時長，未計入時數</div>' : '');
+
+  /* 18 個月近期性視窗：這條規則跟總時數無關，累積多年的人最容易在這裡被卡 */
+  document.getElementById('cred-warn').innerHTML = st.recentH < CRED.acc.recent
+    ? '<div class="card"><div class="warn-box"><b>近期性不足。</b>'
+      + '申請前 ' + CRED.acc.months + ' 個月內至少要有 ' + CRED.acc.recent + ' 小時。總時數夠了但近期不足一樣不能送。'
+      + '（目前近 ' + CRED.acc.months + ' 個月：' + st.recentH + ' 小時）</div></div>'
+    : '';
+
+  /* 桌機：兩張卡並排，每個條件一條進度條 */
+  document.getElementById('cred-cards').innerHTML = ['acc','pcc'].map(k=>{
+    const c = CRED[k];
+    return '<div class="card"><label style="margin-top:0">' + c.name + ' 門檻</label>'
+      + credBar('總時數', st.totalH, c.hours, '小時')
+      + credBar('付費時數', st.totalH, c.paid, '小時')
+      + credBar('不重複客戶', st.clients, c.clients, '位')
+      + credBar('近 ' + c.months + ' 個月', st.recentH, c.recent, '小時')
+      + credBar('送審錄音', st.cands.length, c.rec, '份')
+      + '<div class="cred-note">導師教練：' + CRED_MENTOR_NOTE + '（工具不追蹤，請自行記錄）<br>'
+      + '「付費時數」用總時數估算——工具沒有記錄每場是否付費，這條要自己核對。</div></div>';
+  }).join('');
+
+  /* 送審錄音候選：當場才知道哪場談得好，三個月後翻紀錄挑不出來 */
+  const cands = st.cands.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  document.getElementById('cred-cands').innerHTML = cands.length
+    ? cands.map(r=>{
+        const n = (r.acc||[]).filter(x=>accSt(x) === 2).length;
+        return '<div class="cand-row"><span>' + (r.date||'') + '　' + esc(r.client||'（未填）')
+          + (r.mins ? '　' + r.mins + ' 分' : '') + '</span>'
+          + '<span class="cr-n">到位 ' + n + ' 項</span></div>';
+      }).join('')
+    : '<div class="acc-none">還沒有標記候選場次</div>';
+
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('#hours-stats .pb-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
+    document.querySelectorAll('#cred-cards .pb-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
   }));
 }
 function exportHoursCSV(){
   const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
   if (!arr.length) { toast('沒有紀錄'); return; }
-  const rows = [['日期','客戶代號','會談次數','時長(分鐘)']]
-    .concat(arr.map(r=>[r.date||'', r.client||'', formatSession(r.session)||'', r.mins||'']));
+  /* §4C：ICF 時數表要求客戶真實姓名／聯絡方式／關係起訖日，工具刻意不存這三項，
+     這裡留三個空白欄位讓使用者自己填 */
+  const rows = [['日期','客戶代號','會談次數','時長(分鐘)','客戶真實姓名(自行填寫)','聯絡方式(自行填寫)','關係起訖日(自行填寫)']]
+    .concat(arr.map(r=>[r.date||'', r.client||'', formatSession(r.session)||'', r.mins||'', '', '', '']));
   const csv = String.fromCharCode(0xFEFF) + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   downloadBlob(csv, '教練時數表_'+todayStr()+'.csv', 'text/csv;charset=utf-8');
   toast('已匯出時數表');
@@ -1741,7 +2453,7 @@ function openDetail(id, from) {
     const html = `<div class="acc-detail">
         <div class="acc-detail-title"><span class="acc-mark">${stMark(st)}</span>核心職能 ${ACC[i][0]}</div>
         ${x.note?`<div class="acc-detail-note">${esc(x.note)}</div>`:''}
-        ${x.imp?`<div class="acc-detail-note" style="color:#c47b3f">需要改善：${esc(x.imp)}</div>`:''}
+        ${x.imp?`<div class="acc-detail-note" style="color:var(--warm-ink)">需要改善：${esc(x.imp)}</div>`:''}
         ${mkl.length?`<div class="acc-detail-note">${mkl.map(esc).join('<br>')}</div>`:''}
       </div>`;
     groups[st].push(html);
@@ -1755,6 +2467,10 @@ function openDetail(id, from) {
       ${r.clientfeel!=null?`<div class="score-line">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because-note"><span class="bl">因為</span>　${esc(r.because)}</div>`:''}`:''}
     </div>
     ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
+    ${r.prevFocus?`<div class="detail-field"><div class="detail-label">上次說要盯</div><div class="detail-val">「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div></div>`:''}
+    ${r.focus?`<div class="detail-field"><div class="detail-label">下一場只盯這一件事</div><div class="detail-val">${esc(r.focus)}</div></div>`:''}
+    ${r.clientQuote?`<div class="detail-field"><div class="detail-label">他自己說的一句話</div><div class="detail-val">${esc(r.clientQuote)}</div></div>`:''}
+    ${r.notCaught?`<div class="detail-field"><div class="detail-label">我注意到但沒接的</div><div class="detail-val">${esc(r.notCaught)}</div></div>`:''}
     ${listBlock('我做得好的', r.good)}
     ${r.insight?`<div class="detail-field"><div class="detail-label">客戶受到啟發／頓悟的時刻</div><div class="detail-val">${esc(r.insight)}</div></div>`:''}
     ${listBlock('可以改進的部分', r.improve)}
@@ -1784,7 +2500,25 @@ function editCurrent() {
   const cf = (r.clientfeel!=null?r.clientfeel:7);
   document.getElementById('f-clientfeel').value = cf; document.getElementById('clientfeelVal').textContent = cf;
   document.getElementById('f-because').value = r.because || '';
-  document.getElementById('f-insight').value = r.insight || '';
+  document.getElementById('f-focus').value = r.focus || '';
+  document.getElementById('f-clientquote').value = r.clientQuote || '';
+  document.getElementById('f-notcaught').value = r.notCaught || '';
+  document.getElementById('f-submitcand').checked = !!r.submitCandidate;
+  _scoreTouched = true;
+  _lastImproveText = '';           /* 編輯舊紀錄時不帶「上次要改」，避免時間對不上 */
+  /* 這一筆存的是當時看到的原文，不重算 */
+  renderFocusReview(r.prevFocus || '', r.prevFocusResult || '');
+  updateFocusCount();
+  _legacyInsight = r.insight || '';
+  const lg = document.getElementById('f-insight-legacy');
+  if (lg){
+    if (_legacyInsight){
+      lg.classList.remove('hidden');
+      lg.innerHTML = '<div class="legacy-box"><div class="legacy-lbl">舊欄位：注意到客戶受到啟發／頓悟的時刻'
+        + '<span class="hint">新版改用上面那一欄，這段內容會原樣保留</span></div>'
+        + '<div class="legacy-txt">' + esc(_legacyInsight) + '</div></div>';
+    } else { lg.classList.add('hidden'); lg.innerHTML = ''; }
+  }
   ['good-list','improve-list','special-list'].forEach(id=>document.getElementById(id).innerHTML='');
   (r.good&&r.good.length?r.good:['']).forEach(v=>addItem('good-list',v));
   (r.improve&&r.improve.length?r.improve:['']).forEach(v=>addItem('improve-list',v));
@@ -1799,16 +2533,20 @@ function editCurrent() {
     (MK[i]||[]).forEach(m=>{
       const d = mk[m.c]; if (!d) return;
       const id = mkId(i, m.c);
-      document.getElementById('mk-ev-'+id).value = d.ev || '';
+      const ev = mkEv(d), imp = mkImp(d), on = mkOn(d);
+      document.getElementById('mk-ev-'+id).value = ev;
       refreshMk(i, m.c);
-      if (d.on && !document.getElementById('mk-chk-'+id).disabled)
+      if (on && !document.getElementById('mk-chk-'+id).disabled)
         document.getElementById('mk-chk-'+id).checked = true;
-      if (d.on || d.ev) hasMk = true;
+      const impEl = document.getElementById('mk-imp-'+id);
+      if (impEl && imp){ impEl.value = imp; toggleMkImp(i, m.c, true); }   /* 已有內容直接顯示 */
+      if (on || ev || imp) hasMk = true;
     });
     if (hasMk) toggleMk(i);   // 有填過就直接展開，不用再找一次
   });
   editId = r.id;
   document.getElementById('saveBtn').textContent = '更新紀錄';
+  updateSegbar();
   showView('new');
 }
 
@@ -1858,21 +2596,21 @@ function onClientSelChange(){
   if (!sel || !box) return;
   box.classList.toggle('hidden', sel.value !== '__new__');
   showLastImprove(sel.value === '__new__' ? '' : sel.value);
+  refreshFocusReview();
   if (sel.value === '__new__') { document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
 }
 /* 閉環提醒：選了客戶就帶出上次的「可改進」，讓這次會談前先看見 */
+/* 只負責算出「上次要改」那一行的文字，實際呈現在回顧卡裡（合成一張卡） */
 function showLastImprove(clientId){
-  const box = document.getElementById('f-lastimprove');
-  if (!box) return;
-  box.classList.add('hidden'); box.innerHTML = '';
-  if (!clientId || editId) return;   // 編輯舊紀錄時不顯示，避免時間對不上
-  const rs = clientRecs(clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
-  const last = rs.find(r=>r.improve && r.improve.length);
-  if (!last) return;
-  box.innerHTML = '💡 <b>上次（'+(last.date||'')+'）你想改進：</b>' +
-    last.improve.map(t=>'「'+esc(t)+'」').join('、') + '——這次有做到嗎？';
-  box.classList.remove('hidden');
+  _lastImproveText = '';
+  if (clientId && !editId){          // 編輯舊紀錄時不顯示，避免時間對不上
+    const rs = clientRecs(clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+    const last = rs.find(r=>r.improve && r.improve.length);
+    if (last) _lastImproveText = '（' + (last.date||'') + '）'
+      + last.improve.filter(Boolean).map(t=>'「' + t + '」').join('、');
+  }
+  renderFocusReview(_prevFocusText, _prevFocusResult);
 }
 /* 新客戶：依「之前已談次數」帶入下一次編號 */
 function newClientPreChange(){
@@ -1952,7 +2690,7 @@ function openClient(id){
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
     <label>備註 <span class="hint">選填，同樣不要寫可辨識個資</span></label><textarea id="c-note">${esc(c.note||'')}</textarea>
     <div class="actions" style="margin-top:12px">
-      ${rs.length ? `<button class="btn btn-ghost" onclick="renumberClient('${c.id}')">依日期重新編號</button>` : `<button class="btn btn-ghost" style="color:#c0392b" onclick="deleteClient('${c.id}')">刪除</button>`}
+      ${rs.length ? `<button class="btn btn-ghost" onclick="renumberClient('${c.id}')">依日期重新編號</button>` : `<button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteClient('${c.id}')">刪除</button>`}
       <button class="btn btn-primary" onclick="saveClient('${c.id}')">儲存客戶資料</button>
     </div>`;
   const cc = document.getElementById('client-chart-card');
@@ -1960,9 +2698,9 @@ function openClient(id){
     cc.style.display = '';
     const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
     const series = [
-      { name:'自評表現', color:'#b08968', vals: rs.map(r=>parseFloat(r.perf)) },
-      { name:'我的感受', color:'#5a9e5f', vals: rs.map(r=>parseFloat(r.feel)) },
-      { name:'客戶感受', color:'#4f7fb5', vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+      { name:'自評表現', color:CHART.perf, vals: rs.map(r=>parseFloat(r.perf)) },
+      { name:'我的感受', color:CHART.feel, vals: rs.map(r=>parseFloat(r.feel)) },
+      { name:'客戶感受', color:CHART.client, vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
     ];
     document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
   } else cc.style.display = 'none';
@@ -2037,6 +2775,16 @@ function toggleInsight(){
   document.getElementById('insight-arrow').textContent = insightOpen ? '收合 ▴' : '展開 ▾';
   if (insightOpen) renderInsight();
 }
+/* §2C 焦點追蹤：只計 prevFocusResult 有值的紀錄 */
+function focusStatsHTML(arr){
+  const n = { done:0, partial:0, missed:0, forgot:0 };
+  let N = 0;
+  (arr||[]).forEach(r=>{ const v = r.prevFocusResult; if (v && n[v] != null){ n[v]++; N++; } });
+  if (!N) return '<div class="reflect-line">🎯 <b>焦點追蹤：</b>'
+    + '<span class="hint">還沒有資料，設過焦點並在下一場回答後就會出現</span></div>';
+  return '<div class="reflect-line">🎯 <b>焦點追蹤：</b>設過 <b>' + N + '</b> 個焦點 — '
+    + '做到 <b>' + n.done + '</b>、部分 <b>' + n.partial + '</b>、沒做到 <b>' + n.missed + '</b>、忘了 <b>' + n.forgot + '</b></div>';
+}
 function renderInsight(){
   let arr = load();
   if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
@@ -2046,7 +2794,14 @@ function renderInsight(){
     (r.good||[]).forEach(t=>_insightGoods.push({t, r}));
     (r.improve||[]).forEach(t=>_insightImps.push({t, r}));
     // ACC 標記裡寫的「需要改善的地方」也一起彙整進來
-    (r.acc||[]).forEach((x,i)=>{ if (x && x.imp) _insightImps.push({t: ACC[i][0].replace(/^\d+ · /,'') + '：' + x.imp, r}); });
+    (r.acc||[]).forEach((x,i)=>{
+      if (x && x.imp) _insightImps.push({t: ACC[i][0].replace(/^\d+ · /,'') + '：' + x.imp, r});
+      const mk = (x && x.mk) || {};                       /* §4B：marker 層級的「要改的」 */
+      (MK[i]||[]).forEach(m=>{
+        const im = mkImp(mk[m.c]);
+        if (im) _insightImps.push({t: m.c + '：' + im, r});
+      });
+    });
   });
   const meta = r => `<span class="qctx">${esc(r.client)||''}　${r.date||''}</span>`;
   const gHtml = _insightGoods.length
@@ -2061,7 +2816,49 @@ function renderInsight(){
     `<div class="actions" style="margin-top:12px">
       <button class="btn btn-ghost" onclick="copyStrengths()">複製強項清單</button>
       <button class="btn btn-primary" onclick="copyAdvicePrompt()">複製求建議提示詞</button>
-    </div>`;
+    </div>` + gapHTML(load());   /* §4：缺口掃全部紀錄，不吃客戶篩選 */
+}
+/* ===== §4 你的紀錄裡還沒出現過的證據 =====
+   掃全部紀錄的 acc[i].mk，統計每個 marker 編號 on:true 的次數。
+   0 次進「還沒出現過」，1 次進「只出現過一次」。門檻 10 筆，放洞察頁最下方，
+   要滾下去才看得到——不要放在每場都會經過的路徑上。 */
+const GAP_MIN = 10;
+function markerHitCounts(recs){
+  const cnt = {};
+  MK.forEach((g,i)=>g.forEach(m=>{ cnt[m.c] = 0; }));
+  (recs||[]).forEach(r=>{
+    (r.acc||[]).forEach((x,i)=>{
+      const mk = (x && x.mk) || {};
+      (MK[i]||[]).forEach(m=>{ if (mkOn(mk[m.c])) cnt[m.c]++; });
+    });
+  });
+  return cnt;
+}
+function gapHTML(arr){
+  const head = '<div class="ask-sub" style="margin-top:22px">你的紀錄裡還沒出現過的證據</div>'
+    + '<div class="sub-note">是「沒寫到」，不是「沒做到」。不要為了補這幾條去設計提問。</div>';
+  if (!arr || arr.length < GAP_MIN){
+    return head + '<div class="acc-none" style="margin-top:6px">資料還太少，累積十場以上再看。'
+      + '前幾場的缺口清單幾乎都是全紅，那對你沒有幫助。（目前 ' + (arr ? arr.length : 0) + ' / ' + GAP_MIN + ' 場）</div>';
+  }
+  const cnt = markerHitCounts(arr);
+  const scope = [];
+  MK.forEach((g,i)=>g.forEach(m=>{ if (!mkAccOnly || m.acc) scope.push({m, i}); }));
+  const zero = scope.filter(x=>cnt[x.m.c] === 0);
+  const once = scope.filter(x=>cnt[x.m.c] === 1);
+  if (!zero.length && !once.length){
+    return head + '<div class="acc-none" style="margin-top:6px">' + scope.length + ' 條你都拿到過證據了</div>';
+  }
+  const row = x => '<div class="insight-item">'
+    + '<span class="mk-code">' + x.m.c + '</span>'
+    + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '　'
+    + esc(String(x.m.t).slice(0, 40)) + '</div>';
+  return head
+    + (zero.length ? '<div class="ask-sub" style="margin-top:10px">還沒出現過（' + zero.length + '／' + scope.length + '）</div>' + zero.map(row).join('') : '')
+    + (once.length ? '<div class="ask-sub" style="margin-top:10px">只出現過一次（' + once.length + '）</div>' + once.map(row).join('') : '')
+    + '<div class="sub-note" style="margin-top:8px">目前顯示範圍：'
+    + (mkAccOnly ? 'ACC 也會看的 ' + ACC_MK_N + ' 條' : '全部 ' + scope.length + ' 條')
+    + '（跟上面「先看少一點」的開關連動）</div>';
 }
 function askImprove(i){
   const x = _insightImps[i]; if (!x) return;
@@ -2212,11 +3009,12 @@ const ACC_AI_HTML = `
 <div class="lp-sub">讓 AI 依 ACC 八項職能判斷哪些到位，比自己勾更客觀</div>
 
 <h3>怎麼用（3 步驟）</h3>
-<p><b>1. 準備逐字稿：</b>把會談錄音轉成文字，並先「去識別化」——客戶名字、公司等可辨識資訊改成代號。</p>
-<p><b>2. 複製提示詞：</b>按下方按鈕複製，貼到你慣用的 AI（ChatGPT、Claude、Gemini 都可以），接著在後面貼上逐字稿送出。</p>
-<p><b>3. 回來標記：</b>AI 會逐項判斷八項職能「到位／部分到位／未見」並引用原文佐證。照結果回來選狀態，把佐證抄進「具體事例／證據」，把要練的地方寫進「需要改善的地方」。</p>
+<p><b>1. 準備逐字稿：</b>轉成文字，客戶名字與公司改成代號。</p>
+<p><b>2. 複製提示詞：</b>按下方按鈕，貼到你慣用的 AI，後面接上逐字稿。</p>
+<p><b>3. 回來標記：</b>照 AI 的判定選狀態，佐證抄進「證據」，要練的寫進「要改的」。</p>
 
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
+<p class="lp-sub">提示詞是一份依 ICF ACC 績效評估標準寫的長指令，按下面這顆按鈕直接複製，不用在這裡讀完。</p>
 <button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
 /* 教練反思統計報告（歷史頁）：平均分數、能量對齊指數、最常展現的職能 */
@@ -2275,9 +3073,12 @@ function renderReflect(){
   body.innerHTML =
     '<div class="reflect-scores">' + cell(aPerf,'平均自評表現') + cell(aFeel,'平均自評感受') + cell(aCf,'平均客戶感受') + '</div>'
     + '<div class="reflect-line">⚡ <b>能量對齊：</b>' + energyHtml + '</div>'
+    + '<div class="sub-note" style="margin:2px 0 0 22px">自我參考用，不是能力指標。'
+      + '這是本工具自訂的計算，沒有外部效度，不能當作認證或能力的證據。它只適合跟你自己的過去比。</div>'
+    + focusStatsHTML(arr)
     + '<div class="reflect-line">🌟 <b>職能亮點：</b>' + accHtml + '</div>'
     + '<div class="reflect-line">🌱 <b>成長重點：</b>' + growHtml + '</div>'
-    + '<div class="reflect-line" style="color:#a39b8e;font-size:12px">共 ' + arr.length + ' 筆紀錄'
+    + '<div class="reflect-line" style="color:var(--ink-4);font-size:12px">共 ' + arr.length + ' 筆紀錄'
     + (histFilter && clientById(histFilter) ? '（客戶：'+esc(clientById(histFilter).code)+'）' : '') + '</div>';
 }
 
@@ -2372,20 +3173,31 @@ function openHelp(){
   if (snap && snap.raw){
     extra = `<h3>還原到更新前</h3>
 <p>這個版本（${APP_VER}）把 ACC 標記從「打勾」改成四態自評，更新時自動幫你留了一份更新前的資料（${esc(snap.at||'')}）。
-用起來覺得不對勁的話可以還原回去——更新後才填的狀態、改善筆記與 marker 會一併消失，還原前建議先按「備份全部（下載檔）」。</p>
+用起來覺得不對勁的話可以還原回去——更新後才填的狀態、改善筆記與 marker 會一併消失，還原前建議先按「備份全部（下載檔）」。
+還原的是「資料內容」，不是舊版程式：畫面仍然是新版，原本打過勾的顯示為「到位」，其餘顯示為「尚未評估」。</p>
 <button class="btn btn-ghost" style="width:100%" onclick="restorePreV3()">還原到更新前的資料</button>`;
+  }
+  /* §0B 機制三：雲端快照的還原入口。與上面的本機還原並存，兩者都保留 */
+  if (currentUser && fb.db){
+    extra += `<h3>還原到改版前（雲端備份）</h3>
+<p>每次改版前，系統會自動在你的雲端帳號留一份改版前的原樣，最多保留最近三個版本。這不需要你做任何事。</p>
+<button class="btn btn-ghost" style="width:100%" onclick="openCloudRestore()">看看有哪些雲端備份</button>`;
   }
   openModal(HELP_HTML + extra);
 }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
 
+/* 表單任何輸入都重算進度列（§6 黏著進度列） */
+(function(){
+  const v = document.getElementById('view-new');
+  if (!v) return;
+  ['input','change'].forEach(ev => v.addEventListener(ev, () => updateSegbar()));
+})();
+
 /* init */
 const _ver = document.getElementById('app-ver');
 if (_ver) _ver.textContent = APP_VER;
-migrateQ();
-migrateClients();
-migrateAcc();
-migrateAcc3();
+runMigrations();
 resetForm();
 updateCount();
 updateAskCount();
