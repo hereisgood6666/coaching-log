@@ -24,23 +24,41 @@
   --line-dash: #CDC5B8;
   --warm:      #A6604A;
   --warm-2:    #C08A6E;
-  --warm-d:    #8E4F3B;
+  --warm-d:    #8A4630;   /* = 暖色深字，與 --warm-ink 同值，保留舊名避免大量改寫 */
   --warm-ink:  #8A4630;
-  --warm-bg:   #F6EBE5;
+  --warm-bg:   #FBEEE6;
   --warm-bg-2: #FBEEE6;
   --warm-line: #E8D2C7;
   --cool:      #16748C;
-  --cool-2:    #4E9DB2;
+  --cool-2:    #7FB3C4;   /* 冷色圖表 */
   --cool-d:    #0F5A6D;
   --cool-ink:  #0F5A6D;
   --cool-bg:   #E7F1F4;
   --cool-line: #C0DAE2;
-  --amber:     #B57A26;
   --ok:        #3F7A48;
   --ok-2:      #6FA675;
   --ok-bg:     #E9F2E9;
   --danger:    #B03225;
   --danger-soft: #C08080;
+  /* 狀態五級（暖→冷，最少被觸及→最常被觸及）：熱圖與職能格子共用。
+     到位＝冷色，不是綠色（先前的綠／紅配色已廢除）。 */
+  --st0-bg: #A6604A; --st0-fg: #FFFCF8; --st0-line: #8A4630;   /* 0 次   */
+  --st1-bg: #E8D2C7; --st1-fg: #8A4630; --st1-line: #DCBFB0;   /* 1–2 次 */
+  --st2-bg: #FBEEE6; --st2-fg: #8A4630; --st2-line: #E8D2C7;   /* 3–4 次 */
+  --st3-bg: #C0DAE2; --st3-fg: #0F5A6D; --st3-line: #A9CBD6;   /* 5–8 次 */
+  --st4-bg: #16748C; --st4-fg: #FFFCF8; --st4-line: #0F5A6D;   /* 9+ 次  */
+  /* 四態的小字前景：10–12px 一律 ≥4.5:1，舊的 #C4BCB1 只有 1.7:1 */
+  --st-none: #6B645C;   /* 未評   */
+  --st-part: #735814;   /* 部分   */
+  --st-miss: #4E4842;   /* 未到位 */
+  /* 認證進度卡隨進度換段（色票.html「認證進度卡 — 隨進度換段」） */
+  --amber:      #B57A26;   /* 34–66% 的 bar */
+  --amber-bg:   #FBF0DC;   /* 34–66% 的底 */
+  --amber-ink:  #8A6A18;
+  --seg1-bar: #A6604A; --seg1-bg: #FBEEE6;   /*   0–33%  起步   */
+  --seg2-bar: #B57A26; --seg2-bg: #FBF0DC;   /*  34–66%  在路上 */
+  --seg3-bar: #16748C; --seg3-bg: #E7F1F4;   /*  67–99%  快到了 */
+  --seg4-bar: #2F6B45; --seg4-bg: #E4F0E5;   /* 100%     可以送審 */
 }
 
 :root { color-scheme: light; }
@@ -84,6 +102,14 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .pb-val { color: var(--cool-d); font-weight: 700; font-variant-numeric: tabular-nums; }
 .pb-val .done-tag { color: var(--ok); font-size: 12px; }
 .pb-track { height: 10px; background: var(--line-3); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
+.pb-fill[data-seg="1"] { background: var(--seg1-bar); }
+.pb-fill[data-seg="2"] { background: var(--seg2-bar); }
+.pb-fill[data-seg="3"] { background: var(--seg3-bar); }
+.pb-fill[data-seg="4"] { background: var(--seg4-bar); }
+.pb-track[data-seg="1"] { background: var(--seg1-bg); }
+.pb-track[data-seg="2"] { background: var(--seg2-bg); }
+.pb-track[data-seg="3"] { background: var(--seg3-bg); }
+.pb-track[data-seg="4"] { background: var(--seg4-bg); }
 .pb-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cool-2), var(--cool)); transition: width .7s cubic-bezier(.22,.9,.35,1); }
 .pb-fill.done { background: linear-gradient(90deg, var(--ok-2), var(--ok)); }
 .pb-note { color: var(--ink-4); font-size: 12px; margin-top: 8px; }
@@ -98,7 +124,6 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .reflect-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
 .pchip { border: 1px solid var(--warm-line); background: var(--surface); color: var(--ink-2); border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
 .pchip.on { background: var(--warm); color: var(--surface); border-color: var(--warm); }
-.reflect-scores { display: flex; gap: 10px; margin: 12px 0 4px; }
 .reflect-score { flex: 1; background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 10px 4px; text-align: center; }
 .reflect-score .rs-num { font-size: 22px; font-weight: 700; color: var(--cool); }
 .reflect-score .rs-name { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
@@ -148,8 +173,8 @@ textarea { resize: vertical; min-height: 46px; }
 .acc-alt { font-weight: 500; font-size: 12px; color: var(--warm-ink); margin-left: 6px; }
 .acc-desc { color: var(--ink-4); font-size: 12px; margin-top: 2px; }
 /* 四態：尚未評估／未到位／部分到位／到位 */
-.acc-item[data-st="2"] { background: var(--cool-bg); border-color: var(--cool-line); }
-.acc-item[data-st="1"] { background: var(--warm-bg-2); border-color: var(--warm-line); }
+.acc-item[data-st="2"] { background: var(--st3-bg); border-color: var(--st3-line); }
+.acc-item[data-st="1"] { background: var(--st2-bg); border-color: var(--st2-line); }
 .acc-item[data-st="-1"] { border-style: dashed; }
 .seg { display: flex; gap: 5px; margin-top: 9px; }
 .seg button {
@@ -157,10 +182,10 @@ textarea { resize: vertical; min-height: 46px; }
   border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap;
 }
 .seg button.on { color: var(--surface); border-color: transparent; font-weight: 600; }
-.seg button[data-v="-1"].on { background: var(--line-dash); }
-.seg button[data-v="0"].on { background: var(--ink-3); }
-.seg button[data-v="1"].on { background: var(--amber); }
-.seg button[data-v="2"].on { background: var(--cool); }
+.seg button[data-v="-1"].on { background: var(--st-none); }
+.seg button[data-v="0"].on { background: var(--st-miss); }
+.seg button[data-v="1"].on { background: var(--st-part); }
+.seg button[data-v="2"].on { background: var(--st4-bg); }
 .acc-progress { font-size: 12.5px; color: var(--cool-d); background: var(--cool-bg); border-radius: 7px; padding: 6px 9px; margin-bottom: 10px; }
 .acc-progress.done { color: var(--ok); background: var(--ok-bg); }
 .acc-field { margin-top: 9px; }
@@ -264,7 +289,10 @@ textarea { resize: vertical; min-height: 46px; }
 .mini-link.del-link { color:var(--danger-soft); }
 .mini-link:hover { text-decoration:underline; }
 .ask-sub { font-weight:700; font-size:14px; color:var(--ink-2); margin:4px 0 8px; }
-.hidden { display: none; }
+.hidden { display: none !important; }
+/* !important 是刻意的：.hidden 寫在樣式表前段，後面任何 .foo{display:grid/flex}
+   同特異性且較晚出現就會蓋掉它，元素掛了 hidden 卻還看得見（2026-08-21 踩到，
+   cum-grid / cum-legend / quickfilters 三個都中）。hidden 的語意就是隱藏，不該被覆寫。 */
 /* phrase cheat sheet */
 .phrase-card { background: var(--surface-2); border: 1px solid var(--warm-line); }
 .phrase-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
@@ -339,6 +367,10 @@ textarea { resize: vertical; min-height: 46px; }
 .fold.folded .fold-body { display: none; }
 .fold .fold-body { margin-top: 4px; }
 .fold .fold-body > label:first-child { margin-top: 8px; }
+/* §0-2 這一場的議題：14.5px、600、暖色深字。沒填時灰字「（沒填議題）」，不留空白 */
+.topic { font-size: 14.5px; font-weight: 600; color: var(--warm-ink); line-height: 1.55; margin-top: 3px; word-break: break-word; }
+.topic.none { color: var(--ink-4); font-weight: 400; }
+.fld-div { border-top: 1px solid var(--line-2); margin: 14px 0 2px; }
 .sub-note { font-size: 12px; color: var(--ink-3); line-height: 1.55; margin: 4px 0 2px; }
 .cnt-row { text-align: right; font-size: 11.5px; color: var(--ink-4); margin-top: 4px; }
 /* 焦點卡：頁面裡第二強的元素 */
@@ -359,7 +391,7 @@ textarea { resize: vertical; min-height: 46px; }
   background: var(--surface); color: var(--ink-2); border-radius: 9px;
   font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap;
 }
-.fr-btn.on { background: var(--warm); border-color: var(--warm); color: #fff; font-weight: 700; }
+.fr-btn.on { background: var(--warm); border-color: var(--warm); color: var(--st0-fg); font-weight: 700; }
 .legacy-box { margin-top: 12px; border-left: 3px solid var(--line-dash); padding: 4px 0 4px 11px; }
 .legacy-lbl { font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 3px; }
 .legacy-txt { font-size: 13.5px; color: var(--ink-2); white-space: pre-wrap; }
@@ -377,11 +409,11 @@ textarea { resize: vertical; min-height: 46px; }
   color: var(--ink); resize: vertical; min-height: 38px;
 }
 .mk-tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-right: 5px; vertical-align: 1px; }
-.mk-tag.acc { background: var(--cool); color: #fff; }
+.mk-tag.acc { background: var(--cool); color: var(--st4-fg); }
 .mk-tag.pcc { background: var(--line-3); color: var(--ink-2); }
 .mk-tag.two { background: var(--cool-bg); color: var(--cool-d); border: 1px solid var(--cool-line); }
 /* §4C 認證進度 */
-.cred-wrap { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.cred-wrap { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
 .cred-axis { margin: 6px 0 4px; }
 .cred-track { position: relative; height: 14px; background: var(--line-3); border-radius: 7px; overflow: hidden; }
 .cred-fill { height: 100%; background: linear-gradient(90deg, var(--cool-2), var(--cool)); border-radius: 7px; }
@@ -397,6 +429,8 @@ textarea { resize: vertical; min-height: 46px; }
 /* 手機優先：輸入框可點區 ≥44px */
 input[type=text], input[type=date], select { min-height: 44px; }
 .mini-btn { min-height: 44px; }
+/* 表單元件的內建寬度（約 170–185px）會變成 flex/grid 軌道的最小值，撐破容器；一律解除 */
+input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; min-width: 0; }
 
 /* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
 @media (min-width: 1024px) {
@@ -410,6 +444,8 @@ input[type=text], input[type=date], select { min-height: 44px; }
   .tab { flex: 0 0 auto; text-align: left; padding: 11px 12px; font-size: 14px; }
   /* 桌機唯一真正的優勢是「同時看得到」：左欄會談內容不動，右欄標職能 */
   #view-new { display: grid; grid-template-columns: minmax(360px, 470px) minmax(0, 1fr); gap: 0 20px; align-items: start; }
+  /* ID 選擇器（1-0-0）會壓過 .hidden（0-1-0），不補這行的話 showView() 藏不掉新增紀錄頁 */
+  #view-new.hidden { display: none; }
   #view-new > * { grid-column: 1; }
   /* segbar 佔第 1 列跨兩欄；ICF 從第 2 列起吃滿右欄。
      若讓 ICF 從第 1 列開始，跨欄的 segbar 會被擠到 ICF 之後（第 100 列），整頁往下掉。 */
@@ -418,12 +454,14 @@ input[type=text], input[type=date], select { min-height: 44px; }
     grid-column: 2; grid-row: 2 / span 99;
     position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow-y: auto;
   }
-  .cred-wrap { grid-template-columns: 1fr 1fr; }
+  .cred-wrap { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 }
 @media (min-width: 1180px) {
   /* ICF 攤成 2×4 格子，點「逐條」才展開完整 marker 清單 */
-  #acc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-items: start; }
-  #acc-list .acc-item { margin-bottom: 0; }
+  /* 1fr = minmax(auto,1fr)，auto 會拿 input/textarea 的內建寬度當軌道最小值，軌道就不肯縮 → 欄位溢出被裁掉 */
+  #acc-list { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 9px; align-items: stretch; }
+  #acc-list .acc-item { margin-bottom: 0; display: flex; flex-direction: column; }
+  #acc-list .acc-item .mk-toggle { margin-top: auto; }   /* 同列等高後，展開按鈕永遠在同一條線上 */
 }
 @media (min-width: 1024px) and (max-width: 1179.98px) {
   /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
@@ -433,12 +471,291 @@ input[type=text], input[type=date], select { min-height: 44px; }
   .t-full { display: none; }
   .t-short { display: inline; }
 }
+
+/* ═══ §2-2 八大職能的累積 ═══ */
+/* 八欄固定，不用 auto-fit：窄視窗塌成四欄的話，1→8 的閱讀順序就不存在了 */
+.cum-grid { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 18px; margin: 12px 0 4px; align-items: end; }
+.cum-col { display: grid; grid-template-rows: auto 58px auto; gap: 5px; min-width: 0; }
+.cum-name { font-size: 12px; line-height: 1.3; text-align: center; color: var(--ink-2); align-self: end; word-break: break-word; }
+.cum-box {
+  height: 58px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 27px; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid transparent;
+}
+.cum-box[data-lv="0"] { background: var(--st0-bg); color: var(--st0-fg); border-color: var(--st0-line); }
+.cum-box[data-lv="1"] { background: var(--st1-bg); color: var(--st1-fg); border-color: var(--st1-line); }
+.cum-box[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
+.cum-box[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
+.cum-box[data-lv="4"] { background: var(--st4-bg); color: var(--st4-fg); border-color: var(--st4-line); }
+.cum-ratio { font-size: 12px; text-align: center; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cum-todo { margin-top: 18px; border-top: 1px solid var(--line-2); padding-top: 12px; }
+.todo-row { border-left: 3px solid var(--st1-line); padding: 8px 0 8px 11px; margin-top: 10px; }
+.todo-row[data-n="0"] { border-left-color: var(--st0-bg); }
+.todo-l1 { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.todo-short { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.todo-acc { font-size: 11.5px; color: var(--ink-4); }
+/* ② 待補清單裡例句才是最大最重的元素，ACC 籤降成中性描邊，不跟例句搶 */
+.todo-l1 .mk-tag.acc { background: transparent; border: 1px solid #C0DAE2; color: #0F5A6D; font-size: 11px; }
+.cum-seed { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; padding: 18px 0 4px; }
+.todo-state { margin-left: auto; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+/* 例句是每張卡最大的字 */
+.todo-ex { font-size: 15px; font-weight: 600; color: var(--warm-ink); line-height: 1.6; margin-top: 4px; }
+
+/* ═══ §2-3 每一場 ═══ */
+.hist-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hist-filters { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.hist-filters select { flex: 1 1 150px; }
+.quickfilters { display: flex; gap: 6px; flex-wrap: wrap; }
+.quickfilters .pchip { min-height: 34px; }
+.cum-legend { display: flex; align-items: center; gap: 4px; }
+.cum-legend .lg-t { font-size: 11px; color: var(--ink-4); }
+.cell {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 1 1 0; max-width: 44px; height: 20px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cell.lg { flex: 0 0 auto; width: 18px; }
+/* 淡色系，不用飽和實色——第一場就很搶眼的話，看不出累積 */
+.cell[data-lv="0"] { background: var(--line-3); color: var(--ink-4); }
+.cell[data-lv="1"] { background: var(--st2-bg); color: var(--st2-fg); }
+.cell[data-lv="2"] { background: var(--st1-bg); color: var(--st1-fg); }
+.cell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); }
+.sess {
+  background: var(--surface); border: 1px solid #E8E2D8; border-radius: 9px;
+  padding: 10px 12px; margin-bottom: 7px; cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .15s;
+}
+.sess:hover { border-color: #B99C82; }
+.sess-top { display: flex; align-items: baseline; gap: 9px; }
+.sess-date { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sess-client { font-size: 13.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+/* 議題永遠有完整寬度：兩層列就是為了這件事 */
+.sess-topic { flex: 1 1 auto; min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--warm-ink); }
+.sess-topic.none { color: var(--ink-4); font-weight: 400; }
+.sess-meta { font-size: 12px; color: var(--ink-4); white-space: nowrap; }
+.sess-arrow { color: var(--ink-4); font-size: 16px; }
+.sess-bot { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.sess-cells { display: flex; gap: 3px; flex: 1 1 auto; min-width: 0; }
+.sess-gap { flex: 0 0 10px; }
+.sess-tag { font-size: 11px; color: var(--ink-3); background: var(--line-3); border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
+@media (max-width: 480px) {
+  .sess-top { flex-wrap: wrap; }
+  .sess-topic { flex-basis: 100%; order: 3; }
+  .sess-arrow { margin-left: auto; }
+}
+
+/* ═══ §2-4 你在練的事 ═══ */
+.prac-sub { font-size: 13.5px; font-weight: 700; color: var(--ink-2); margin: 12px 0 6px; }
+.prac-sub.ok { color: #2F6B45; }
+.prac-sub b { font-variant-numeric: tabular-nums; }
+.prac { border: 1px solid var(--line-2); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; background: var(--surface); }
+.prac.ok { background: #F4FAF4; border-color: #DCEBDD; }
+.prac-top { display: flex; align-items: baseline; gap: 10px; }
+.prac-text { flex: 1 1 auto; min-width: 0; font-size: 16.5px; font-weight: 600; color: var(--ink); line-height: 1.5; word-break: break-word; }
+.prac-n { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prac-tip { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-top: 6px; }
+@media (max-width: 700px) {
+  .cum-grid { gap: 8px; }
+  .cum-name { font-size: 10.5px; }
+  .cum-box { font-size: 19px; }
+}
+
+/* ═══ §4 客戶頁 ═══ */
+.stat4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; margin-top: 10px; }
+.stat1 { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 11px 8px; text-align: center; min-width: 0; }
+.stat-n { font-size: 24px; font-weight: 700; color: var(--cool-d); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat-name { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.stat-note { font-size: 10.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.4; }
+@media (max-width: 560px) { .stat4 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+/* 兩欄並排、底部對齊：兩張卡是 grid 的直接項目，中間不包容器，
+   包了容器 grid 拉伸的是容器、卡片仍停在內容高度。也不用 margin-top:auto 推圖例，
+   那會在中間生出一大塊空洞。 */
+.two-col { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; align-items: stretch; }
+.two-col > .card { margin-bottom: 14px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: minmax(0,1fr); } }
+/* recap 卡：白底，不用深色實心 */
+#client-recap { background: var(--surface); }
+.recap-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.recap-copy {
+  height: 28px; line-height: 1; padding: 0 12px; flex: 0 0 auto;
+  border: 1px solid var(--cool-line); background: var(--cool-bg); color: var(--cool-d);
+  border-radius: 8px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+.recap-row { margin-top: 11px; }
+.recap-label { font-size: 11.5px; font-weight: 700; color: var(--ink-3); margin-bottom: 2px; }
+.recap-from { font-weight: 400; color: var(--ink-4); }
+.recap-val { font-size: 14.5px; line-height: 1.6; color: var(--ink); word-break: break-word; white-space: pre-wrap; }
+.recap-val.none { color: var(--ink-4); }
+
+/* ═══ §6 標記的多列「時間戳＋實例」 ═══ */
+.mk-rows { margin-top: 5px; padding-left: 25px; }
+.mk-row1 { display: flex; gap: 6px; margin-bottom: 5px; }
+.mk-row1 .mk-t { flex: 0 0 116px; }
+.mk-row1 .mk-x { flex: 1 1 auto; min-width: 0; }
+.mk-row1 input {
+  padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px;
+  font-size: 13px; font-family: inherit; background: var(--surface); color: var(--ink); min-height: 38px;
+}
+.mk-row1 .mk-del { width: 32px; min-height: 38px; font-size: 16px; flex: 0 0 auto; }
+.mk-short { font-size: 12px; font-weight: 700; color: var(--warm-ink); margin-right: 6px; }
+@media (max-width: 480px) {
+  /* 窄螢幕：時間戳與刪除鈕同一行，實例佔滿第二行——
+     三個元素硬擠一行會各自換行，一列變三行，39 條會長到看不完 */
+  .mk-rows { padding-left: 0; }
+  .mk-row1 { flex-wrap: wrap; row-gap: 5px; }
+  /* 全域的 input{width:100%} 會把時間戳撐滿整行、把刪除鈕擠下去，這裡要解除 */
+  .mk-row1 .mk-t { flex: 1 1 0; width: auto; min-width: 0; }
+  .mk-row1 .mk-del { order: 2; }
+  .mk-row1 .mk-x { order: 3; flex: 1 1 100%; }
+}
+
+/* ═══ §7 側欄分區與 ACC 認證卡 ═══ */
+.nav-group { display: none; }
+.credcard { display: none; }
+.tab-soon { opacity: .45; cursor: not-allowed; }
+@media (min-width: 1024px) {
+  .tabs { align-items: stretch; }
+  .nav-group {
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+    color: var(--ink-4); padding: 12px 12px 2px; text-transform: none;
+  }
+  .credcard {
+    display: block; background: var(--surface); border: 1px solid var(--line-2);
+    border-radius: 12px; padding: 10px 11px 11px; margin-bottom: 6px;
+  }
+  .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .cc-title { font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+  .cc-switch { display: flex; gap: 3px; flex: 0 0 auto; }
+  .cc-switch button {
+    border: 1px solid var(--line); background: transparent; color: var(--ink-3);
+    border-radius: 6px; padding: 2px 6px; font-size: 10.5px; font-weight: 700;
+    font-family: inherit; cursor: pointer; line-height: 1.4;
+  }
+  .cc-switch button.on { background: var(--cool); border-color: var(--cool); color: var(--st4-fg); }
+  .cc-body {
+    display: block; width: 100%; text-align: left; border: none; background: none;
+    padding: 6px 0 0; margin: 0; cursor: pointer; font-family: inherit;
+  }
+  /* 主角是小時數，百分比縮在右下角 */
+  .cc-hours { font-size: 12px; color: var(--ink-3); line-height: 1.15; margin-bottom: 7px; }
+  .cc-hours b { font-size: 30px; font-weight: 700; color: var(--cool-d); font-variant-numeric: tabular-nums; }
+  .cc-track { height: 9px; border-radius: 5px; overflow: hidden; background: var(--line-3); }
+  .cc-track[data-seg="1"] { background: var(--seg1-bg); }
+  .cc-track[data-seg="2"] { background: var(--seg2-bg); }
+  .cc-track[data-seg="3"] { background: var(--seg3-bg); }
+  .cc-track[data-seg="4"] { background: var(--seg4-bg); }
+  .cc-fill { height: 100%; border-radius: 5px; transition: width .5s ease; }
+  .cc-fill[data-seg="1"] { background: var(--seg1-bar); }
+  .cc-fill[data-seg="2"] { background: var(--seg2-bar); }
+  .cc-fill[data-seg="3"] { background: var(--seg3-bar); }
+  .cc-fill[data-seg="4"] { background: var(--seg4-bar); }
+  .cc-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: 6px; }
+  .cc-foot > span:first-child { font-size: 12px; color: var(--ink-2); }
+  .cc-pct { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  .cc-miss { font-size: 11px; color: var(--ink-4); line-height: 1.5; margin-top: 5px; }
+  .cc-miss:empty { display: none; }
+}
+@media (min-width: 1024px) and (max-width: 1179.98px) {
+  /* 側欄收成 76px，卡片只留時數與進度條。
+     ACC／PCC 兩顆並排會超出 76px 的內容寬，這裡改成上下疊。 */
+  .credcard { padding: 7px 5px 8px; }
+  .cc-title, .cc-pace, .cc-miss, .cc-foot > span:first-child { display: none; }
+  .cc-head { justify-content: center; }
+  .cc-switch { flex-direction: column; gap: 2px; width: 100%; }
+  .cc-switch button { padding: 2px 0; font-size: 9.5px; text-align: center; }
+  .cc-hours b { font-size: 20px; }
+  .cc-hours { text-align: center; font-size: 10.5px; }
+  .cc-foot { justify-content: center; }
+}
+
+/* ═══ §9 覺察手帳 ═══ */
+.jtagbar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.jtagbar:empty { display: none; }
+.jcard {
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+/* 標籤在左上角，刪除（左）編輯（右）在右上角 */
+.j-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; min-height: 22px; }
+.j-tags { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.j-acts { display: flex; gap: 12px; flex: 0 0 auto; white-space: nowrap; }
+.jtag {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600;
+  background: var(--line-3); color: var(--ink-2); border-radius: 5px; padding: 2px 7px;
+}
+.jtag-x { border: none; background: none; color: var(--ink-4); cursor: pointer; font-size: 13px; padding: 0 0 0 2px; line-height: 1; }
+.j-confirm { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
+.j-title { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.5; margin-top: 6px; }
+/* 三種內容三個底色：提醒＝可以照唸的句子（藍底）、為什麼＝暖粉底、例子＝灰底 */
+.j-note { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 8px;
+          padding: 9px 11px; margin-top: 8px; font-size: 14.5px; line-height: 1.65; color: var(--ink); white-space: pre-wrap; }
+.j-why  { background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 8px;
+          padding: 8px 11px; margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; }
+.j-ex   { background: var(--line-3); border: 1px solid var(--line-2); border-radius: 8px;
+          padding: 8px 11px; margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; }
+.j-lbl  { display: block; font-size: 11px; font-weight: 700; color: var(--ink-3); margin-bottom: 2px; }
+.j-src  { margin-top: 9px; border-left: 3px solid var(--line-dash); padding: 3px 0 3px 10px;
+          font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+.j-src-lbl { display: block; font-size: 11px; font-weight: 700; color: var(--ink-3); }
+.j-src-ans { color: var(--ink-3); margin-top: 2px; }
+.j-edit { border-color: var(--warm); border-width: 2px; }
+.j-edit label { margin: 10px 0 4px; }
+.jtag-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line-2); }
+.jtag-row:last-child { border-bottom: none; }
+.jtag-n { font-size: 12px; color: var(--ink-4); margin-left: auto; }
+
+/* ═══ §10 導師提問 ═══ */
+.qcat { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.qhead { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.qcat-tag { font-size: 11px; font-weight: 700; background: var(--line-3); color: var(--ink-2); border-radius: 5px; padding: 2px 7px; }
+.qstate { font-size: 11px; font-weight: 700; color: var(--cool-d); background: var(--cool-bg);
+          border: 1px solid var(--cool-line); border-radius: 5px; padding: 1px 7px; margin-left: auto; }
+/* 重複提問的琥珀提示卡 */
+.dupbox { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 10px;
+          padding: 10px 12px; margin-top: 9px; }
+.dup-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); }
+.dup-sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; line-height: 1.55; }
+.dup-item { border-top: 1px solid var(--amber); margin-top: 9px; padding-top: 8px; }
+.dup-q { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.55; }
+.dup-a { font-size: 13px; color: var(--ink-2); margin-top: 4px; line-height: 1.6; white-space: pre-wrap; }
+.dup-a.none { color: var(--ink-4); }
+.dup-shared { font-size: 11px; color: var(--ink-4); margin-top: 4px; }
+.dup-item .mini-link { margin-top: 6px; }
+
+/* ═══ §11 匯出二段式的清單 ═══ */
+.expbox {
+  background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 10px;
+  padding: 11px 13px; margin-top: 9px;
+}
+.exp-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); }
+.exp-sub { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.55; }
+.exp-list { margin: 8px 0 0; padding-left: 20px; font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+.exp-warn { background: var(--surface); border: 1px solid var(--amber); border-radius: 8px;
+            padding: 8px 10px; margin-top: 9px; font-size: 12.5px; color: var(--warm-ink); line-height: 1.65; }
+.exp-note { font-size: 12px; color: var(--ink-3); margin-top: 8px; line-height: 1.6; }
+.exp-foot { font-size: 12px; color: var(--ink-3); margin-top: 8px; font-weight: 600; }
+.btn.armed { background: var(--amber); color: var(--st0-fg); }
+
+/* ═══ §6 步驟眉標 ═══
+   眉標用絕對定位，不佔版面高度；page-head 的 padding-top 是常數，
+   所有分頁共用同一個 header，大標題的 Y 座標因此不會因為有沒有眉標而位移。 */
+.page-head { position: relative; padding-top: 18px; }
+.step-eyebrow {
+  position: absolute; top: 0; left: 0; height: 18px; line-height: 18px;
+  font-size: 11px; font-weight: 700; letter-spacing: .3px; color: var(--warm-ink);
+  white-space: nowrap; pointer-events: none;
+}
+.step-eyebrow:empty { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
-  <h1>會談後快速記錄</h1>
-  <div class="sub">會談結束了嗎？花 15 分鐘，陪自己回顧這一場。</div>
+  <header class="page-head">
+    <!-- 「1 / 2」是常數：新增紀錄頁固定兩步——先填內容，再標職能（§6 明講不做 step 狀態機，
+         所以沒有「目前在第幾步」的狀態可讀）。步數若日後改變，改這裡的 STEP_TOTAL。 -->
+    <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"></span>
+    <h1>會談後快速記錄</h1>
+    <div class="sub">會談結束了嗎？花 15 分鐘，陪自己回顧這一場。</div>
+  </header>
   <div class="stats-line" id="stats-line"></div>
 
   <div class="acct-bar hidden" id="acct-bar">
@@ -446,13 +763,33 @@ input[type=text], input[type=date], select { min-height: 44px; }
     <span><button onclick="openHelp()">使用說明</button>　<button onclick="doLogout()">登出</button></span>
   </div>
 
-  <div class="tabs">
+  <nav class="tabs">
+    <!-- §7 ACC 認證卡：側欄最上方，可點進認證進度頁；切換鈕跟卡片本體分開，點切換不會誤觸導頁 -->
+    <div class="credcard" id="credcard">
+      <div class="cc-head">
+        <span class="cc-title" id="cc-title"></span>
+        <span class="cc-switch" id="cc-switch">
+          <button type="button" data-lv="acc" onclick="setCredLevel('acc', event)">ACC</button>
+          <button type="button" data-lv="pcc" onclick="setCredLevel('pcc', event)">PCC</button>
+        </span>
+      </div>
+      <button type="button" class="cc-body" onclick="showView('cred')">
+        <div class="cc-hours"><b id="cc-h"></b><span id="cc-goal"></span></div>
+        <div class="cc-track"><div class="cc-fill" id="cc-fill"></div></div>
+        <div class="cc-foot"><span id="cc-pace"></span><span class="cc-pct" id="cc-pct"></span></div>
+        <div class="cc-miss" id="cc-miss"></div>
+      </button>
+    </div>
+    <span class="nav-group">記錄</span>
     <button class="tab active" id="tabNew" onclick="showView('new')"><span class="t-full">新增紀錄</span><span class="t-short">新增</span></button>
+    <span class="nav-group">回顧</span>
+    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span id="clientCnt"></span></button>
     <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span id="cnt"></span></button>
-    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span></button>
     <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span></button>
     <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span id="askCnt"></span></button>
-  </div>
+    <span class="nav-group">手邊</span>
+    <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span id="jCnt"></span></button>
+  </nav>
 
   <!-- ===== NEW / EDIT FORM ===== -->
   <div id="view-new">
@@ -491,6 +828,10 @@ input[type=text], input[type=date], select { min-height: 44px; }
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
       <label class="submit-cand"><input type="checkbox" id="f-submitcand">
         這場可以當送審錄音<span class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</span></label>
+      <div class="fld-div"></div>
+      <label>這一場的議題</label>
+      <div class="hint">他帶來想談的事</div>
+      <input type="text" id="f-topic" placeholder="例：想清楚要不要離職">
       </div>
     </section>
 
@@ -505,7 +846,7 @@ input[type=text], input[type=date], select { min-height: 44px; }
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>馬上掉出來的問題 <span class="hint">會談後第一個浮現的念頭</span></label>
+      <div class="hint">會談後第一個浮現的念頭</div>
       <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
       </div>
     </section>
@@ -513,12 +854,13 @@ input[type=text], input[type=date], select { min-height: 44px; }
     <!-- 4. 三個評分 -->
     <section class="card fold" data-fold="score">
       <button type="button" class="fold-head" onclick="toggleFold('score')">
-        <span class="fold-title">這一場，打幾分</span>
+        <span class="fold-title">這一場的衡量</span>
         <span class="fold-state" data-state="score"></span>
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>給我自己的表現打幾分 <span class="hint">0–10</span></label>
+      <div class="hint">0–10，可以拉半格。這不是評分，只是給自己一個衡量——第一個直覺通常最準。</div>
+      <label>給我自己的表現</label>
       <div class="score-wrap">
         <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
@@ -549,8 +891,7 @@ input[type=text], input[type=date], select { min-height: 44px; }
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>下一場只盯這一件事
-        <span class="hint">一次只盯一件才練得動。寫成動作，例如「客戶講超過兩分鐘就出手」</span></label>
+      <div class="hint">一次只盯一件才練得動。寫成動作，例如「客戶講超過兩分鐘就出手」</div>
       <input type="text" id="f-focus" maxlength="40" placeholder="例：客戶講超過兩分鐘就出手"
              oninput="updateFocusCount()">
       <div class="cnt-row"><span id="focus-count">0 / 40</span></div>
@@ -582,7 +923,7 @@ input[type=text], input[type=date], select { min-height: 44px; }
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>ICF 八大核心職能 Checklist <span class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</span></label>
+      <div class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</div>
       <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
       <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
         先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
@@ -616,7 +957,6 @@ input[type=text], input[type=date], select { min-height: 44px; }
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>這次的特殊狀況</label>
       <div id="special-list"></div>
       <button class="add-btn" onclick="addItem('special-list')">＋ 再加一項</button>
       </div>
@@ -637,23 +977,60 @@ input[type=text], input[type=date], select { min-height: 44px; }
 
     <div class="actions">
       <button class="btn btn-ghost" onclick="confirmReset()">清空</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">儲存紀錄</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">儲存這一場</button>
+    </div>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn btn-ghost" id="saveLaterBtn" onclick="saveRecord(true)">先存起來，稍後再標職能</button>
     </div>
     <div style="height:24px"></div>
   </div>
 
   <!-- ===== HISTORY ===== -->
   <div id="view-hist" class="hidden">
-    <div class="card filter-bar">
-      <span class="fl">客戶篩選</span>
-      <select id="hist-filter" onchange="onHistFilter()"></select>
+    <!-- ① 八大職能的累積（§2-2） -->
+    <div class="card" id="cum-card">
+      <label style="margin-top:0">八大職能的累積</label>
+      <div class="sub-note">格子的深淺是這項職能所有標記的平均命中次數。暖色是還沒怎麼寫到的，藍色是已經經常出現的。暖色那些不是你做不到，是你沒記下來。</div>
+      <div class="cum-grid" id="cum-grid"></div>
+      <div class="cum-todo" id="cum-todo">
+        <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
+        <div class="sub-note">最少寫到的排最前面・例句可以直接用</div>
+        <div id="cum-todo-list"></div>
+      </div>
     </div>
+
+    <!-- ② 每一場（§2-3） -->
+    <div class="card">
+      <div class="hist-head">
+        <label style="margin:0">每一場 <span class="hint" id="hist-count"></span></label>
+        <div class="cum-legend" id="hist-legend"></div>
+      </div>
+      <input type="text" id="hist-q" placeholder="搜尋日期、客戶或議題" oninput="onHistFilter()">
+      <div class="hist-filters">
+        <select id="hist-filter" onchange="onHistFilter()"></select>
+        <div class="quickfilters" id="hist-quick">
+          <button type="button" class="pchip on" data-q="all"   onclick="setHistQuick('all')">全部</button>
+          <button type="button" class="pchip"    data-q="7d"    onclick="setHistQuick('7d')">最近 7 天</button>
+          <button type="button" class="pchip"    data-q="nopdf" onclick="setHistQuick('nopdf')">還沒匯出 PDF</button>
+        </div>
+      </div>
+      <div id="hist-list"></div>
+    </div>
+
+    <!-- ③ 你在練的事（§2-4） -->
+    <div class="card" id="practice-card">
+      <label style="margin-top:0">你在練的事</label>
+      <div class="sub-note">每一場設一個焦點，下一場回來回答。同一件事練幾場都可以——練的場數就是你的累積。</div>
+      <div id="practice-body"></div>
+    </div>
+
     <div class="card">
       <label style="margin-top:0">匯出與分享 <span class="hint">上方選了客戶，就只會匯出那一位的完整紀錄</span></label>
       <div class="actions" style="margin-top:10px">
-        <button class="btn btn-primary" onclick="exportPDF()">匯出 PDF</button>
-        <button class="btn btn-ghost" onclick="exportAllText()">匯出文字</button>
+        <button class="btn btn-primary" id="btn-exp-hist" onclick="exportTwoStep('hist')">匯出 PDF</button>
+        <button class="btn btn-ghost" id="btn-exp-txt" onclick="exportTwoStep('txt')">匯出文字</button>
       </div>
+      <div id="expbox-hist"></div>
       <div class="actions" style="margin-top:8px">
         <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
       </div>
@@ -680,7 +1057,6 @@ input[type=text], input[type=date], select { min-height: 44px; }
       </div>
       <div id="reflect-body"></div>
     </div>
-    <div id="hist-list"></div>
     <div class="actions" style="margin:10px 0 14px">
       <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
       <span id="admin-backup-slot"></span>
@@ -691,14 +1067,26 @@ input[type=text], input[type=date], select { min-height: 44px; }
 
   <!-- ===== CLIENTS ===== -->
   <div id="view-clients" class="hidden">
+    <!-- ① 客戶列表在最上面 -->
     <div class="card">
-      <label style="margin-top:0">新增客戶 <span class="hint">一律使用代號</span></label>
+      <label style="margin-top:0">客戶 <span class="hint" id="client-count"></span></label>
+      <div id="client-list"></div>
+    </div>
+    <!-- ② 洞察卡在列表下面 -->
+    <div class="card" id="client-insight-card">
+      <label style="margin-top:0">你一直在練同一件事</label>
+      <div class="sub-note">同一個焦點連續出現兩場以上就會列在這裡。通常不是你忘了——而是這件事對你重要，而且它真的不容易。</div>
+      <div id="client-insight"></div>
+    </div>
+    <!-- ③ 新增客戶 -->
+    <div class="card">
+      <label style="margin-top:0">＋ 新增客戶 <span class="hint">一律使用代號</span></label>
       <div class="phrase-add" style="margin-top:0">
         <input type="text" id="new-client-code" placeholder="客戶代號，例：Tom、A 小姐">
         <button onclick="addClient()">新增</button>
       </div>
+      <div class="privacy-tip">🔒 真實姓名不要進工具。代號會出現在匯出的 PDF 與時數表裡，是給你自己對照用的。</div>
     </div>
-    <div id="client-list"></div>
     <div style="height:24px"></div>
   </div>
 
@@ -720,30 +1108,67 @@ input[type=text], input[type=date], select { min-height: 44px; }
       <label style="margin-top:0">匯出 ICF 時數表</label>
       <div class="sub-note">工具裡只有客戶代號、日期、會談次數、時長。ICF 的時數表另外要求客戶<b>真實姓名、聯絡方式、關係起訖日</b>——
         這三欄是刻意不放進工具的（去識別化），匯出的 CSV 會留三個空白欄位讓你自己填。</div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="exportHoursCSV()">匯出時數表（CSV）</button>
+      <button class="btn btn-ghost" id="btn-exp-csv" style="width:100%;margin-top:10px" onclick="exportTwoStep('csv')">匯出時數表（CSV）</button>
+      <div id="expbox-csv"></div>
     </div>
     <div style="height:24px"></div>
   </div>
 
   <!-- ===== CLIENT DETAIL ===== -->
   <div id="view-client-detail" class="hidden">
-    <div class="card" id="client-info"></div>
-    <div class="card" id="client-chart-card">
-      <label style="margin-top:0">這位客戶的趨勢 <span class="hint">依會談時間排序</span></label>
-      <div class="chart-box" id="clientChart"></div>
+    <!-- 1. 四張統計卡 -->
+    <div class="card">
+      <label style="margin-top:0" id="cd-title"></label>
+      <div class="stat4" id="client-stats"></div>
     </div>
-    <div id="client-recs"></div>
+    <!-- 2. 每一場的議題（整列，每列可點進單場詳情） -->
+    <div class="card">
+      <label style="margin-top:0">每一場的議題 <span class="hint" id="cd-sess-count"></span></label>
+      <div id="client-recs"></div>
+    </div>
+    <!-- 3. 兩欄並排、底部對齊：兩張卡直接當 grid 項目，中間不包容器 -->
+    <div class="two-col">
+      <div class="card" id="client-chart-card">
+        <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
+        <div class="chart-box" id="clientChart"></div>
+      </div>
+      <div class="card" id="client-recap"></div>
+    </div>
+    <div class="card" id="client-info"></div>
     <div class="actions">
       <button class="btn btn-ghost" onclick="showView('clients')">返回客戶列表</button>
     </div>
     <div style="height:24px"></div>
   </div>
 
+  <!-- ===== 覺察手帳（§9） ===== -->
+  <div id="view-journal" class="hidden">
+    <div class="card">
+      <div class="hist-head">
+        <label style="margin:0">覺察手帳 <span class="hint" id="j-count"></span></label>
+        <button type="button" class="recap-copy" onclick="jManageTags()">管理標籤</button>
+      </div>
+      <div class="sub-note">一條一條的提醒。導師講過的話，寫成下一場真的用得上的句子。</div>
+      <div class="jtagbar" id="j-tagbar"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="jNew()">寫一條提醒</button>
+      <button class="btn btn-ghost" id="btn-exp-journal" style="width:100%;margin-top:8px" onclick="exportTwoStep('journal')">匯出手帳（PDF）</button>
+      <div id="expbox-journal"></div>
+    </div>
+    <div id="j-list"></div>
+    <div style="height:24px"></div>
+  </div>
+
   <!-- ===== MENTOR QUESTIONS ===== -->
   <div id="view-ask" class="hidden">
     <div class="card">
-      <label style="margin-top:0">新增想問導師的問題</label>
-      <textarea id="ask-q" placeholder="這次會談後想問導師的問題…"></textarea>
+      <label style="margin-top:0">＋ 新增問題</label>
+      <textarea id="ask-q" placeholder="這次會談後想問導師的問題…" oninput="onAskInput()"></textarea>
+      <div id="ask-dup"></div>
+      <label>這題是關於 <span class="hint">二選一</span></label>
+      <div class="qcat" id="ask-cat">
+        <button type="button" class="pchip on" data-cat="skill"  onclick="setAskCat('skill')">卡住的技巧</button>
+        <button type="button" class="pchip"    data-cat="client" onclick="setAskCat('client')">特定客戶</button>
+      </div>
       <label>相關情境 <span class="hint">選填，客戶／會談</span></label>
       <input type="text" id="ask-ctx" placeholder="例：Tom 第一次">
       <button class="btn btn-primary" style="margin-top:12px" onclick="addQuestion()">加入清單</button>
@@ -765,9 +1190,10 @@ input[type=text], input[type=date], select { min-height: 44px; }
       <button class="btn btn-primary" onclick="editCurrent()">編輯</button>
     </div>
     <div class="actions" style="margin-top:8px">
-      <button class="btn btn-primary" onclick="exportRecordPDF(currentId)">匯出 PDF</button>
+      <button class="btn btn-primary" id="btn-exp-one" onclick="exportTwoStep('one')">匯出 PDF</button>
       <button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteCurrent()">刪除這筆</button>
     </div>
+    <div id="expbox-one"></div>
     <div style="height:24px"></div>
   </div>
 
@@ -853,6 +1279,61 @@ const MK = [
    {c:"8.9", t:"與客戶共同決定如何結束這場會談", p:"「還有想說的嗎？我們可以在這裡結束嗎？」", acc:true}]
 ];
 /* 每項職能的評分提醒：紅＝直接扣分行為，綠＝導師常提醒的重點 */
+/* 39 條標記的短名：使用者背不起來編號，格子上要看得出這條在講什麼 */
+const MK_SHORT = {
+  '1.1':'道德一致',
+  '2.1':'教練心態',
+  '3.1':'本次議題','3.2':'成功標準','3.3':'想處理什麼','3.4':'進度再確認',
+  '4.1':'認可洞察','4.2':'接住情緒','4.3':'支持這個人','4.4':'邀請回饋',
+  '5.1':'回應整體','5.2':'回應目標','5.3':'用客戶的話','5.4':'展現好奇','5.5':'允許沉默',
+  '6.1':'客製提問','6.2':'探索用詞','6.3':'探索情緒','6.4':'能量變化','6.5':'探索價值觀','6.6':'探索信念','6.7':'簡潔複述',
+  '7.1':'關於客戶','7.2':'超越現況','7.3':'分享觀察','7.4':'邀請探索','7.5':'邀請進展','7.6':'客戶的節奏','7.7':'客戶的學習','7.8':'調整做法',
+  '8.1':'整合學習','8.2':'設計行動','8.3':'自主思考','8.4':'支持自主','8.5':'慶祝進展','8.6':'資源與障礙','8.7':'當責方式','8.8':'客戶收尾','8.9':'共同結束'
+};
+
+/* 每條標記的例句：照著問就會落地，不用自己想怎麼開口 */
+const MK_EX = {
+  '3.1':'「今天你想帶走什麼？」',
+  '3.2':'「怎樣算今天談完了？」',
+  '3.3':'「這件事裡你最想處理哪一塊？」',
+  '3.4':'「我們現在還在你想談的那件事上嗎？」',
+  '4.1':'「我聽到你剛才說的，好像是一個突破——你發現自己從被動變成主動了。」',
+  '4.2':'「我聽到你說那句話的時候，感受到你似乎很委屈。」',
+  '4.3':'「一直以來我發現你對人的敏感度很高，我很欣賞你這一點。」',
+  '4.4':'「你對於我的分享有什麼想法嗎？」',
+  '5.1':'「你整個人現在是什麼狀態？」',
+  '5.2':'「這跟你今天想達成的有關嗎？」',
+  '5.3':'「你說『卡住』——那個卡住是什麼樣子？」',
+  '5.4':'「我很好奇，然後呢？」',
+  '5.5':'（不說話，數三秒）',
+  '6.1':'「以你這樣的人來說，什麼會擋住你？」',
+  '6.2':'「你用了『應該』這個詞，那是誰的應該？」',
+  '6.3':'「說到這件事，你的感覺是什麼？」',
+  '6.4':'「我注意到你的聲音變了，感覺你從猶豫變成篤定了。」',
+  '6.5':'「這件事對你為什麼重要？」',
+  '6.6':'「你相信什麼，才會這樣看它？」',
+  '6.7':'「我聽到的是……我理解得對嗎？」',
+  '7.1':'「這件事說明了你是什麼樣的人？」',
+  '7.2':'「想像你站在五年後回頭看這個決定，你會怎麼評價？」',
+  '7.3':'「我注意到一件事，可以分享嗎？」',
+  '7.4':'「這對你來說意味著什麼？」',
+  '7.5':'「我們上次談到了那件事，你現在有什麼想法？」',
+  '7.6':'「你想在這裡停一下，還是往下走？」',
+  '7.7':'「今天你學到的是什麼？」',
+  '7.8':'「這樣談對你有幫助嗎？要換個方式嗎？」',
+  '8.1':'「今天的收穫怎麼用到你的生活裡？」',
+  '8.2':'「你想做的第一步是什麼？」',
+  '8.3':'「你自己會怎麼設計這件事？」',
+  '8.4':'「這是你要的，還是你覺得該要的？」',
+  '8.5':'「對於今天這個小突破，你想給自己什麼獎勵？」',
+  '8.6':'「除了你之外，還有誰處理過類似的狀況？」',
+  '8.7':'「你會如何承諾把這個計畫進行到底？」',
+  '8.8':'「時間差不多到了，你還有什麼想說的嗎？」',
+  '8.9':'「如果沒有了，我們在這裡結束好嗎？」',
+  '1.1':'（開場講完保密聲明再問議題）',
+  '2.1':'（保持開放、好奇、以客戶為中心）'
+};
+
 const CC_NOTE = [
   {x:"告訴客戶該做什麼（顧問模式）；長時間停留在情緒性的過去（治療模式）；違反 ICF 倫理守則。",
    o:"開場保密聲明是這一條的展現；「下指導棋」「往過去治療」是反思表裡自查的正確方向。"},
@@ -892,6 +1373,17 @@ function mkId(i, code){ return i + '_' + code.replace('.', '_'); }
 function mkOn(v){ return typeof v === 'string' ? false : !!(v && v.on); }
 function mkEv(v){ return typeof v === 'string' ? v : String((v && v.ev) || ''); }
 function mkImp(v){ return typeof v === 'string' ? '' : String((v && v.imp) || ''); }
+/* §6：每條標記可以有多列「時間戳＋實例」。
+   舊資料只有一行逗號分隔的 ev，讀取端在這裡攤成 rows，不改寫磁碟上的舊資料。
+   ev 仍然是證據計數（evCount / MK_TWO）的唯一來源，由 rows 的時間戳推導。 */
+function mkRows(v){
+  if (v && Array.isArray(v.rows) && v.rows.length)
+    return v.rows.map(r=>({ t: String((r&&r.t)||''), x: String((r&&r.x)||'') }));
+  const ev = mkEv(v);
+  if (!ev) return [];
+  return ev.split(/[,，、;；]+/).map(t=>t.trim()).filter(Boolean).map(t=>({ t, x: '' }));
+}
+function rowsToEv(rows){ return (rows||[]).map(r=>String(r.t||'').trim()).filter(Boolean).join(', '); }
 /* 標記顯示範圍：true = 只顯示 ACC 必備標記 */
 let mkAccOnly = false;
 const APP_VER = "v5.0";   // 頁尾顯示；使用者回報問題時用來確認版本
@@ -908,7 +1400,31 @@ let currentClientId = null;     // client shown in client detail
 let histFilter = '';            // history view: filter by clientId ('' = all)
 
 function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
-function store(a) { localStorage.setItem(KEY, JSON.stringify(a)); saveRich(a); schedulePush(); }
+/* ═══ 同步：雙改衝突用「單筆最後寫入者勝」 ═══
+   itemTime()：這一筆最後被使用者改動的時間。沒有 updated 的舊資料退回用 id
+   （records / questions / journal 的 id 就是建立當下的 Date.now()，
+     clients 的 id 是 'c<時間戳>_<序號>'，抓得出數字），所以舊資料也有可比較的下界。
+   stampChanged()：寫入前比對「這一筆的內容跟磁碟上那份是否不同」，只蓋真的變了的那幾筆。
+   遷移與合併是直接 localStorage.setItem，不走這裡，所以不會把整份重新蓋成現在時間。 */
+function itemTime(x){
+  if (!x) return 0;
+  if (typeof x.updated === 'number') return x.updated;
+  const m = String(x.id == null ? '' : x.id).match(/(\d{10,})/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+function stampChanged(key, arr){
+  const prev = {};
+  try { (JSON.parse(localStorage.getItem(key)) || []).forEach(x=>{ if (x && x.id != null) prev[x.id] = x; }); } catch(e){}
+  const norm = x => { const c = Object.assign({}, x); delete c.updated; return JSON.stringify(c); };
+  const now = Date.now();
+  (arr || []).forEach(x=>{
+    if (!x || x.id == null) return;
+    const old = prev[x.id];
+    if (!old || norm(old) !== norm(x)) x.updated = now;
+  });
+  return arr;
+}
+function store(a) { localStorage.setItem(KEY, JSON.stringify(stampChanged(KEY, a))); saveRich(a); schedulePush(); }
 
 /* ===== 更新保護 =====
    PREV3KEY：第一次跑 accv 3 遷移前，把當下資料原樣留一份，使用者可從「使用說明」還原
@@ -931,27 +1447,73 @@ function saveRich(recs){
 }
 const QKEY = "coachingQuestions_v1";
 function loadQ() { try { return JSON.parse(localStorage.getItem(QKEY)) || []; } catch(e){ return []; } }
-function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(a)); schedulePush(); }
+function storeQ(a) { localStorage.setItem(QKEY, JSON.stringify(stampChanged(QKEY, a))); schedulePush(); }
+/* §9 覺察手帳：獨立集合，比照 QKEY 的做法，不塞進 acc 也不塞進紀錄物件 */
+const JKEY  = "coachingJournal_v1";       // 手帳卡片
+const JTKEY = "coachingJournalTags_v1";   // 標籤清單（標籤可以先存在、還沒有卡片用它）
+function loadJ()  { try { const a = JSON.parse(localStorage.getItem(JKEY));  return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+function storeJ(a){ localStorage.setItem(JKEY, JSON.stringify(stampChanged(JKEY, a))); schedulePush(); }
+function loadJT() { try { const a = JSON.parse(localStorage.getItem(JTKEY)); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+function storeJT(a){ localStorage.setItem(JTKEY, JSON.stringify(a)); schedulePush(); }
 const CKEY = "coachingClients_v1";
 function loadC() { try { return JSON.parse(localStorage.getItem(CKEY)) || []; } catch(e){ return []; } }
-function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(a)); schedulePush(); }
+function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(stampChanged(CKEY, a))); schedulePush(); }
 const DKEY = "coachingDeleted_v1";   // 刪除墓碑：避免另一台裝置把已刪的資料「復活」
 const SKEY = "coachingSyncedAt_v1";  // 上次看到的雲端 updated_at
-function loadDel(){ try { const d = JSON.parse(localStorage.getItem(DKEY)); return (d && d.r) ? d : {r:[],q:[],c:[]}; } catch(e){ return {r:[],q:[],c:[]}; } }
+function loadDel(){
+  try {
+    const d = JSON.parse(localStorage.getItem(DKEY));
+    if (!d || !d.r) return {r:[],q:[],c:[],j:[]};
+    if (!Array.isArray(d.j)) d.j = [];      // §9 手帳的墓碑，舊資料補上
+    return d;
+  } catch(e){ return {r:[],q:[],c:[],j:[]}; }
+}
 function storeDel(d){ localStorage.setItem(DKEY, JSON.stringify(d)); }
 function markDeleted(kind, id){ const d = loadDel(); if (!d[kind].includes(id)) { d[kind].push(id); storeDel(d); } }
 /* 把雲端資料併進本機：id 聯集、本機優先、排除墓碑 */
+/* id 聯集；同一個 id 兩邊都有時比 itemTime()，較新的那份勝（單筆最後寫入者勝）。
+   為什麼不做欄位級合併：一場會談的紀錄是教練一次寫完的一段敘述，
+   把 A 的「做得好」跟 B 的「可改進」縫在一起，會產生一份她從來沒寫過的紀錄。
+   單筆整份取代雖然會丟掉較舊那一邊的修改，但結果是可預測、可解釋的。 */
+function mergeArr(localArr, cloudArr, delList){
+  const out = [], seen = new Map();
+  (localArr || []).forEach(x=>{
+    if (!x) return;
+    /* 沒有 id 的本機項目照樣留著。它沒辦法跟雲端比對，但也不能因此被丟掉——
+       舊版是 localArr.filter(...)，無條件保留，這裡要維持一樣的安全性。 */
+    if (x.id == null){ out.push(x); return; }
+    if (delList.includes(x.id)){ return; }
+    seen.set(x.id, out.length); out.push(x);
+  });
+  (cloudArr || []).forEach(c=>{
+    if (!c || c.id == null || delList.includes(c.id)) return;
+    if (!seen.has(c.id)){ seen.set(c.id, out.length); out.push(c); return; }
+    const i = seen.get(c.id);
+    if (itemTime(c) > itemTime(out[i])) out[i] = c;      // 雲端那份比較新才取代
+  });
+  return out;
+}
+/* 2026-08-23 Ann 決定：代號重複的客戶**不做自動合併**。
+   兩台裝置各自長出同代號的客戶時，兩位各自保留、各自的紀錄不動，交由使用者自己處理。
+   理由：客戶代號是對外識別碼，程式自作主張把兩位併成一位、又把紀錄改掛過去，
+   一旦判斷錯了很難回復。寧可讓使用者看到兩個 Tom 自己決定，也不要程式代替她決定。 */
 function mergeCloud(p){
   const del = loadDel();
-  if (p.deleted) { ['r','q','c'].forEach(k=>{ (p.deleted[k]||[]).forEach(id=>{ if (!del[k].includes(id)) del[k].push(id); }); }); storeDel(del); }
-  const mergeArr = (localArr, cloudArr, delList) => {
-    const ids = new Set(localArr.map(x=>x.id));
-    (cloudArr||[]).forEach(x=>{ if (!ids.has(x.id) && !delList.includes(x.id)) localArr.push(x); });
-    return localArr.filter(x=>!delList.includes(x.id));
-  };
+  if (p.deleted) { ['r','q','c','j'].forEach(k=>{ if (!Array.isArray(del[k])) del[k] = [];
+    (p.deleted[k]||[]).forEach(id=>{ if (!del[k].includes(id)) del[k].push(id); }); }); storeDel(del); }
   localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r)));
   localStorage.setItem(QKEY, JSON.stringify(mergeArr(loadQ(), p.questions, del.q)));
   localStorage.setItem(CKEY, JSON.stringify(mergeArr(loadC(), p.clients,   del.c)));
+  localStorage.setItem(JKEY, JSON.stringify(mergeArr(loadJ(), p.journal,   del.j)));
+  /* ④ 標籤：取聯集，而且不再用墓碑。
+     舊做法用 'tag:名稱' 當墓碑，會造成「這個名字以後再也建不起來」——
+     一台刪掉標籤，另一台之後新建同名標籤會被永久壓掉，而且使用者無法自救。
+     兩害相權：「刪掉的標籤可能因為另一台還留著而回來」是使用者再刪一次就好，
+     「某個名字永遠不能用」則救不回來，所以選前者。
+     卡片上的標籤本身由單筆 LWW 決定，會正確收斂。 */
+  const tags = loadJT().slice();
+  (p.journalTags || []).forEach(t=>{ if (tags.indexOf(t) < 0) tags.push(t); });
+  localStorage.setItem(JTKEY, JSON.stringify(tags));
   runMigrations(); updateCount(); updateAskCount();
 }
 function clientById(id) { return loadC().find(c=>c.id===id); }
@@ -1031,6 +1593,42 @@ function migrateAcc3(){
   });
   if (ch) { localStorage.setItem(KEY, JSON.stringify(recs)); saveRich(recs); schedulePush(); }
 }
+/* v5 → v6：新增頂層欄位 topic（這一場的議題）。
+   只補空字串，不動 acc、不動 accv——議題是頂層欄位，跟 acc 的格式版號無關。 */
+function migrateTopic(){
+  const recs = load(); let ch = false;
+  recs.forEach(r=>{
+    if (typeof r.topic !== 'string'){ r.topic = ''; ch = true; }
+    if (typeof r.exportedAt !== 'string'){ r.exportedAt = ''; ch = true; }   /* §2-3 還沒匯出 PDF 快篩 */
+  });
+  if (ch) { localStorage.setItem(KEY, JSON.stringify(recs)); schedulePush(); }
+}
+/* §9：手帳卡片與導師提問的欄位補預設值，讀取端一律不會拿到 undefined。
+   導師提問從兩態（待問／已回答）補上第三態「已消化」——沿用 answered，另加 digested。 */
+function migrateJournal(){
+  const js = loadJ(); let ch = false;
+  js.forEach(j=>{
+    ['title','note','why','example'].forEach(k=>{ if (typeof j[k] !== 'string'){ j[k] = ''; ch = true; } });
+    if (!Array.isArray(j.tags)){ j.tags = []; ch = true; }
+    if (j.srcQ === undefined){ j.srcQ = null; ch = true; }
+  });
+  if (ch) localStorage.setItem(JKEY, JSON.stringify(js));
+  const qs = loadQ(); let qch = false;
+  qs.forEach(q=>{
+    if (typeof q.digested !== 'boolean'){ q.digested = false; qch = true; }
+    if (typeof q.cat !== 'string'){ q.cat = ''; qch = true; }     /* §10 分類：卡住的技巧／特定客戶 */
+  });
+  if (qch) localStorage.setItem(QKEY, JSON.stringify(qs));
+  if (!Array.isArray(loadJT())) storeJT([]);
+}
+/* 顯示用：沒填時給灰字，永遠不會是 undefined */
+function topicText(r){ return String((r && r.topic) || '').trim(); }
+function topicHTML(r){
+  const t = topicText(r);
+  return t ? '<div class="topic">' + esc(t) + '</div>'
+           : '<div class="topic none">（沒填議題）</div>';
+}
+
 /* 從更新前的快照還原（「使用說明」裡的按鈕） */
 function restorePreV3(){
   let snap = null;
@@ -1136,6 +1734,7 @@ async function onLogin(user){
   maybeOnboard();
 }
 async function doLogout(){
+  await flushPush();           /* ② 登出會清掉本機資料，等待中的推送要先送出去 */
   if (fb.auth){ try { await fb.authMod.signOut(fb.auth); } catch(e){} }
   currentUser = null;
   localStorage.removeItem(KEY); localStorage.removeItem(QKEY); localStorage.removeItem(CKEY);
@@ -1147,22 +1746,32 @@ async function doLogout(){
 }
 async function syncPull(){
   if (!fb.db || !currentUser) return;
+  let pulled = false;
   try {
     const ref = fb.fsMod.doc(fb.db, 'user_data', currentUser.uid);
     const snap = await fb.fsMod.getDoc(ref);
     if (snap.exists() && snap.data().payload){
-      const p = JSON.parse(snap.data().payload);
-      if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
-      if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
-      if (Array.isArray(p.clients))   localStorage.setItem(CKEY, JSON.stringify(p.clients));
-      if (p.deleted && p.deleted.r)   storeDel(p.deleted);
+      /* ① 走跟 pushCloud 一樣的合併路徑，不再用雲端無條件覆蓋本機。
+         先前這裡是直接 setItem，離線期間在這台裝置上寫的東西會在下次登入時整批消失。 */
+      mergeCloud(JSON.parse(snap.data().payload));
       localStorage.setItem(SKEY, String(snap.data().updated_at || Date.now()));
+      pulled = true;
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
     }
   } catch(e){ toast('⚠️ 無法讀取雲端資料，目前顯示本機內容'); }
   runMigrations();
   buildClientSel(''); updateCount(); updateAskCount();
+  /* ② 合併之後本機可能有雲端沒有的東西（離線期間寫的、或上次 debounce 沒送出的），
+     補推一次，不然那些改動會一直只留在這台裝置上。 */
+  if (pulled) schedulePush();
+}
+/* ② debounce 還在等的時候，使用者存檔／離開頁面／登出，那筆改動會跟著消失。
+   flushPush() 把等待中的推送立刻送出；下面四個時機點都會叫它。 */
+function flushPush(){
+  if (!pushTimer) return Promise.resolve();
+  clearTimeout(pushTimer); pushTimer = null;
+  return pushCloud();
 }
 function schedulePush(){
   if (!fb.db || !currentUser) return;
@@ -1170,7 +1779,7 @@ function schedulePush(){
      壞資料或未備份狀態下的 setDoc 會直接蓋掉使用者雲端那份。 */
   if (migrationFailed || !cloudSnapReady) return;
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(pushCloud, 800);
+  pushTimer = setTimeout(()=>{ pushTimer = null; pushCloud(); }, 800);
 }
 async function pushCloud(){
   if (!fb.db || !currentUser) return;
@@ -1186,7 +1795,8 @@ async function pushCloud(){
       }
     } catch(e){}
     const now = Date.now();
-    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(), deleted: loadDel() }), updated_at: now });
+    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(),
+      journal: loadJ(), journalTags: loadJT(), deleted: loadDel() }), updated_at: now });
     localStorage.setItem(SKEY, String(now));
     pushFailed = false;
   } catch(e){
@@ -1204,7 +1814,9 @@ let pushFailed = false;
      機制三 openCloudRestore()   ：使用說明裡的還原入口，讓使用者自己救
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 5;
+const SCHEMA_VER = 8;   /* v8：§9 覺察手帳（journal / journalTags 兩個新集合進 payload）。
+                              前一版 v7 是 §6 標記多列。升版號是為了在資料形狀改變之前，
+                              先在雲端留一份 payload_pre_v8。 */
 const SNAP_KEEP  = 3;                 // 只留最近 3 個版號，避免 Firestore 單一文件 1MB 上限爆掉
 const SNAP_BUDGET = 900 * 1024;       // 快照總量上限（保守值，留給 payload 本身）
 function snapField(v){ return 'payload_pre_v' + v; }
@@ -1220,7 +1832,7 @@ function runMigrations(){
   const before = {};
   KEYS.forEach(k => { before[k] = localStorage.getItem(k); });
   try {
-    migrateQ(); migrateClients(); migrateAcc(); migrateAcc3();
+    migrateQ(); migrateClients(); migrateAcc(); migrateAcc3(); migrateTopic(); migrateJournal();
     return true;
   } catch(e){
     KEYS.forEach(k => {
@@ -1342,19 +1954,124 @@ function toast(msg) {
 }
 
 /* ---- mentor questions ---- */
+/* ═══ §10 導師提問 ═══ */
+const Q_CATS = { skill: '卡住的技巧', client: '特定客戶' };
+let askCat = 'skill';
+function setAskCat(c){
+  askCat = Q_CATS[c] ? c : 'skill';
+  document.querySelectorAll('#ask-cat .pchip').forEach(b=>b.classList.toggle('on', b.dataset.cat === askCat));
+}
+/* 中文二字詞：英文那種用空格斷詞的做法在中文上不管用，改成連續兩字滑窗 */
+function biGrams(str){
+  const t = String(str||'').replace(/[\s，。！？、；：「」『』（）()\[\]{}.,!?;:'"~\-–—…]/g, '');
+  const out = [];
+  for (let i = 0; i < t.length - 1; i++) out.push(t.slice(i, i + 2));
+  return out;
+}
+/* 兩組以上重疊詞才提示——一組太容易誤報 */
+const DUP_MIN = 2;
+function similarQuestions(text, excludeId){
+  const a = new Set(biGrams(text));
+  if (a.size < DUP_MIN) return [];
+  return loadQ()
+    .filter(q=>q.id !== excludeId)
+    .map(q=>{
+      const b = new Set(biGrams(q.q));
+      const shared = [];
+      a.forEach(g=>{ if (b.has(g)) shared.push(g); });
+      return { q, shared };
+    })
+    .filter(x=>x.shared.length >= DUP_MIN)
+    .sort((x,y)=>y.shared.length - x.shared.length || y.q.id - x.q.id)
+    .slice(0, 3);
+}
+function renderAskDup(){
+  const box = document.getElementById('ask-dup');
+  if (!box) return;
+  const txt = (document.getElementById('ask-q') || {}).value || '';
+  const hits = similarQuestions(txt, null);
+  if (!hits.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="dupbox">'
+    + '<div class="dup-head">你以前問過很接近的問題（' + hits.length + ' 則）</div>'
+    + '<div class="dup-sub">先看看當時的答案，也許不用再問一次。</div>'
+    + hits.map(h=>'<div class="dup-item">'
+        + '<div class="dup-q">' + esc(h.q.q) + '</div>'
+        + (h.q.answer ? '<div class="dup-a"><span class="alabel">當時的答案</span>' + esc(h.q.answer) + '</div>'
+                      : '<div class="dup-a none">這一則還沒有答案</div>')
+        + '<div class="dup-shared">重疊的詞：' + h.shared.slice(0, 6).map(esc).join('、') + '</div>'
+        + '<button type="button" class="mini-link" onclick="mergeIntoQuestion(' + h.q.id + ')">把新情境補到這則上</button>'
+      + '</div>').join('')
+    + '</div>';
+}
+let askDupTimer = null;
+function onAskInput(){
+  clearTimeout(askDupTimer);
+  askDupTimer = setTimeout(renderAskDup, 200);   // 打字時即時比對
+}
+/* 把目前輸入的內容併進舊問題，而不是新增一則重複的 */
+function mergeIntoQuestion(id){
+  const qEl = document.getElementById('ask-q'), cEl = document.getElementById('ask-ctx');
+  const txt = (qEl.value || '').trim(), ctx = (cEl.value || '').trim();
+  if (!txt && !ctx){ toast('先寫下這次的情境再併過去'); return; }
+  const arr = loadQ(); const it = arr.find(x=>x.id === id);
+  if (!it) return;
+  const parts = [];
+  if (ctx) parts.push(ctx);
+  if (txt) parts.push('這次的問法：' + txt);
+  it.ctx = (it.ctx ? it.ctx + '\n' : '') + '這次的情境：' + parts.join('｜');
+  if (it.digested) it.digested = false;          // 又冒出來一次，代表還沒真的消化完
+  storeQ(arr);
+  qEl.value = ''; cEl.value = '';
+  renderAskDup(); updateAskCount(); renderAsk();
+  toast('已把新情境補到那一則上');
+}
+/* 打字就自動從「待問」跳「已問」，不用手動切狀態 */
+let qAnsTimer = null;
+function qAnsSave(id, val){
+  const arr = loadQ(); const it = arr.find(x=>x.id === id);
+  if (!it) return null;
+  it.answer = String(val || '').trim();
+  it.answered = !!it.answer;                     // 清空又會回到待問
+  storeQ(arr); updateAskCount();
+  const badge = document.getElementById('qstate-' + id);
+  if (badge) badge.textContent = qStateLabel(it);   /* 只更新狀態籤，不重繪，游標才不會跑掉 */
+  return it;
+}
+function onAnswerInput(id){
+  const el = document.getElementById('ans-' + id);
+  if (!el) return;
+  const val = el.value;
+  clearTimeout(qAnsTimer);
+  qAnsTimer = setTimeout(()=>{ qAnsTimer = null; qAnsSave(id, val); }, 350);
+}
+function onAnswerBlur(id){
+  /* 離開輸入框時先把還在 debounce 裡的答案存掉，再重繪。
+     不先存的話會有一段時間差：重繪（200ms）比存檔（350ms）早，
+     使用者會看到剛打的字在畫面上消失——雖然之後才被寫進去，但那一刻看起來像沒存到。 */
+  const el = document.getElementById('ans-' + id);
+  if (el){ clearTimeout(qAnsTimer); qAnsTimer = null; qAnsSave(id, el.value); }
+  /* 延一下讓同一張卡上的按鈕點擊先發生，再重繪把卡片移到正確的分組 */
+  setTimeout(()=>{ if (document.activeElement !== document.getElementById('ans-' + id)) renderAsk(); }, 200);
+}
+const Q_STATE_LABEL = { pending: '待問', answered: '已問', digested: '已消化' };
+function qStateLabel(x){ return Q_STATE_LABEL[qState(x)]; }
+/* 三態：待問（!answered）→ 已回答（answered && !digested）→ 已消化（digested） */
+function qState(x){ return !x.answered ? 'pending' : (x.digested ? 'digested' : 'answered'); }
 function updateAskCount() {
-  const n = loadQ().filter(x=>!x.answered).length;
+  const n = loadQ().filter(x=>qState(x) === 'pending').length;
   document.getElementById('askCnt').textContent = n ? '('+n+')' : '';
+  updateJCount();
 }
 function addQuestion() {
   const q = document.getElementById('ask-q').value.trim();
   if (!q) { toast('請先寫問題'); return; }
   const ctx = document.getElementById('ask-ctx').value.trim();
   const arr = loadQ();
-  arr.push({ id: Date.now(), q, ctx, answer:'', answered:false, created: todayStr() });
+  arr.push({ id: Date.now(), q, ctx, cat: askCat, answer:'', answered:false, digested:false, created: todayStr() });
   storeQ(arr);
   document.getElementById('ask-q').value = '';
   document.getElementById('ask-ctx').value = '';
+  renderAskDup();
   updateAskCount(); renderAsk(); toast('已加入清單');
 }
 function addQuestionFromRecord(id) {
@@ -1362,45 +2079,61 @@ function addQuestionFromRecord(id) {
   if (!r || !r.instant) return;
   const arr = loadQ();
   if (arr.some(x=> x.q === r.instant)) { toast('這題已加過了'); return; }
-  arr.push({ id: Date.now(), q: r.instant, ctx: buildCtx(r), answer:'', answered:false, created: todayStr() });
+  arr.push({ id: Date.now(), q: r.instant, ctx: buildCtx(r), cat: 'client', answer:'', answered:false, digested:false, created: todayStr() });
   storeQ(arr); updateAskCount(); toast('已加入導師提問清單');
 }
 function renderAsk() {
   const arr = loadQ().sort((a,b)=>b.id-a.id);
-  const pend = arr.filter(x=>!x.answered);
-  const done = arr.filter(x=>x.answered);
+  const pend = arr.filter(x=>qState(x) === 'pending');
+  const done = arr.filter(x=>qState(x) === 'answered');
+  const dig  = arr.filter(x=>qState(x) === 'digested');
+  const catTag = x => x.cat && Q_CATS[x.cat] ? `<span class="qcat-tag">${Q_CATS[x.cat]}</span>` : '';
+  const stateTag = x => `<span class="qstate" id="qstate-${x.id}">${qStateLabel(x)}</span>`;
   const pItem = x => `<div class="qcard">
+    <div class="qhead">${catTag(x)}${stateTag(x)}</div>
     <div class="qtext">${esc(x.q)}</div>
     ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
-    <textarea class="qans" id="ans-${x.id}" placeholder="導師的回答…"></textarea>
+    <textarea class="qans" id="ans-${x.id}" placeholder="導師的回答…（開始打字就會變成「已問」）"
+      oninput="onAnswerInput(${x.id})" onblur="onAnswerBlur(${x.id})">${esc(x.answer||'')}</textarea>
     <div class="qbtns">
-      <button class="mini-link" onclick="saveAnswer(${x.id})">存下答案</button>
       <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
     </div></div>`;
   const dItem = x => `<div class="qcard done">
+    <div class="qhead">${catTag(x)}${stateTag(x)}</div>
+    <div class="qtext">${esc(x.q)}</div>
+    ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
+    <textarea class="qans" id="ans-${x.id}" oninput="onAnswerInput(${x.id})" onblur="onAnswerBlur(${x.id})">${esc(x.answer||'')}</textarea>
+    <div class="qbtns">
+      <button class="mini-link" onclick="jFromQuestion(${x.id})">→ 加進覺察手帳</button>
+      <button class="mini-link" onclick="reopenQuestion(${x.id})">改回待問</button>
+      <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
+    </div></div>`;
+  const gItem = x => `<div class="qcard done">
+    <div class="qhead">${catTag(x)}${stateTag(x)}</div>
     <div class="qtext">${esc(x.q)}</div>
     ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
     <div class="qanswer"><span class="alabel">導師回答</span>${esc(x.answer)}</div>
     <div class="qbtns">
-      <button class="mini-link" onclick="reopenQuestion(${x.id})">改回待問</button>
+      <button class="mini-link" onclick="showView('journal')">看覺察手帳</button>
+      <button class="mini-link" onclick="undigestQuestion(${x.id})">改回已回答</button>
       <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
     </div></div>`;
   document.getElementById('ask-list').innerHTML =
     `<div class="ask-sub">待回答（${pend.length}）</div>` +
     (pend.length ? pend.map(pItem).join('') : '<div class="empty" style="padding:14px 0">目前沒有待問的問題</div>') +
     `<div class="ask-sub" style="margin-top:18px">已回答（${done.length}）</div>` +
-    (done.length ? done.map(dItem).join('') : '<div class="empty" style="padding:14px 0">還沒有已回答的問題</div>');
-}
-function saveAnswer(id) {
-  const val = document.getElementById('ans-'+id).value.trim();
-  if (!val) { toast('請先填答案'); return; }
-  const arr = loadQ(); const it = arr.find(x=>x.id===id);
-  if (it) { it.answer = val; it.answered = true; storeQ(arr); }
-  updateAskCount(); renderAsk(); toast('已記錄答案');
+    (done.length ? done.map(dItem).join('') : '<div class="empty" style="padding:14px 0">還沒有已回答的問題</div>') +
+    `<div class="ask-sub" style="margin-top:18px">已消化（${dig.length}）</div>` +
+    (dig.length ? dig.map(gItem).join('') : '<div class="empty" style="padding:14px 0">加進覺察手帳的問題會收到這裡</div>');
 }
 function reopenQuestion(id) {
   const arr = loadQ(); const it = arr.find(x=>x.id===id);
-  if (it) { it.answered = false; storeQ(arr); }
+  if (it) { it.answered = false; it.digested = false; storeQ(arr); }
+  updateAskCount(); renderAsk();
+}
+function undigestQuestion(id) {
+  const arr = loadQ(); const it = arr.find(x=>x.id===id);
+  if (it) { it.digested = false; storeQ(arr); }
   updateAskCount(); renderAsk();
 }
 function deleteQuestion(id) {
@@ -1483,12 +2216,6 @@ function downloadBlob(content, filename, mime){
 }
 
 /* ---- export: PDF (history) via print ---- */
-function focusLine(r){
-  const f = String(r.focus||'').trim();
-  const pf = String(r.prevFocus||'').trim();
-  const pr = focusResultLabel(r.prevFocusResult||'');
-  return { focus: f, prev: pf, prevLabel: pr };
-}
 function recordMainHTML(r){
   const list = (title, items) => items&&items.length
     ? `<div class="lbl">${title}</div><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul>` : '';
@@ -1496,6 +2223,7 @@ function recordMainHTML(r){
     <div class="doc-date">${r.date||''}</div>
     <h2>客戶：${esc(r.client)||'（未填）'}</h2>
     ${r.session?`<div class="date">會談次數：${esc(r.session)}</div>`:''}
+    <div class="topic">${topicText(r) ? esc(topicText(r)) : '（沒填議題）'}</div>
     <div class="scorebox">
       <div class="score">自評表現：<b>${r.perf}</b></div>
       <div class="score">自評感受：<b>${r.feel}</b></div>
@@ -1546,36 +2274,202 @@ function exportRecordPDF(id){
 const PRINT_CSS = `
 #print-root{ display:none; }
 @media print {
-  html, body{ background:#fff !important; }
+  html, body{ background:#fff !important; }   /* 列印是紙張，這裡要純白，不套色票 */
   body > *:not(#print-root){ display:none !important; }
   #print-root{ display:block !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   @page{ margin:18mm 16mm; }
 }
-#print-root{ font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif; color:#2c2a28; font-size:12pt; line-height:1.55; }
+#print-root{ font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif; color:var(--ink); font-size:12pt; line-height:1.55; }
 #print-root .page{ page-break-after:always; }
 #print-root .page:last-child{ page-break-after:auto; }
-#print-root h2{ font-size:16pt; margin:0 0 4pt; color:#2c2a28; }
-#print-root .doc-date{ color:#8a8378; font-size:10.5pt; margin:0 0 20pt; }
+#print-root h2{ font-size:16pt; margin:0 0 4pt; color:var(--ink); }
+#print-root .doc-date{ color:var(--ink-3); font-size:10.5pt; margin:0 0 20pt; }
+#print-root .topic{ color:var(--warm-ink); font-weight:bold; font-size:12.5pt; margin:2pt 0 0; }
 #print-root .acc-page-head{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 4pt; }
-#print-root .date{ color:#8a8378; font-size:10.5pt; font-weight:normal; }
-#print-root .scorebox{ background:#E7F1F4; border:1px solid #C0DAE2; border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
+#print-root .date{ color:var(--ink-3); font-size:10.5pt; font-weight:normal; }
+#print-root .scorebox{ background:var(--cool-bg); border:1px solid var(--cool-line); border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
 #print-root .score{ margin:0 0 6pt; }
 #print-root .score:last-child{ margin-bottom:0; }
-#print-root .score b{ color:#16748C; }
-#print-root .because{ margin:8pt 0 0 0; padding-left:10pt; border-left:3px solid #d9c9b0; color:#7a7266; }
-#print-root .because b{ color:#a89478; }
-#print-root .lbl{ color:#0F5A6D; font-weight:bold; font-size:11.5pt; margin:12pt 0 4pt; }
+#print-root .score b{ color:var(--cool); }
+#print-root .because{ margin:8pt 0 0 0; padding-left:10pt; border-left:3px solid var(--warm-line); color:var(--ink-2); }
+#print-root .because b{ color:var(--ink-4); }
+#print-root .lbl{ color:var(--cool-d); font-weight:bold; font-size:11.5pt; margin:12pt 0 4pt; }
 #print-root ul{ margin:3pt 0; padding-left:22pt; }
 #print-root li{ margin-bottom:2pt; }
-#print-root .accsub{ font-weight:bold; font-size:11pt; color:#6b655c; margin:10pt 0 5pt; }
+#print-root .accsub{ font-weight:bold; font-size:11pt; color:var(--ink-2); margin:10pt 0 5pt; }
 #print-root .accitem{ margin:0 0 6pt; font-size:12pt; }
-#print-root .accnote{ color:#9a9184; font-size:10.5pt; padding-left:18pt; margin-top:2pt; }
-#print-root .accimp{ color:#a4693c; }
+#print-root .accnote{ color:var(--ink-4); font-size:10.5pt; padding-left:18pt; margin-top:2pt; }
+#print-root .accimp{ color:var(--warm-ink); }
 `;
+/* 匯出過就蓋時間戳，§2-3 的「還沒匯出 PDF」快篩靠這個 */
+function stampExported(records){
+  const ids = new Set((records||[]).map(r=>r.id));
+  const all = load(); let ch = false;
+  const now = new Date().toISOString();
+  all.forEach(r=>{ if (ids.has(r.id)){ r.exportedAt = now; ch = true; } });
+  if (ch) store(all);
+}
+/* ═══ §11 匯出二段式 ═══
+   按第一下展開「這次會匯出什麼」，按第二下才產檔。
+   匯出的東西會離開工具、可能寄給導師或 ICF，按之前應該知道裡面有什麼——尤其是有沒有真實姓名。
+   清單一律從「這次真的要匯出的那批資料」數出來，不是寫死的文案，
+   所以頁面上沒有的區塊不會出現在清單裡，也不會有「寫著四張統計卡但只有兩張」那種事。 */
+const PDF_BLOCKS = [
+  ['日期與客戶代號',        r => !!(r.date || r.client)],
+  ['會談次數',              r => !!r.session],
+  ['這一場的議題',          r => !!topicText(r)],
+  ['三個分數與「因為」',    r => r.perf != null || r.feel != null || r.clientfeel != null],
+  ['馬上掉出來的問題',      r => !!r.instant],
+  ['上次說要盯與結果',      r => !!String(r.prevFocus||'').trim()],
+  ['下一場只盯這一件事',    r => !!String(r.focus||'').trim()],
+  ['他自己說的一句話',      r => !!String(r.clientQuote||'').trim()],
+  ['我注意到但沒接的',      r => !!String(r.notCaught||'').trim()],
+  ['我做得好的',            r => (r.good||[]).filter(Boolean).length > 0],
+  ['客戶受到啟發／頓悟的時刻（舊欄位）', r => !!String(r.insight||'').trim()],
+  ['可以改進的部分',        r => (r.improve||[]).filter(Boolean).length > 0],
+  ['這次的特殊狀況',        r => (r.special||[]).filter(Boolean).length > 0],
+  ['ACC 標記（四態分組、證據、需要改善、marker）',
+                            r => Array.isArray(r.acc) && r.acc.length > 0]
+];
+function pdfSections(records){
+  return PDF_BLOCKS.map(([name, has])=>({ name, n: (records||[]).filter(has).length }))
+                   .filter(x=>x.n > 0);
+}
+let expArmed = null;
+const EXPORTS = {
+  hist: {
+    btn: 'btn-exp-hist', box: 'expbox-hist', label: '匯出 PDF',
+    build(){
+      let arr = load();
+      const fc = histFilter ? clientById(histFilter) : null;
+      if (fc) arr = arr.filter(r=>r.clientId === histFilter);
+      if (!arr.length) return { blocked: '沒有紀錄' };
+      return { head: '會匯出 ' + arr.length + ' 場' + (fc ? '（只有 ' + esc(fc.code) + '）' : '') + '，每場兩頁',
+               items: pdfSections(arr).map(x=>x.name + '（' + x.n + ' 場有）'),
+               note: '客戶一律是代號，工具裡沒有真實姓名。' };
+    },
+    run(){ exportPDF(); }
+  },
+  one: {
+    btn: 'btn-exp-one', box: 'expbox-one', label: '匯出 PDF',
+    build(){
+      const r = load().find(x=>x.id === currentId);
+      if (!r) return { blocked: '找不到這一場' };
+      return { head: '會匯出這一場（' + (r.date || '') + '　' + (esc(r.client) || '（未填）') + '），共兩頁',
+               items: pdfSections([r]).map(x=>x.name),
+               note: '客戶一律是代號，工具裡沒有真實姓名。' };
+    },
+    run(){ exportRecordPDF(currentId); }
+  },
+  csv: {
+    btn: 'btn-exp-csv', box: 'expbox-csv', label: '匯出時數表（CSV）',
+    build(){
+      const arr = load();
+      if (!arr.length) return { blocked: '沒有紀錄' };
+      const filled = HOURS_COLS.filter(c=>c.from === '紀錄').map(c=>c.name);
+      const blank  = HOURS_COLS.filter(c=>c.from === '空白').map(c=>c.name);
+      return { head: '會匯出 ' + arr.length + ' 列，' + HOURS_COLS.length + ' 個欄位',
+               items: filled.map(n=>n + '（有值）').concat(blank.map(n=>n + '（留空白）')),
+               warn: 'ICF 時數表要求的<b>真實姓名／聯絡方式／關係起訖日</b>這三欄會留空白，'
+                   + '匯出後要你自己填。<b>代號不會自動換成姓名</b>——工具裡本來就沒有姓名。' };
+    },
+    run(){ exportHoursCSV(); }
+  },
+  txt: {
+    btn: 'btn-exp-txt', box: 'expbox-hist', label: '匯出文字',
+    build(){
+      let arr = load();
+      const fc = histFilter ? clientById(histFilter) : null;
+      if (fc) arr = arr.filter(r=>r.clientId === histFilter);
+      if (!arr.length) return { blocked: '沒有紀錄' };
+      return { head: '會匯出 ' + arr.length + ' 場的純文字' + (fc ? '（只有 ' + esc(fc.code) + '）' : ''),
+               items: pdfSections(arr).map(x=>x.name + '（' + x.n + ' 場有）'),
+               note: '跟 PDF 是同一份內容，只是換成純文字檔。客戶一律是代號，工具裡沒有真實姓名。' };
+    },
+    run(){ exportAllText(); }
+  },
+  journal: {
+    btn: 'btn-exp-journal', box: 'expbox-journal', label: '匯出手帳（PDF）',
+    build(){
+      const js = jSorted();
+      if (!js.length) return { blocked: '手帳還是空的' };
+      const cnt = (f) => js.filter(f).length;
+      const items = [
+        ['標題',       j => !!j.title],
+        ['提醒',       j => !!j.note],
+        ['為什麼',     j => !!j.why],
+        ['例子',       j => !!j.example],
+        ['標籤',       j => (j.tags||[]).length > 0],
+        ['來源提問與導師的回答', j => j.srcQ != null]
+      ].map(([n,f])=>({ n, c: cnt(f) })).filter(x=>x.c > 0);
+      return { head: '會匯出 ' + js.length + ' 條提醒',
+               items: items.map(x=>x.n + '（' + x.c + ' 條有）'),
+               note: '手帳裡如果寫過客戶的事，一樣只會是代號。' };
+    },
+    run(){ printJournalPDF(); }
+  }
+};
+function exportCollapse(){
+  if (!expArmed) return;
+  const c = EXPORTS[expArmed];
+  const box = document.getElementById(c.box); if (box) box.innerHTML = '';
+  const btn = document.getElementById(c.btn);
+  if (btn){ btn.textContent = c.label; btn.classList.remove('armed'); }
+  expArmed = null;
+}
+function exportTwoStep(key){
+  const cfg = EXPORTS[key];
+  if (!cfg) return;
+  if (expArmed === key){        // 第二下才產檔
+    exportCollapse();
+    cfg.run();
+    return;
+  }
+  exportCollapse();             // 別處展開中的先收起來
+  const info = cfg.build();
+  if (info.blocked){ toast(info.blocked); return; }
+  const box = document.getElementById(cfg.box);
+  box.innerHTML = '<div class="expbox">'
+    + '<div class="exp-head">這次會匯出什麼</div>'
+    + '<div class="exp-sub">' + info.head + '</div>'
+    + '<ul class="exp-list">' + info.items.map(i=>'<li>' + i + '</li>').join('') + '</ul>'
+    + (info.warn ? '<div class="exp-warn">' + info.warn + '</div>' : '')
+    + (info.note ? '<div class="exp-note">' + info.note + '</div>' : '')
+    + '<div class="exp-foot">看過了就再按一次「確定匯出」。</div>'
+    + '</div>';
+  const btn = document.getElementById(cfg.btn);
+  if (btn){ btn.textContent = '確定匯出'; btn.classList.add('armed'); }
+  expArmed = key;
+}
+
+/* §11 覺察手帳 PDF：第 8 批做完手帳之後才有東西可匯 */
+function journalPageHTML(js){
+  return '<div class="acc-page-head"><h2 style="margin:0">覺察手帳</h2>'
+    + '<span class="date">' + js.length + ' 條　' + todayStr() + '</span></div>'
+    + js.map(j=>'<div class="accitem">'
+        + ((j.tags||[]).length ? '<div class="accnote">標籤：' + esc((j.tags||[]).join('、')) + '</div>' : '')
+        + '<div class="lbl">' + esc(j.title || '（沒有標題）') + '</div>'
+        + (j.note ? '<div>' + esc(j.note) + '</div>' : '')
+        + (j.why ? '<div class="accnote">為什麼：' + esc(j.why) + '</div>' : '')
+        + (j.example ? '<div class="accnote">例子：' + esc(j.example) + '</div>' : '')
+        + (function(){
+            const q = j.srcQ != null ? loadQ().find(x=>x.id === j.srcQ) : null;
+            return q ? '<div class="accnote">來源提問：' + esc(q.q) + (q.answer ? '／' + esc(q.answer) : '') + '</div>' : '';
+          })()
+      + '</div>').join('');
+}
+function printJournalPDF(){
+  const js = jSorted();
+  if (!js.length){ toast('手帳還是空的'); return; }
+  printPages('<section class="page">' + journalPageHTML(js) + '</section>', '覺察手帳_' + todayStr());
+}
 function printRecordsPDF(records, fname){
-  const pages = records.map(r =>
+  stampExported(records);
+  printPages(records.map(r =>
     `<section class="page">${recordMainHTML(r)}</section><section class="page">${recordAccHTML(r)}</section>`
-  ).join('');
+  ).join(''), fname);
+}
+function printPages(pages, fname){
   if (!document.getElementById('print-style')){
     const st = document.createElement('style'); st.id = 'print-style'; st.textContent = PRINT_CSS;
     document.head.appendChild(st);
@@ -1678,8 +2572,16 @@ function renderChart() {
   ];
   document.getElementById('trendChart').innerHTML = svgLineChart(labels, series);
 }
-/* §6 圖表用色：與 CSS 變數同一套，集中在這裡，不散落 */
-const CHART = { perf:'#16748C', feel:'#A6604A', client:'#3F7A48', grid:'#ECE7DE', ink:'#7C746A' };
+/* §0-1 圖表用色：直接從 :root 的色票變數讀出來，不再有第二份色碼。
+   SVG 的 presentation attribute 不吃 var()，所以這裡取實際值而不是字串 var(...)。
+   冷色＝事實與成績，暖色＝人與關係。 */
+const CHART = (() => {
+  const cs = getComputedStyle(document.documentElement);
+  const v = n => cs.getPropertyValue(n).trim();
+  return { perf: v('--cool'), feel: v('--cool-2'), client: v('--warm-2'),
+           grid: v('--line-2'), ink: v('--ink-3'), ink4: v('--ink-4'), ink2: v('--ink-2'),
+           surface: v('--surface') };
+})();
 function escSvg(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 function svgLineChart(labels, series) {
   const W=600, H=250, padL=26, padR=14, padT=30, padB=44;
@@ -1690,11 +2592,11 @@ function svgLineChart(labels, series) {
   for (let v=0; v<=10; v+=2){
     const yy=Y(v);
     g+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="${CHART.grid}" stroke-width="1"/>`;
-    g+=`<text x="${padL-5}" y="${yy+3}" font-size="9" fill="#a39b8e" text-anchor="end">${v}</text>`;
+    g+=`<text x="${padL-5}" y="${yy+3}" font-size="9" fill="${CHART.ink4}" text-anchor="end">${v}</text>`;
   }
   labels.forEach((lb,i)=>{
     const t = lb.length>6 ? lb.slice(0,6)+'…' : lb;
-    g+=`<text x="${X(i)}" y="${H-padB+16}" font-size="9" fill="#8a8378" text-anchor="middle">${escSvg(t)}</text>`;
+    g+=`<text x="${X(i)}" y="${H-padB+16}" font-size="9" fill="${CHART.ink}" text-anchor="middle">${escSvg(t)}</text>`;
   });
   // 繪製順序：把「我的感受」畫在最上層，避免與其他線重疊時被蓋掉
   const drawOrder = [series[0], series[2], series[1]].filter(Boolean);
@@ -1702,11 +2604,11 @@ function svgLineChart(labels, series) {
     const pts=[];
     s.vals.forEach((v,i)=>{ if(v!=null && !isNaN(v)) pts.push(X(i).toFixed(1)+','+Y(v).toFixed(1)); });
     if (pts.length>1) g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
-    s.vals.forEach((v,i)=>{ if(v!=null && !isNaN(v)) g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3.4" fill="${s.color}" stroke="#fff" stroke-width="1.2"/>`; });
+    s.vals.forEach((v,i)=>{ if(v!=null && !isNaN(v)) g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3.4" fill="${s.color}" stroke="${CHART.surface}" stroke-width="1.2"/>`; });
   });
   let lx=padL, legend='';
   series.forEach(s=>{
-    legend+=`<circle cx="${lx+4}" cy="12" r="4" fill="${s.color}"/><text x="${lx+12}" y="15" font-size="10" fill="#6b655c">${s.name}</text>`;
+    legend+=`<circle cx="${lx+4}" cy="12" r="4" fill="${s.color}"/><text x="${lx+12}" y="15" font-size="10" fill="${CHART.ink2}">${s.name}</text>`;
     lx += 22 + s.name.length*11;
   });
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">${legend}${g}</svg>`;
@@ -1751,12 +2653,11 @@ async function backupAllUsers(){
   toast('已下載全體備份（' + users.length + ' 位使用者）');
 }
 function backupJSON() {
-  const data = { records: load(), questions: loadQ(), clients: loadC(), exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '會談紀錄備份_' + new Date().toISOString().slice(0,10) + '.json';
-  a.click(); URL.revokeObjectURL(a.href);
+  const data = { records: load(), questions: loadQ(), clients: loadC(),
+                 journal: loadJ(), journalTags: loadJT(), exportedAt: new Date().toISOString() };
+  /* 走跟其他匯出同一個下載函式，行為一致也驗得到 */
+  downloadBlob(JSON.stringify(data, null, 2),
+    '會談紀錄備份_' + new Date().toISOString().slice(0,10) + '.json', 'application/json');
   toast('已下載備份檔');
 }
 function restoreJSON(e) {
@@ -1783,7 +2684,7 @@ function restoreJSON(e) {
         storeC(ccur);
       }
       migrateClients(); migrateAcc(); migrateAcc3(); buildClientSel(''); buildHistFilter();
-      updateCount(); renderHist(); renderChart();
+      updateCount(); renderHistPage();   /* 紀錄數變了，_histEmpty 要重算 */
       toast('已還原，新增 '+added+' 筆');
     } catch(err){ toast('這個檔案讀不出來，請確認是本工具下載的備份檔'); }
     e.target.value = '';
@@ -1798,11 +2699,8 @@ function exportAllText() {
   if (!arr.length) { toast('沒有紀錄'); return; }
   const blocks = arr.map(r => recordToText(r));
   const text = blocks.join('\n\n──────────\n\n');
-  const blob = new Blob([text], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '會談紀錄_' + (fc?fc.code:'全部') + '_' + new Date().toISOString().slice(0,10) + '.txt';
-  a.click(); URL.revokeObjectURL(a.href);
+  downloadBlob(text, '會談紀錄_' + (fc?fc.code:'全部') + '_' + new Date().toISOString().slice(0,10) + '.txt',
+    'text/plain;charset=utf-8');
   toast(fc ? '已匯出（'+fc.code+'）' : '已匯出全部文字');
 }
 function recordToText(r) {
@@ -1810,6 +2708,7 @@ function recordToText(r) {
   lines.push('日期：'+(r.date||''));
   lines.push('客戶：'+(r.client||''));
   lines.push('會談次數：'+(r.session||''));
+  lines.push('這一場的議題：'+(topicText(r) || '（沒填議題）'));
   if(r.mins) lines.push('時長：'+r.mins+' 分鐘');
   if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
   lines.push('自評表現：'+r.perf);
@@ -1872,17 +2771,19 @@ function buildAcc() {
       <div class="mk-row${m.acc?' is-acc':''}" id="mk-row-${mkId(i,m.c)}">
         <div class="mk-top">
           <input type="checkbox" id="mk-chk-${mkId(i,m.c)}">
-          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${m.acc?'<span class="mk-tag acc">ACC 必備</span>':'<span class="mk-tag pcc">PCC 才要求</span>'}${m.acc&&MK_TWO[i]?'<span class="mk-tag two">PCC 需 2 個證據</span>':''}${m.t}
+          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${MK_SHORT[m.c]?`<span class="mk-short">${MK_SHORT[m.c]}</span>`:''}${m.acc?'<span class="mk-tag acc">ACC 必備</span>':'<span class="mk-tag pcc">PCC 才要求</span>'}${m.acc&&MK_TWO[i]?'<span class="mk-tag two">PCC 建議 2 個證據</span>':''}${m.t}
             ${m.p?`<div class="mk-plain">${m.p}</div>`:''}</div>
         </div>
-        <div class="mk-ev"><input type="text" id="mk-ev-${mkId(i,m.c)}"
-          placeholder="證據時間戳，例：10:08、11:31（沒有就寫 No）"></div>
+        <div class="mk-rows" id="mk-rows-${mkId(i,m.c)}"></div>
+        <div class="mk-btns">
+          <button type="button" class="mk-addbtn" onclick="mkAddRow(${i},'${m.c}')">＋ 再加一個時間戳</button>
+          <button type="button" class="mk-addbtn" id="mk-impbtn-${mkId(i,m.c)}"
+            onclick="toggleMkImp(${i},'${m.c}')">＋ 備註</button>
+        </div>
         <div class="mk-hint" id="mk-hint-${mkId(i,m.c)}"></div>
-        <div class="mk-btns"><button type="button" class="mk-addbtn" id="mk-impbtn-${mkId(i,m.c)}"
-          onclick="toggleMkImp(${i},'${m.c}')">＋ 要改的</button></div>
         <div class="mk-imp hidden" id="mk-imp-box-${mkId(i,m.c)}">
-          <textarea id="mk-imp-${mkId(i,m.c)}" rows="1"
-            placeholder="這一條要往哪裡練，例：連問三個問題，沒有等他回答"></textarea>
+          <textarea id="mk-imp-${mkId(i,m.c)}" rows="2"
+            placeholder="備註：實例、要改的地方、選 No 或反的原因（可空白）"></textarea>
         </div>
       </div>`).join('');
     const n = CC_NOTE[i] || {};
@@ -1921,8 +2822,9 @@ function buildAcc() {
       b.onclick = () => setAccSt(i, parseInt(b.dataset.v,10));
     });
     (MK[i]||[]).forEach(m=>{
-      const ev = document.getElementById('mk-ev-'+mkId(i,m.c));
-      ev.oninput = () => refreshMk(i, m.c);
+      mkAddRow(i, m.c);                 /* 預設一列「時間戳＋實例」 */
+      const chk = document.getElementById('mk-chk-'+mkId(i,m.c));
+      if (chk) chk.onchange = () => refreshMk(i, m.c);
       refreshMk(i, m.c);
     });
     setAccSt(i, ST_NE);
@@ -1978,7 +2880,35 @@ function toggleMk(i){
     (open ? '收合 ACC 標記 ▴' : '展開 ACC 標記（'+n+' 條）▾');
 }
 /* 兩個證據的規則：不擋輸入，只擋勾選 */
-/* §4B：39 條 × 2 欄 = 78 格，全開會變成一片空格，所以「要改的」點了才長出來 */
+/* §6：每條標記可以加多列「時間戳＋實例」，每列可刪。
+   實例是要配逐字稿丟給 AI 的內容，先前只留一行時間戳就是把它丟掉了。 */
+function mkAddRow(i, code, t, x){
+  const box = document.getElementById('mk-rows-' + mkId(i, code));
+  if (!box) return;
+  const row = document.createElement('div');
+  row.className = 'mk-row1';
+  row.innerHTML =
+    '<input type="text" class="mk-t" placeholder="時間戳，例 10:08" value="' + esc(t || '') + '">'
+    + '<input type="text" class="mk-x" placeholder="那一刻發生了什麼（可空白）" value="' + esc(x || '') + '">'
+    + '<button type="button" class="mini-btn mk-del" title="刪掉這一列">×</button>';
+  box.appendChild(row);
+  row.querySelector('.mk-t').oninput = () => refreshMk(i, code);
+  row.querySelector('.mk-del').onclick = () => {
+    row.remove();
+    if (!box.children.length) mkAddRow(i, code);   /* 至少留一列，不然沒地方打字 */
+    refreshMk(i, code);
+  };
+  return row;
+}
+function mkRowValues(i, code){
+  const box = document.getElementById('mk-rows-' + mkId(i, code));
+  if (!box) return [];
+  return [].map.call(box.querySelectorAll('.mk-row1'), r=>({
+    t: r.querySelector('.mk-t').value.trim(),
+    x: r.querySelector('.mk-x').value.trim()
+  }));
+}
+/* §4B：39 條 × 2 欄 = 78 格，全開會變成一片空格，所以「備註」點了才長出來 */
 function toggleMkImp(i, code, force){
   const id = mkId(i, code);
   const box = document.getElementById('mk-imp-box-'+id);
@@ -1986,27 +2916,35 @@ function toggleMkImp(i, code, force){
   if (!box) return;
   const open = force != null ? force : box.classList.contains('hidden');
   box.classList.toggle('hidden', !open);
-  if (btn) { btn.classList.toggle('on', open); btn.textContent = open ? '－ 要改的' : '＋ 要改的'; }
+  if (btn) { btn.classList.toggle('on', open); btn.textContent = open ? '－ 備註' : '＋ 備註'; }
 }
+/* §6：標記可以只勾「做到」，不填時間戳也能標——提醒但不擋。
+   ICF 的兩證據規則（職能 4／5／7 的 ACC 必備項）降級成送審前的提醒，
+   不再 disable 勾選框。使用者回饋：被擋住的時候，最需要記筆記的那幾條反而無處可寫。 */
 function refreshMk(i, code){
   const id = mkId(i, code);
-  const ev = document.getElementById('mk-ev-'+id);
   const chk = document.getElementById('mk-chk-'+id);
   const hint = document.getElementById('mk-hint-'+id);
-  if (!ev || !chk) return;
-  const n = evCount(ev.value);
+  const box = document.getElementById('mk-rows-'+id);
+  if (!chk || !hint || !box) return;
+  const rows = mkRowValues(i, code);
+  const n = evCount(rowsToEv(rows));
+  chk.disabled = false;                       /* 一律不擋 */
+  /* 填了時間戳自動勾起來；只在 0 → 有 的那一次自動勾，之後使用者取消就尊重他 */
+  const prev = parseInt(box.dataset.n || '0', 10);
+  if (prev === 0 && n > 0 && !chk.checked) chk.checked = true;
+  box.dataset.n = String(n);
   const m = (MK[i]||[]).find(x=>x.c === code) || {};
-  if (needsTwo(i, m)){
-    const ok = n >= 2;
-    chk.disabled = !ok;
-    if (!ok && chk.checked) chk.checked = false;
-    hint.textContent = ok ? ('證據 '+n+' 個，可勾選') : ('這項需要 2 個以上證據才能勾選（目前 '+n+' 個）');
-    hint.className = 'mk-hint' + (ok ? '' : ' warn');
-  } else {
-    chk.disabled = false;
-    hint.textContent = n ? ('證據 '+n+' 個') : '';
-    hint.className = 'mk-hint';
+  let txt = '', warn = false;
+  if (chk.checked && n === 0){
+    txt = '只勾了「做到」，送審前再回來補時間戳就好'; warn = true;
+  } else if (needsTwo(i, m) && chk.checked && n < 2){
+    txt = '這項送審時建議 2 個以上證據（目前 ' + n + ' 個）'; warn = true;
+  } else if (n){
+    txt = '證據 ' + n + ' 個';
   }
+  hint.textContent = txt;
+  hint.className = 'mk-hint' + (warn ? ' warn' : '');
 }
 function getAcc() {
   return ACC.map((a,i)=>{
@@ -2015,10 +2953,11 @@ function getAcc() {
     (MK[i]||[]).forEach(m=>{
       const id = mkId(i, m.c);
       const on = document.getElementById('mk-chk-'+id).checked;
-      const evv = document.getElementById('mk-ev-'+id).value.trim();
+      const rows = mkRowValues(i, m.c).filter(r=>r.t || r.x);
+      const evv = rowsToEv(rows);            /* ev 由 rows 推導，仍是證據計數的唯一來源 */
       const impEl = document.getElementById('mk-imp-'+id);
       const impv = impEl ? impEl.value.trim() : '';
-      if (on || evv || impv) mk[m.c] = { on, ev: evv, imp: impv };
+      if (on || evv || impv || rows.length) mk[m.c] = { on, ev: evv, imp: impv, rows };
     });
     return {
       st,
@@ -2030,16 +2969,8 @@ function getAcc() {
   });
 }
 /* 把一筆紀錄的 marker 整理成可讀的行（給詳情、PDF、文字匯出共用） */
-/* 列表上的 ACC 徽章：全部沒評過就直說沒評過，不要顯示 0/8 讓人誤以為八項都沒做到 */
-function accBadgeText(r){
-  const acc = r.acc || [];
-  if (!acc.length) return 'ACC 未評估';
-  const n2 = acc.filter(x=>accSt(x)===2).length;
-  const n1 = acc.filter(x=>accSt(x)===1).length;
-  const ne = acc.filter(x=>accSt(x)===ST_NE).length;
-  if (ne === acc.length) return 'ACC 未評估';
-  return 'ACC ' + n2 + '/8' + (n1 ? '　部分 '+n1 : '') + (ne ? '　未評 '+ne : '');
-}
+/* accBadgeText 已於 2026-08-23 移除：§2-3 的每一場改成兩層列（用職能格子表達）、
+   §4 的客戶頁改成議題列之後，這顆「ACC n/8」徽章就沒有任何畫面在用了。 */
 function mkLines(x, i){
   const mk = (x && x.mk) || {};
   const out = [];
@@ -2055,7 +2986,11 @@ function mkLines(x, i){
 }
 
 /* ---- views ---- */
+const STEP_TOTAL = 2;      // 新增紀錄頁：填內容 → 標職能
 function showView(v) {
+  exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
+  const eb = document.getElementById('step-eyebrow');
+  if (eb) eb.textContent = (v === 'new') ? ('步驟 1 / ' + STEP_TOTAL) : '';
   document.getElementById('view-new').classList.toggle('hidden', v!=='new');
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
   document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
@@ -2063,15 +2998,18 @@ function showView(v) {
   document.getElementById('view-clients').classList.toggle('hidden', v!=='clients');
   document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
   document.getElementById('view-cred').classList.toggle('hidden', v!=='cred');
+  document.getElementById('view-journal').classList.toggle('hidden', v!=='journal');
   document.getElementById('tabNew').classList.toggle('active', v==='new');
   document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
   document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
   document.getElementById('tabCred').classList.toggle('active', v==='cred');
-  if (v==='hist') { buildHistFilter(); renderHist(); renderChart(); renderReflect(); renderAdminBackup(); }
+  document.getElementById('tabJournal').classList.toggle('active', v==='journal');
+  if (v==='hist') renderHistPage();
   if (v==='ask') renderAsk();
   if (v==='clients') renderClients();
   if (v==='cred') renderCred();
+  if (v==='journal') renderJournal();
 }
 
 /* ---- save ---- */
@@ -2195,7 +3133,7 @@ function toggleFold(k){
   updateFoldHead(k);
 }
 
-function saveRecord() {
+function saveRecord(later) {
   const selVal = document.getElementById('f-client-sel').value;
   let clientId = '', clientCode = '';
   if (selVal === '__new__') {
@@ -2235,6 +3173,7 @@ function saveRecord() {
     focus: fv('f-focus').slice(0, 40),
     prevFocus: _prevFocusText,
     prevFocusResult: _prevFocusResult,
+    topic: fv('f-topic'),
     clientQuote: fv('f-clientquote'),
     notCaught: fv('f-notcaught'),
     submitCandidate: !!(document.getElementById('f-submitcand') || {}).checked
@@ -2250,12 +3189,16 @@ function saveRecord() {
     arr.push(rec);
   }
   store(arr);
-  toast(editId ? '已更新 ✓' : '已記下這一場。辛苦了 🌱');
+  flushPush();                 /* ② 存檔是明確的動作，不要讓它卡在 debounce 裡 */
+  /* §6：兩顆儲存都接同一個流程，存完跳到那一場的詳情頁並顯示確認訊息 */
+  toast(editId ? '已更新 ✓'
+        : (later ? '先存起來了，隨時回來標職能 🌱' : '已記下這一場。辛苦了 🌱'));
+  const savedId = rec.id;
   editId = null;
-  document.getElementById('saveBtn').textContent = '儲存紀錄';
+  document.getElementById('saveBtn').textContent = '儲存這一場';
   resetForm();
   updateCount();
-  showView('hist');
+  openDetail(savedId, 'hist');
 }
 
 function confirmReset() {
@@ -2276,6 +3219,7 @@ function resetForm() {
   document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
+  document.getElementById('f-topic').value = '';
   document.getElementById('f-clientquote').value = '';
   document.getElementById('f-notcaught').value = '';
   document.getElementById('f-submitcand').checked = false;
@@ -2289,7 +3233,7 @@ function resetForm() {
   buildAcc();
   editId = null;
   buildClientSel('');
-  document.getElementById('saveBtn').textContent = '儲存紀錄';
+  document.getElementById('saveBtn').textContent = '儲存這一場';
   _scoreTouched = false;
   _lastImproveText = '';
   renderFocusReview('', '');
@@ -2299,9 +3243,15 @@ function resetForm() {
 }
 
 /* ---- history list ---- */
+/* 客戶數的唯一來源：側欄徽章與客戶頁的「N 位」都從這裡推導，不手寫數字 */
+function clientCount(){ return loadC().length; }
 function updateCount() {
   const n = load().length;
   document.getElementById('cnt').textContent = n ? '('+n+')' : '';
+  const cc = clientCount();
+  const cEl = document.getElementById('clientCnt');
+  if (cEl) cEl.textContent = cc ? '('+cc+')' : '';
+  renderCredCard();
   updateStats();
 }
 /* 累積統計（首頁小字） */
@@ -2322,7 +3272,7 @@ function updateStats(){
    門檻數字集中成常數表，ICF 規則會改，不要散在 UI 裡。 */
 const CRED = {
   acc: { name:'ACC', hours:100, paid:75,  clients:8,  mentor:10, rec:1, recent:25, months:18 },
-  pcc: { name:'PCC', hours:500, paid:450, clients:25, mentor:10, rec:2, recent:25, months:18 }
+  pcc: { name:'PCC', hours:500, paid:375, clients:25, mentor:10, rec:2, recent:50, months:18 }
 };
 const CRED_MENTOR_NOTE = '10 小時（至少 3 個月，其中 3 小時一對一）';
 function monthsAgoStr(n){
@@ -2341,13 +3291,295 @@ function credStats(recs){
     cands:   (recs||[]).filter(r=>r.submitCandidate)
   };
 }
+/* 進度分四段換色：0–33 起步／34–66 在路上／67–99 快到了／100 可以送審（色票.html） */
+function credSeg(pct){ return pct >= 100 ? 4 : (pct >= 67 ? 3 : (pct >= 34 ? 2 : 1)); }
 function credBar(name, val, goal, unit){
   const pct = Math.min(100, goal ? val/goal*100 : 0);
   const done = val >= goal;
+  const seg = credSeg(pct);
   return '<div class="pb-row"><div class="pb-head">'
     + '<span class="pb-name">' + name + '</span>'
     + '<span class="pb-val">' + val + ' / ' + goal + ' ' + unit + (done ? '　<span class="done-tag">✓ 達標</span>' : '') + '</span>'
-    + '</div><div class="pb-track"><div class="pb-fill' + (done ? ' done' : '') + '" data-w="' + pct.toFixed(1) + '" style="width:0%"></div></div></div>';
+    + '</div><div class="pb-track" data-seg="' + seg + '"><div class="pb-fill" data-seg="' + seg + '" data-w="' + pct.toFixed(1) + '" style="width:0%"></div></div></div>';
+}
+/* ═══ §9 覺察手帳 ═══
+   結構固定：標題 → 提醒 → 為什麼（可省）→ 例子（可省）→ 來源提問。
+   來源只有一種：導師提問。工具無從得知上課筆記／讀書／AI 分析，
+   一個永遠只有一個值的欄位不是欄位，所以不做來源選單。 */
+let jFilter = '';        // 目前篩選的標籤（'' = 全部）
+let jEditing = null;     // 正在編輯的卡片 id；'new' 代表新的空白卡
+/* 編輯中的暫存。加／刪標籤會重繪整張卡，重繪前一定要先把使用者打到一半的字收進來，
+   否則按一次「＋新標籤」就會把剛打的標題與提醒洗掉。 */
+let jDraft = null;
+let jConfirmDel = null;  // 就地確認刪除中的卡片 id
+
+function jSorted(){ return loadJ().slice().sort((a,b)=>b.id-a.id); }
+function jFiltered(){ const all = jSorted(); return jFilter ? all.filter(j=>(j.tags||[]).indexOf(jFilter) >= 0) : all; }
+function jTagsInUse(){ const s = {}; loadJ().forEach(j=>(j.tags||[]).forEach(t=>{ s[t] = (s[t]||0) + 1; })); return s; }
+function jAllTags(){
+  const reg = loadJT(), used = Object.keys(jTagsInUse());
+  return reg.concat(used.filter(t=>reg.indexOf(t) < 0));
+}
+function jQuestionById(id){ return loadQ().find(q=>q.id === id); }
+
+function updateJCount(){
+  const el = document.getElementById('jCnt');
+  const n = loadJ().length;
+  if (el) el.textContent = n ? '(' + n + ')' : '';
+}
+function jNew(){
+  jEditing = 'new';
+  jDraft = { id: 'new', title: '', note: '', why: '', example: '', srcQ: null, tags: [] };
+  renderJournal();
+  const el = document.querySelector('#j-list .j-edit input');
+  if (el) el.focus();
+}
+function jEdit(id){
+  const it = loadJ().find(j=>j.id === id);
+  if (!it) return;
+  jEditing = id; jConfirmDel = null;
+  jDraft = { id: id, title: it.title||'', note: it.note||'', why: it.why||'',
+             example: it.example||'', srcQ: it.srcQ != null ? it.srcQ : null, tags: (it.tags||[]).slice() };
+  renderJournal();
+}
+/* 把畫面上打到一半的字收回 draft，任何會重繪的動作之前都要先叫一次 */
+function jSyncDraft(){
+  if (!jDraft) return;
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : null; };
+  const t = g('j-f-title'), n = g('j-f-note'), w = g('j-f-why'), e = g('j-f-example');
+  if (t !== null) jDraft.title = t;
+  if (n !== null) jDraft.note = n;
+  if (w !== null) jDraft.why = w;
+  if (e !== null) jDraft.example = e;
+}
+function jAskDelete(id){ jConfirmDel = id; renderJournal(); }        /* 就地確認，不用彈窗——彈窗會遮住你要刪的那張卡 */
+function jCancelDelete(){ jConfirmDel = null; renderJournal(); }
+function jDelete(id){
+  markDeleted('j', id);
+  storeJ(loadJ().filter(j=>j.id !== id));
+  jConfirmDel = null; if (jEditing === id){ jEditing = null; jDraft = null; }
+  updateJCount(); renderJournal(); toast('已刪除');
+}
+function jSave(id){
+  jSyncDraft();
+  const d = jDraft;
+  if (!d || d.id !== id) { jEditing = null; jDraft = null; renderJournal(); return; }
+  /* 收起時標題與提醒都是空的，當作沒寫過，自動移除、不留空卡 */
+  if (!d.title && !d.note){
+    if (id !== 'new') { jDelete(id); return; }
+    jEditing = null; jDraft = null; renderJournal(); return;
+  }
+  const arr = loadJ();
+  if (id === 'new'){
+    arr.push({ id: Date.now(), title: d.title, note: d.note, why: d.why, example: d.example,
+               srcQ: d.srcQ != null ? d.srcQ : null, tags: (d.tags||[]).slice(), created: todayStr() });
+  } else {
+    const it = arr.find(j=>j.id === id);
+    if (it){ it.title = d.title; it.note = d.note; it.why = d.why; it.example = d.example; it.tags = (d.tags||[]).slice(); }
+  }
+  storeJ(arr); jEditing = null; jDraft = null; updateJCount(); renderJournal(); toast('已存下這一條');
+}
+function jDraftOf(id){ return (jDraft && jDraft.id === id) ? jDraft : loadJ().find(j=>j.id === id); }
+function jAddTag(id, name){
+  const t = String(name || '').trim();
+  if (!t) return;
+  jSyncDraft();                       // 先把打到一半的字收回來，再重繪
+  const d = jDraftOf(id); if (!d) return;
+  if (!Array.isArray(d.tags)) d.tags = [];
+  if (d.tags.indexOf(t) < 0) d.tags.push(t);
+  const reg = loadJT(); if (reg.indexOf(t) < 0){ reg.push(t); storeJT(reg); }
+  renderJournal();
+}
+function jTagInputKey(ev, id){
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  jAddTag(id, ev.target.value);
+  ev.target.value = '';
+}
+function jRemoveTag(id, name){
+  jSyncDraft();
+  const d = jDraftOf(id); if (!d) return;
+  d.tags = (d.tags || []).filter(t=>t !== name);
+  renderJournal();
+}
+function jSetFilter(t){ jFilter = (jFilter === t) ? '' : t; renderJournal(); }
+/* 刪標籤要連卡片上的一起拔掉，否則那顆徽章會永遠取不下來 */
+function jDeleteTag(t){
+  if (!confirm('要刪掉標籤「' + t + '」嗎？\n所有卡片上的這顆標籤也會一起拿掉。')) return;
+  jDeleteTagForce(t);
+  jManageTags(); toast('已刪掉標籤');
+}
+/* 真正動手的那一段抽出來，測試才驗得到「卡片上的標籤有沒有一起被拔掉」 */
+function jDeleteTagForce(t){
+  storeJT(loadJT().filter(x=>x !== t));
+  const arr = loadJ(); let ch = false;
+  arr.forEach(j=>{ if ((j.tags||[]).indexOf(t) >= 0){ j.tags = j.tags.filter(x=>x !== t); ch = true; } });
+  if (ch) storeJ(arr);
+  /* 標籤不寫墓碑（見 mergeCloud 的說明）：墓碑會讓同名標籤永遠建不回來 */
+  if (jFilter === t) jFilter = '';
+  if (jDraft && Array.isArray(jDraft.tags)) jDraft.tags = jDraft.tags.filter(x=>x !== t);
+  renderJournal();
+}
+function jManageTags(){
+  const tags = jAllTags(), used = jTagsInUse();
+  openModal('<h3 style="margin-top:0">管理標籤</h3>'
+    + '<p>刪掉標籤時，卡片上的這顆標籤也會一起拿掉，不會留下拔不掉的徽章。</p>'
+    + (tags.length
+        ? tags.map(t=>'<div class="jtag-row"><span class="jtag">' + esc(t) + '</span>'
+            + '<span class="jtag-n">' + (used[t] || 0) + ' 張卡</span>'
+            + '<button class="mini-link del-link" onclick="jDeleteTag(\'' + esc(t).replace(/'/g,"&#39;") + '\')">刪除</button></div>').join('')
+        : '<div class="acc-none">還沒有標籤。編輯任一張卡片，在「＋新標籤」按 Enter 就會建立。</div>'));
+}
+/* 從導師提問加進手帳：跳到手帳、開新卡、來源已填好、標題與提醒留白 */
+function jFromQuestion(qid){
+  const q = jQuestionById(qid);
+  if (!q) return;
+  const arr = loadQ(); const it = arr.find(x=>x.id === qid);
+  if (it){ it.digested = true; storeQ(arr); }      /* 那則提問標記為「已消化」 */
+  jEditing = 'new';
+  jDraft = { id: 'new', title: '', note: '', why: '', example: '', srcQ: qid, tags: [] };
+  updateAskCount(); showView('journal');
+  const el = document.querySelector('#j-list .j-edit input');
+  if (el) el.focus();
+}
+function jSrcLine(j){
+  const q = j.srcQ != null ? jQuestionById(j.srcQ) : null;
+  if (!q) return '';
+  return '<div class="j-src"><span class="j-src-lbl">來源提問</span>' + esc(q.q)
+    + (q.answer ? '<div class="j-src-ans">' + esc(q.answer) + '</div>' : '') + '</div>';
+}
+function jTagChips(j, editable){
+  const tags = j.tags || [];
+  return '<div class="j-tags">' + tags.map(t=>'<span class="jtag">' + esc(t)
+      + (editable ? '<button type="button" class="jtag-x" onclick="jRemoveTag(' + (typeof j.id === 'string' ? "'" + j.id + "'" : j.id) + ',\'' + esc(t).replace(/'/g,"&#39;") + '\')">×</button>' : '')
+    + '</span>').join('') + '</div>';
+}
+function jCardHTML(j){
+  const idArg = typeof j.id === 'string' ? "'" + j.id + "'" : j.id;
+  if (jEditing === j.id){
+    return '<div class="jcard j-edit">'
+      + '<div class="j-head">' + jTagChips(j, true)
+        + '<span class="j-acts"><button class="mini-link" onclick="jSave(' + idArg + ')">收起</button></span></div>'
+      + '<label style="margin-top:6px">標題</label><input type="text" id="j-f-title" value="' + esc(j.title||'') + '" placeholder="一句話講完這條提醒是什麼">'
+      + '<label>提醒 <span class="hint">可以照唸的句子</span></label><textarea id="j-f-note" rows="2" placeholder="下一場可以直接說出口的話">' + esc(j.note||'') + '</textarea>'
+      + '<label>為什麼 <span class="hint">選填</span></label><textarea id="j-f-why" rows="2" placeholder="導師為什麼這樣說">' + esc(j.why||'') + '</textarea>'
+      + '<label>例子 <span class="hint">選填</span></label><textarea id="j-f-example" rows="2" placeholder="實際發生過的情況">' + esc(j.example||'') + '</textarea>'
+      + '<label>＋新標籤 <span class="hint">按 Enter 建立</span></label>'
+      + '<input type="text" class="j-tagin" placeholder="例：提問、認可" onkeydown="jTagInputKey(event,' + idArg + ')">'
+      + jSrcLine(j)
+      + '</div>';
+  }
+  const del = jConfirmDel === j.id
+    ? '<span class="j-confirm">你確定要刪除嗎？<button class="mini-link del-link" onclick="jDelete(' + idArg + ')">刪除</button>'
+      + '<button class="mini-link" onclick="jCancelDelete()">取消</button></span>'
+    : '<button class="mini-link del-link" onclick="jAskDelete(' + idArg + ')">刪除</button>';
+  return '<div class="jcard">'
+    + '<div class="j-head">' + jTagChips(j, false)
+      + '<span class="j-acts">' + del + '<button class="mini-link" onclick="jEdit(' + idArg + ')">編輯</button></span></div>'
+    + (j.title ? '<div class="j-title">' + esc(j.title) + '</div>' : '')
+    + (j.note ? '<div class="j-note">' + esc(j.note) + '</div>' : '')
+    + (j.why ? '<div class="j-why"><span class="j-lbl">為什麼</span>' + esc(j.why) + '</div>' : '')
+    + (j.example ? '<div class="j-ex"><span class="j-lbl">例子</span>' + esc(j.example) + '</div>' : '')
+    + jSrcLine(j)
+    + '</div>';
+}
+function renderJournal(){
+  const list = document.getElementById('j-list');
+  if (!list) return;
+  updateJCount();
+  const all = loadJ();
+  const cnt = document.getElementById('j-count');
+  if (cnt) cnt.textContent = all.length ? all.length + ' 條' : '';
+  /* 篩選列的標籤：數量從資料推導 */
+  const used = jTagsInUse(), tags = jAllTags();
+  const bar = document.getElementById('j-tagbar');
+  bar.innerHTML = tags.length
+    ? '<button type="button" class="pchip' + (jFilter ? '' : ' on') + '" onclick="jSetFilter(\'\')">全部 ' + all.length + '</button>'
+      + tags.map(t=>'<button type="button" class="pchip' + (jFilter === t ? ' on' : '')
+          + '" onclick="jSetFilter(\'' + esc(t).replace(/'/g,"&#39;") + '\')">' + esc(t) + ' ' + (used[t] || 0) + '</button>').join('')
+    : '';
+  const rows = jFiltered().map(j=>jCardHTML((jDraft && jDraft.id === j.id) ? jDraft : j));
+  if (jEditing === 'new' && jDraft) rows.unshift(jCardHTML(jDraft));   /* 新卡在最上面 */
+  list.innerHTML = rows.length ? rows.join('')
+    : '<div class="acc-none">' + (jFilter ? '這個標籤下還沒有卡片。' : '還沒有提醒。導師講過的話，可以從這裡開始記。') + '</div>';
+}
+
+/* ═══ §7 側欄 ACC 認證卡 ═══
+   數字全部從 CRED ＋ credStats() 推導，與 §4C 認證進度頁同一份來源，不重算一次。
+   進度取「最落後的那一項」——時數 118/100 已超標但客戶只有 6/8 時要顯示 75%，
+   顯示 118% 會讓人以為可以送審了。
+   百分比只看三項「做一場就會長」的累積型門檻：總時數、不重複客戶、近 18 個月。
+   送審錄音是最後才勾的一次性動作，算進百分比的話一路到送審前都是 0%，與「主角是時數」矛盾，
+   所以它只出現在下面那行「還差什麼」。付費時數與導師教練時數工具無從得知，同樣不列入。 */
+let credLevel = 'acc';
+function credProgress(level, recs){
+  const c = CRED[level] || CRED.acc;
+  const st = credStats(recs || load());
+  const items = [
+    { key:'hours',   name:'總時數',                 val: st.totalH,       goal: c.hours,   unit:'小時', rate: true  },
+    { key:'clients', name:'不重複客戶',             val: st.clients,      goal: c.clients, unit:'位',   rate: true  },
+    { key:'recent',  name:'近 ' + c.months + ' 個月', val: st.recentH,    goal: c.recent,  unit:'小時', rate: true  },
+    { key:'rec',     name:'送審錄音',               val: st.cands.length, goal: c.rec,     unit:'份',   rate: false }
+  ].map(x=>{
+    const pct = x.goal ? Math.min(100, x.val / x.goal * 100) : 100;
+    return { key:x.key, name:x.name, val:x.val, goal:x.goal, unit:x.unit, pct: pct, rate: x.rate,
+             done: x.val >= x.goal, gap: Math.round(Math.max(0, x.goal - x.val) * 10) / 10 };
+  });
+  const rated = items.filter(x=>x.rate);
+  const worst = rated.reduce((a,b)=> b.pct < a.pct ? b : a, rated[0]);
+  return { level, c, st, items, worst, pct: Math.floor(worst.pct),
+           seg: credSeg(worst.pct), missing: items.filter(x=>!x.done) };
+}
+/* 還差的時數換算成場數；場數大於 60 就改用年——「再 382 場」沒有意義 */
+function credPace(level, recs){
+  const rs = recs || load();
+  const p = credProgress(level, rs);
+  const hoursItem = p.items.find(x=>x.key === 'hours');
+  if (hoursItem.done) return { text: '時數已達標', sessions: 0 };
+  const withMins = rs.filter(r=>parseInt(r.mins,10) > 0);
+  const avgMin = withMins.length
+    ? withMins.reduce((t,r)=>t + parseInt(r.mins,10), 0) / withMins.length
+    : 60;                                             // 還沒有紀錄時用一場 60 分估
+  const sessions = Math.max(1, Math.ceil(hoursItem.gap * 60 / avgMin));
+  if (sessions <= 60) return { text: '再 ' + sessions + ' 場左右', sessions };
+  /* 場數太多就換成年：用目前的累積速度（每月幾場）推 */
+  const dates = rs.map(r=>r.date || '').filter(Boolean).sort();
+  if (dates.length >= 2){
+    const first = new Date(dates[0]), now = new Date();
+    const months = Math.max(1, (now.getFullYear()-first.getFullYear())*12 + (now.getMonth()-first.getMonth()));
+    const perMonth = rs.length / months;
+    if (perMonth > 0){
+      const years = Math.round(sessions / perMonth / 12 * 10) / 10;
+      return { text: '這個步調約 ' + years + ' 年', sessions, years };
+    }
+  }
+  return { text: '還有一段路，先累積幾場再看', sessions };
+}
+function setCredLevel(lv, ev){
+  if (ev){ ev.stopPropagation(); ev.preventDefault(); }   /* 點切換不能誤觸進到認證進度頁 */
+  credLevel = (lv === 'pcc') ? 'pcc' : 'acc';
+  renderCredCard();
+}
+function renderCredCard(){
+  const card = document.getElementById('credcard');
+  if (!card) return;
+  const p = credProgress(credLevel);
+  const pace = credPace(credLevel);
+  document.getElementById('cc-title').textContent = p.c.name + ' 認證';
+  document.getElementById('cc-h').textContent = p.st.totalH;
+  document.getElementById('cc-goal').textContent = ' / ' + p.c.hours + ' 小時';
+  const fill = document.getElementById('cc-fill');
+  fill.style.width = p.pct + '%';
+  fill.dataset.seg = String(p.seg);
+  card.querySelector('.cc-track').dataset.seg = String(p.seg);
+  document.getElementById('cc-pace').textContent = pace.text;
+  document.getElementById('cc-pct').textContent = p.pct + '%';
+  document.getElementById('cc-miss').textContent = p.missing.length
+    ? p.missing.filter(x=>x.key !== 'hours')
+        .map(x=>x.name + '還差 ' + x.gap + ' ' + x.unit).join(' · ')
+    : '可以準備送審';
+  card.querySelectorAll('.cc-switch button').forEach(b=>
+    b.classList.toggle('on', b.dataset.lv === credLevel));
 }
 function renderCred(){
   const recs = load();
@@ -2407,37 +3639,274 @@ function renderCred(){
     document.querySelectorAll('#cred-cards .pb-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
   }));
 }
+/* CSV 的欄位定義：展開清單與實際檔案吃同一份，不會各寫一次而對不起來 */
+const HOURS_COLS = [
+  { name:'日期',                    from:'紀錄' },
+  { name:'客戶代號',                from:'紀錄' },
+  { name:'會談次數',                from:'紀錄' },
+  { name:'時長(分鐘)',              from:'紀錄' },
+  { name:'客戶真實姓名(自行填寫)',  from:'空白' },
+  { name:'聯絡方式(自行填寫)',      from:'空白' },
+  { name:'關係起訖日(自行填寫)',    from:'空白' }
+];
 function exportHoursCSV(){
   const arr = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
   if (!arr.length) { toast('沒有紀錄'); return; }
   /* §4C：ICF 時數表要求客戶真實姓名／聯絡方式／關係起訖日，工具刻意不存這三項，
      這裡留三個空白欄位讓使用者自己填 */
-  const rows = [['日期','客戶代號','會談次數','時長(分鐘)','客戶真實姓名(自行填寫)','聯絡方式(自行填寫)','關係起訖日(自行填寫)']]
+  const rows = [HOURS_COLS.map(c=>c.name)]
     .concat(arr.map(r=>[r.date||'', r.client||'', formatSession(r.session)||'', r.mins||'', '', '', '']));
   const csv = String.fromCharCode(0xFEFF) + rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   downloadBlob(csv, '教練時數表_'+todayStr()+'.csv', 'text/csv;charset=utf-8');
   toast('已匯出時數表');
 }
-function renderHist() {
-  const list = document.getElementById('hist-list');
-  let arr = load();
-  if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
-  arr = arr.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
-  if (!arr.length) { list.innerHTML = histFilter ? '<div class="empty">這位客戶還沒有紀錄</div>' : '<div class="empty">這裡還空著。<br>第一筆紀錄，就從今天的會談開始吧 🌱</div>'; return; }
-  list.innerHTML = arr.map(r=>{
-    const accBadge = accBadgeText(r);
-    return `<div class="rec" onclick="openDetail(${r.id})">
-      <div class="rec-top">
-        <span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span>
-        <span class="rec-date">${r.date||''}</span>
-      </div>
-      <div class="rec-meta">${esc(formatSession(r.session))||''} · 自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}
-        <span class="badge">${accBadge}</span></div>
-    </div>`;
+/* ═══ §2-2 八大職能的累積 ═══════════════════════════════
+   狀態五級（暖→冷）：最沒被觸及 → 最常被觸及。暖色實底只給「一次都沒寫到」，
+   那是唯一需要被看見的狀態；到位是冷色，不是綠色。 */
+function stLevel(n){ return n <= 0 ? 0 : (n <= 2 ? 1 : (n <= 4 ? 2 : (n <= 8 ? 3 : 4))); }
+const ST_LV_NAME = ['一次都沒寫到', '寫過 1–2 次', '寫過 3–4 次', '寫過 5–8 次', '寫過 9 次以上'];
+
+/* 每項職能：所有標記的平均命中次數、寫到過幾條、共幾條 */
+function accCumStats(recs){
+  const cnt = markerHitCounts(recs);
+  return ACC.map((a,i)=>{
+    const ms = MK[i] || [];
+    const hits = ms.map(m=>cnt[m.c] || 0);
+    const total = hits.reduce((x,y)=>x+y, 0);
+    const avg = ms.length ? total / ms.length : 0;
+    return { i, n: ms.length, written: hits.filter(h=>h>0).length, total,
+             avg: Math.round(avg*10)/10, lv: stLevel(avg) };
+  });
+}
+/* 歷史紀錄頁的唯一算繪入口：空狀態判斷在這裡算一次，底下三處共用 */
+function renderHistPage(){
+  _histEmpty = histSource().length === 0;
+  buildHistFilter(); renderAccCum(); renderHist(); renderPractice();
+  renderChart(); renderReflect(); renderAdminBackup();
+}
+function renderAccCum(){
+  const card = document.getElementById('cum-card');
+  if (!card) return;
+  const recs = histSource();
+  /* ① 還沒有任何紀錄時不畫熱圖：八格全暖色實底＋五條「還沒寫到」＝整頁在說「你什麼都沒做」，
+     跟「不指認失敗、沒寫到不等於沒做到」直接衝突。標題與副標保留。 */
+  const grid = document.getElementById('cum-grid');
+  const todoBox = document.getElementById('cum-todo');
+  let seedEl = document.getElementById('cum-seed');
+  if (!seedEl){
+    seedEl = document.createElement('div');
+    seedEl.id = 'cum-seed'; seedEl.className = 'cum-seed hidden';
+    seedEl.textContent = '等你記下第一場，這裡會開始長出來。';
+    grid.parentNode.insertBefore(seedEl, grid);
+  }
+  const sub = document.querySelector('#cum-card .sub-note');
+  if (sub) sub.classList.toggle('hidden', _histEmpty);   /* 沒有格子時，副標在解釋不存在的東西 */
+  seedEl.classList.toggle('hidden', !_histEmpty);
+  grid.classList.toggle('hidden', _histEmpty);
+  todoBox.classList.toggle('hidden', _histEmpty);
+  if (_histEmpty){ grid.innerHTML = ''; return; }
+  const st = accCumStats(recs);
+  /* 八欄橫排，repeat(8, minmax(0,1fr))。不可用 auto-fit——窄視窗會塌成四欄，1→8 的閱讀順序就消失了 */
+  grid.innerHTML = st.map(x=>
+    '<div class="cum-col">'
+      + '<div class="cum-name">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</div>'
+      + '<div class="cum-box" data-lv="' + x.lv + '" title="' + ST_LV_NAME[x.lv] + '">'
+        + (Number.isInteger(x.avg) ? x.avg : x.avg.toFixed(1)) + '</div>'
+      + '<div class="cum-ratio">' + x.written + '/' + x.n + '</div>'
+    + '</div>').join('');
+
+  /* 待補清單：只列命中 2 次以下，次數少的在前，同分時 ACC 必評優先，最多五條 */
+  const cnt = markerHitCounts(recs);
+  const todo = [];
+  MK.forEach((g,i)=>g.forEach(m=>{
+    const n = cnt[m.c] || 0;
+    if (n <= 2) todo.push({ m, i, n });
+  }));
+  todo.sort((a,b)=> a.n - b.n || (b.m.acc?1:0) - (a.m.acc?1:0) || a.m.c.localeCompare(b.m.c));
+  const five = todo.slice(0, 5);
+  const box = document.getElementById('cum-todo-list');
+  if (!five.length){
+    box.innerHTML = '<div class="acc-none">39 條你都寫到過三次以上了。</div>';
+    return;
+  }
+  box.innerHTML = five.map(x=>{
+    const state = x.n === 0 ? '還沒寫到' : (x.n === 1 ? '只寫過 1 次' : '寫過 2 次');
+    return '<div class="todo-row" data-n="' + (x.n === 0 ? '0' : 'few') + '">'
+      + '<div class="todo-l1">'
+        + '<span class="mk-code">' + x.m.c + '</span>'
+        + '<span class="todo-short">' + esc(MK_SHORT[x.m.c] || x.m.c) + '</span>'
+        + '<span class="todo-acc">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</span>'
+        + (x.m.acc ? '<span class="mk-tag acc">ACC 必評</span>' : '')
+        + '<span class="todo-state">' + state + '</span>'
+      + '</div>'
+      + '<div class="todo-ex">' + esc(MK_EX[x.m.c] || '') + '</div>'
+    + '</div>';
   }).join('');
 }
 
-/* ---- detail ---- */
+/* ═══ §2-3 每一場 ═════════════════════════════════════
+   四個篩選條件共用同一份邏輯，標頭的計數也從同一份推導——不可各算一次。 */
+let histQuick = 'all';
+/* ①③④（空狀態）與 §2-3 的篩選共用同一份來源：都從 histSource() 出發。
+   總數一次算完存進 _histEmpty，三個地方共用，不各數一次。
+   注意判斷的是「這個帳號有沒有紀錄」而不是「目前篩出幾場」——
+   篩到 0 場時快篩必須留著，不然使用者會被關在空清單裡出不來。 */
+function histSource(){ return load(); }
+let _histEmpty = true;
+function setHistQuick(q){ histQuick = q; onHistFilter(); }
+function histFiltered(){
+  const el = document.getElementById('hist-q');
+  const kw = (el ? el.value : '').trim().toLowerCase();
+  const cut7 = (()=>{ const d = new Date(Date.now() - 7*86400000);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  return histSource().filter(r=>{
+    if (histFilter && r.clientId !== histFilter) return false;
+    if (histQuick === '7d' && (r.date||'') < cut7) return false;
+    if (histQuick === 'nopdf' && String(r.exportedAt||'')) return false;
+    if (kw){
+      const hay = ((r.date||'') + ' ' + (r.client||'') + ' ' + topicText(r)).toLowerCase();
+      if (hay.indexOf(kw) < 0) return false;
+    }
+    return true;
+  }).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+}
+/* 每一場那一列的職能格子：用狀態五級的淡色系，不要飽和實色——
+   第一場就很搶眼的話，看不出累積。 */
+function cellLevel(n){ return n <= 0 ? 0 : (n === 1 ? 1 : (n === 2 ? 2 : 3)); }
+const ACK_MK = ['4.1','4.3','8.5'];   // 認可
+const EMP_MK = ['4.2','6.4'];         // 同理
+function sessionMkCounts(r){
+  const per = ACC.map(()=>0);
+  let ack = 0, emp = 0, total = 0;
+  (r.acc||[]).forEach((x,i)=>{
+    const mk = (x && x.mk) || {};
+    (MK[i]||[]).forEach(m=>{
+      if (!mkOn(mk[m.c])) return;
+      per[i]++; total++;
+      if (ACK_MK.indexOf(m.c) >= 0) ack++;
+      if (EMP_MK.indexOf(m.c) >= 0) emp++;
+    });
+  });
+  return { per, ack: Math.min(ack,2), emp: Math.min(emp,2), total };
+}
+function renderHistLegend(){
+  const el = document.getElementById('hist-legend');
+  if (!el) return;
+  /* ③ 一場都沒有時沒有格子可對照，圖例先不出現 */
+  el.classList.toggle('hidden', _histEmpty);
+  if (_histEmpty){ el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="lg-t">寫到次數</span>'
+    + [0,1,2,3].map(l=>'<span class="cell lg" data-lv="' + l + '"></span>').join('')
+    + '<span class="lg-t">少 → 多</span>';
+}
+function renderHist() {
+  const list = document.getElementById('hist-list');
+  const arr = histFiltered();
+  const cntEl = document.getElementById('hist-count');
+  if (cntEl) cntEl.textContent = arr.length + ' 場';   // 與清單同一份來源
+  renderHistLegend();
+  /* ④ 一場都沒有時沒有東西可篩，搜尋框／客戶下拉／三顆快篩整組一起隱藏（做法一致）。
+     注意：這裡看的是「有沒有紀錄」，不是「篩出幾場」——
+     篩到 0 場時整組要留著，不然使用者會被關在空清單裡回不去。 */
+  ['hist-q', 'hist-filter', 'hist-quick'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', _histEmpty);
+  });
+  document.querySelectorAll('#hist-quick .pchip').forEach(b=>
+    b.classList.toggle('on', b.dataset.q === histQuick));
+  if (!arr.length) {
+    /* 兩種「空」是不同的東西：
+       零紀錄 → 引導句只由第一張卡講一次，這裡不再重複；
+       有紀錄但篩到 0 場 → 一定要給回饋，否則搜尋打錯字會看到一張沒有任何反應的空卡片。 */
+    list.innerHTML = _histEmpty ? ''
+      : '<div class="empty">這些條件下沒有紀錄。<br>換個關鍵字，或按「全部」看所有場次。</div>';
+    return;
+  }
+  /* 兩層列：上層 日期｜客戶｜議題（可伸縮）｜時長・標記數；
+     下層 八個職能格子跨到議題欄下方，空一格後接認可／同理。
+     這張表曾經四次把議題欄壓到讀不到——五欄擠同一列時，句子欄永遠輸。不要改回單層。 */
+  list.innerHTML = arr.map(r=>{
+    const c = sessionMkCounts(r);
+    const cells = c.per.map((n,i)=>'<span class="cell" data-lv="' + cellLevel(n) + '">' + (i+1) + '</span>').join('');
+    return '<div class="sess" onclick="openDetail(' + r.id + ')">'
+      + '<div class="sess-top">'
+        + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
+        + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
+        + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
+          + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
+        + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '標記 ' + c.total + '</span>'
+        + '<span class="sess-arrow">›</span>'
+      + '</div>'
+      + '<div class="sess-bot">'
+        + '<span class="sess-cells">' + cells + '</span>'
+        + '<span class="sess-gap"></span>'
+        + '<span class="sess-tag">認可 ' + c.ack + '/2</span>'
+        + '<span class="sess-tag">同理 ' + c.emp + '/2</span>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+/* ═══ §2-4 你在練的事 ══════════════════════════════════
+   只分兩組。同一件事練幾場都可以——練的場數就是你的累積。 */
+function practiceItems(){
+  const recs = load().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  const map = new Map();
+  recs.forEach(r=>{
+    const f = String(r.focus||'').trim();
+    if (!f) return;
+    if (!map.has(f)) map.set(f, { text: f, n: 0, results: [] });
+    map.get(f).n++;
+  });
+  recs.forEach(r=>{
+    const pf = String(r.prevFocus||'').trim();
+    if (!pf || !r.prevFocusResult) return;
+    if (!map.has(pf)) map.set(pf, { text: pf, n: 0, results: [] });
+    map.get(pf).results.push(r.prevFocusResult);
+  });
+  return Array.from(map.values()).map(o=>{
+    const last = o.results.length ? o.results[o.results.length-1] : '';
+    const sessions = Math.max(o.n, o.results.length);
+    return { text: o.text, n: sessions, done: last === 'done',
+             tip: practiceTip(o.results), };
+  }).sort((a,b)=> b.n - a.n || a.text.localeCompare(b.text));
+}
+/* 建議句：先承認進展，再用邀請語氣。不評分、不指認失敗、不下命令。 */
+function practiceTip(results){
+  if (!results.length) return '';
+  const last = results[results.length-1];
+  if (last === 'done') return '';
+  if (results.indexOf('partial') >= 0)
+    return '最近那一場已經做到部分了。也許換成一個聽得見的訊號，會好抓一點。';
+  if (last === 'forgot' || results.indexOf('forgot') >= 0)
+    return '如果願意，可以試著在會談開始前先看一眼這個焦點。';
+  if (last === 'missed')
+    return '同一條再練一場就好，累積就是這樣來的。';   /* 內容中立：焦點可以是任何事，不假設它是「注意某個訊號」 */
+  return '';
+}
+function renderPractice(){
+  const body = document.getElementById('practice-body');
+  if (!body) return;
+  const items = practiceItems();
+  if (!items.length){
+    /* 零紀錄時不重複講一次「還沒有東西」；有紀錄卻還沒設過焦點，才需要這句提示 */
+    body.innerHTML = _histEmpty ? ''
+      : '<div class="acc-none">還沒有焦點。在新增紀錄頁寫下「下一場只盯這一件事」，這裡就會出現。</div>';
+    return;
+  }
+  const doing = items.filter(x=>!x.done), done = items.filter(x=>x.done);
+  const card = (x, cls) => '<div class="prac ' + cls + '">'
+    + '<div class="prac-top"><span class="prac-text">' + esc(x.text) + '</span>'
+    + '<span class="prac-n">練了 ' + x.n + ' 場</span></div>'
+    + (x.tip ? '<div class="prac-tip">' + esc(x.tip) + '</div>' : '')
+    + '</div>';
+  body.innerHTML =
+    '<div class="prac-sub">還在練 <b>' + doing.length + '</b> 件</div>'
+    + (doing.length ? doing.map(x=>card(x,'')).join('') : '<div class="acc-none">目前沒有還在練的焦點。</div>')
+    + '<div class="prac-sub ok" style="margin-top:16px">已經做到了 <b>' + done.length + '</b> 件</div>'
+    + (done.length ? done.map(x=>card(x,'ok')).join('') : '<div class="acc-none">還沒有，慢慢來。</div>');
+}
+
 function openDetail(id, from) {
   detailFrom = from || 'hist';
   currentId = id;
@@ -2461,6 +3930,7 @@ function openDetail(id, from) {
   document.getElementById('detail-body').innerHTML = `
     <div class="rec-top"><span class="rec-client">客戶：${esc(r.client)||'（未填）'}</span><span class="rec-date">${r.date||''}</span></div>
     ${r.session||r.mins?`<div class="rec-meta" style="margin-bottom:6px">${r.session?'會談次數：'+esc(r.session):''}${r.mins?'　·　'+esc(r.mins)+' 分鐘':''}</div>`:''}
+    ${topicHTML(r)}
     <div class="score-lines">
       <div class="score-line">自評表現：<b>${r.perf}</b></div>
       <div class="score-line">自評感受：<b>${r.feel}</b></div>
@@ -2501,6 +3971,7 @@ function editCurrent() {
   document.getElementById('f-clientfeel').value = cf; document.getElementById('clientfeelVal').textContent = cf;
   document.getElementById('f-because').value = r.because || '';
   document.getElementById('f-focus').value = r.focus || '';
+  document.getElementById('f-topic').value = r.topic || '';
   document.getElementById('f-clientquote').value = r.clientQuote || '';
   document.getElementById('f-notcaught').value = r.notCaught || '';
   document.getElementById('f-submitcand').checked = !!r.submitCandidate;
@@ -2533,14 +4004,18 @@ function editCurrent() {
     (MK[i]||[]).forEach(m=>{
       const d = mk[m.c]; if (!d) return;
       const id = mkId(i, m.c);
-      const ev = mkEv(d), imp = mkImp(d), on = mkOn(d);
-      document.getElementById('mk-ev-'+id).value = ev;
+      const ev = mkEv(d), imp = mkImp(d), on = mkOn(d), rows = mkRows(d);
+      const rbox = document.getElementById('mk-rows-'+id);
+      if (rbox){
+        rbox.innerHTML = '';
+        (rows.length ? rows : [{t:'',x:''}]).forEach(r=>mkAddRow(i, m.c, r.t, r.x));
+        rbox.dataset.n = String(evCount(rowsToEv(rows)));   /* 不要觸發自動勾選 */
+      }
+      document.getElementById('mk-chk-'+id).checked = !!on;
       refreshMk(i, m.c);
-      if (on && !document.getElementById('mk-chk-'+id).disabled)
-        document.getElementById('mk-chk-'+id).checked = true;
       const impEl = document.getElementById('mk-imp-'+id);
       if (impEl && imp){ impEl.value = imp; toggleMkImp(i, m.c, true); }   /* 已有內容直接顯示 */
-      if (on || ev || imp) hasMk = true;
+      if (on || ev || imp || rows.length) hasMk = true;
     });
     if (hasMk) toggleMk(i);   // 有填過就直接展開，不用再找一次
   });
@@ -2656,28 +4131,168 @@ function addClient(){
   document.getElementById('new-client-code').value = '';
   renderClients(); toast('已新增客戶');
 }
+/* 一位客戶的場次／時數／最近一場：openClient 的統計卡與列表卡共用同一份 */
+function clientStats(id){
+  const rs = clientRecs(id).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  const mins = rs.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
+  const marks = rs.map(r=>sessionMkCounts(r).total);
+  const focusDone = rs.filter(r=>r.prevFocusResult === 'done').length;
+  const focusAns  = rs.filter(r=>r.prevFocusResult).length;
+  return {
+    rs, n: rs.length,
+    hours: Math.round(mins / 60 * 10) / 10,
+    last: rs.length ? (rs[0].date || '') : '',
+    marksAvg: rs.length ? Math.round(marks.reduce((x,y)=>x+y, 0) / rs.length * 10) / 10 : 0,
+    focusDone, focusAns
+  };
+}
 function renderClients(){
   const list = document.getElementById('client-list');
   const cs = loadC();
-  if (!cs.length) { list.innerHTML = '<div class="empty">還沒有客戶。<br>在上面新增第一位（記得用代號就好）</div>'; return; }
-  const recs = load();
-  const info = cs.map(c=>{
-    const rs = recs.filter(r=>r.clientId===c.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    return { c, n: rs.length, last: rs.length ? (rs[0].date||'') : '' };
-  }).sort((a,b)=>
-    ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0) || (b.last||'').localeCompare(a.last||''));
-  list.innerHTML = info.map(x=>`<div class="rec" onclick="openClient('${x.c.id}')">
+  const cnt = document.getElementById('client-count');
+  if (cnt) cnt.textContent = clientCount() + ' 位';   // 與側欄徽章同一個來源
+  if (!cs.length) { list.innerHTML = '<div class="empty">還沒有客戶。<br>在下面新增第一位（記得用代號就好）</div>'; return; }
+  const info = cs.map(c=>({ c, st: clientStats(c.id) })).sort((a,b)=>
+    ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0)
+    || (b.st.last||'').localeCompare(a.st.last||''));
+  list.innerHTML = info.map(x=>{
+    /* 裸日期讀者不知道是什麼日期，一律帶「最近一場」 */
+    const meta = [x.st.n + ' 場', x.st.hours + ' 小時',
+                  x.st.last ? '最近一場 ' + x.st.last.slice(5) : '還沒有紀錄'].join(' · ');
+    return `<div class="rec" onclick="openClient('${x.c.id}')">
     <div class="rec-top">
       <span class="rec-client">${esc(x.c.code)}${x.c.status==='closed'?'<span class="badge">已結案</span>':''}</span>
-      <span class="rec-date">${x.last||'尚無紀錄'}</span>
+      <span class="sess-arrow">›</span>
     </div>
-    <div class="rec-meta">會談 ${x.n} 次${x.c.goal?' · 目標：'+esc(x.c.goal):''}</div>
-  </div>`).join('');
+    <div class="rec-meta">${meta}${x.c.goal?' · 目標：'+esc(x.c.goal):''}</div>
+  </div>`;}).join('');
+  renderClientInsight();
+}
+/* 洞察卡：同一個焦點連續出現兩場以上。沿用 §2-4 的 practiceItems()，不另外算一次 */
+function renderClientInsight(){
+  const box = document.getElementById('client-insight');
+  if (!box) return;
+  const items = practiceItems().filter(x=>x.n >= 2);
+  box.innerHTML = items.length
+    ? items.map(x=>'<div class="prac' + (x.done ? ' ok' : '') + '">'
+        + '<div class="prac-top"><span class="prac-text">' + esc(x.text) + '</span>'
+        + '<span class="prac-n">練了 ' + x.n + ' 場</span></div>'
+        + (x.tip ? '<div class="prac-tip">' + esc(x.tip) + '</div>' : '') + '</div>').join('')
+    : '<div class="acc-none">還沒有連續出現兩場以上的焦點。</div>';
+}
+/* recap 卡的五個欄位：對齊 coaching-recap 的核心結構（議題／成果／衡量／重要性／阻礙）。
+   全部取自既有資料，沒有新增任何欄位：
+     議題   ← 頂層欄位 topic
+     成果   ← marker 3.1「與客戶確認本次會談想達成什麼」的實例
+     衡量   ← marker 3.2「與客戶定義成功的衡量標準」的實例
+     重要性 ← marker 3.3「探詢這個議題對客戶為何重要、有何意義」的實例
+     阻礙   ← marker 3.4「要達成目標，他們認為需要處理什麼」的實例
+   每欄各自往回找「最近一場有填的」，沒有就顯示灰字「—」，旁邊標是哪一天。 */
+function mkExample(r, code){
+  const i = parseInt(code.split('.')[0], 10) - 1;
+  const x = (r.acc || [])[i];
+  if (!x) return '';
+  return mkRows((x.mk || {})[code]).map(o=>String(o.x||'').trim()).filter(Boolean).join('；');
+}
+/* 衡量想要「現在幾分／期待幾分」兩個數字。marker 3.2 的實例是自由文字，
+   抓得到兩個 0–10 的數字就排成量尺，抓不到就照原文顯示（不把使用者寫的內容藏起來）。 */
+function scaleText(txt){
+  const t = String(txt || '').trim();
+  if (!t) return '';
+  const nums = (t.match(/(?:^|[^\d.])(10|\d(?:\.\d)?)(?![\d.])/g) || [])
+    .map(x=>parseFloat(x.replace(/[^\d.]/g, ''))).filter(n=>n >= 0 && n <= 10);
+  if (nums.length >= 2) return '現在 ' + nums[0] + '／期待 ' + nums[1];
+  return t;
+}
+const RECAP_FIELDS = [
+  ['議題',   r => topicText(r)],
+  ['成果',   r => mkExample(r, '3.1')],
+  ['衡量',   r => scaleText(mkExample(r, '3.2'))],
+  ['重要性', r => mkExample(r, '3.3')],
+  ['阻礙',   r => mkExample(r, '3.4')]
+];
+function clientRecapRows(rs){
+  const desc = rs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  return RECAP_FIELDS.map(([label, get])=>{
+    let val = '', from = '';
+    for (const r of desc){ const v = get(r); if (v){ val = v; from = r.date || ''; break; } }
+    return { label, val, from };
+  });
+}
+function clientRecapText(c, rs){
+  return ['客戶：' + (c.code || '')]
+    .concat(clientRecapRows(rs).map(x=>x.label + '：' + (x.val || '（沒有）')))
+    .join('\n');
+}
+function copyClientRecap(id){
+  const c = clientById(id); if (!c) return;
+  copyText(clientRecapText(c, clientRecs(id)), 'recap 已複製');
 }
 function openClient(id){
   currentClientId = id;
   const c = clientById(id); if (!c) return;
-  const rs = clientRecs(id).sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  const st = clientStats(id);                       // 與客戶列表同一份統計
+  const rs = st.rs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+
+  /* 1. 四張統計卡（數字全部從資料推導） */
+  document.getElementById('cd-title').textContent = c.code + (c.status==='closed' ? '（已結案）' : '');
+  const pre = parseInt(c.preSessions,10) || 0;
+  const stat = (n, name, note) => '<div class="stat1"><div class="stat-n">' + n + '</div>'
+    + '<div class="stat-name">' + name + '</div>'
+    + (note ? '<div class="stat-note">' + note + '</div>' : '') + '</div>';
+  document.getElementById('client-stats').innerHTML =
+      stat(st.n, '場次', pre ? '另有工具前 ' + pre + ' 場' : '')
+    + stat(st.hours, '小時', '')
+    + stat(st.focusAns ? st.focusDone + '/' + st.focusAns : '—', '焦點達成', st.focusAns ? '' : '還沒回答過焦點')
+    + stat(st.marksAvg, '平均標記', '每場命中幾條');
+
+  /* 2. 每一場的議題：整列，每列可點進單場詳情 */
+  const rl = rs.slice().reverse();
+  document.getElementById('cd-sess-count').textContent = rl.length ? rl.length + ' 場' : '';
+  document.getElementById('client-recs').innerHTML = rl.length
+    ? rl.map(r=>{
+        const mk = sessionMkCounts(r);
+        return '<div class="sess" onclick="openDetail(' + r.id + ',\'client\')">'
+          + '<div class="sess-top">'
+            + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
+            + '<span class="sess-client">' + (esc(formatSession(r.session)) || '會談') + '</span>'
+            + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
+              + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
+            + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '標記 ' + mk.total + '</span>'
+            + '<span class="sess-arrow">›</span>'
+          + '</div></div>';
+      }).join('')
+    : '<div class="acc-none">這位客戶還沒有紀錄。</div>';
+
+  /* 3. 左：自評趨勢；右：recap。兩張卡是 grid 的直接項目，靠 align-items:stretch 底部對齊 */
+  const cc = document.getElementById('client-chart-card');
+  if (rs.length >= 2) {
+    cc.classList.remove('hidden');
+    const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
+    const series = [
+      { name:'自評表現', color:CHART.perf, vals: rs.map(r=>parseFloat(r.perf)) },
+      { name:'我的感受', color:CHART.feel, vals: rs.map(r=>parseFloat(r.feel)) },
+      { name:'客戶感受', color:CHART.client, vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+    ];
+    document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
+  } else {
+    cc.classList.add('hidden');
+  }
+  /* recap 卡：白底、標籤在上值在下（固定寬度的標籤欄會把值擠成三行） */
+  document.getElementById('client-recap').innerHTML =
+    '<div class="recap-head">'
+      + '<label style="margin:0">開頭要盤點的重點</label>'
+      + '<button type="button" class="recap-copy" onclick="copyClientRecap(\'' + c.id + '\')">複製 recap</button>'
+    + '</div>'
+    + '<div class="sub-note">下次會談前看這個。</div>'
+    + (rl.length
+        ? clientRecapRows(rs).map(x=>'<div class="recap-row">'
+            + '<div class="recap-label">' + x.label + (x.from ? '　<span class="recap-from">' + x.from.slice(5) + '</span>' : '') + '</div>'
+            + '<div class="recap-val' + (x.val ? '' : ' none') + '">' + (x.val ? esc(x.val) : '—') + '</div>'
+          + '</div>').join('')
+        : '<div class="acc-none">還沒有紀錄可以盤點。</div>');
+
+  /* 客戶資料編輯（規格的版面三段之外，保留在最下面） */
   document.getElementById('client-info').innerHTML = `
     <label style="margin-top:0">客戶代號</label><input type="text" id="c-code" value="${esc(c.code)}">
     <label>狀態</label>
@@ -2686,33 +4301,16 @@ function openClient(id){
       <option value="closed"${c.status==='closed'?' selected':''}>已結案</option>
     </select>
     <label>開始記錄前已談次數 <span class="hint">用這工具之前已談過幾次就填幾，都在這裡記就填 0</span></label>
-    <input type="text" id="c-pre" inputmode="numeric" value="${parseInt(c.preSessions,10)||0}">
+    <input type="text" id="c-pre" inputmode="numeric" value="${pre}">
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
     <label>備註 <span class="hint">選填，同樣不要寫可辨識個資</span></label><textarea id="c-note">${esc(c.note||'')}</textarea>
     <div class="actions" style="margin-top:12px">
-      ${rs.length ? `<button class="btn btn-ghost" onclick="renumberClient('${c.id}')">依日期重新編號</button>` : `<button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteClient('${c.id}')">刪除</button>`}
+      ${rs.length ? '' : `<button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteClient('${c.id}')">刪除</button>`}
       <button class="btn btn-primary" onclick="saveClient('${c.id}')">儲存客戶資料</button>
     </div>`;
-  const cc = document.getElementById('client-chart-card');
-  if (rs.length >= 2) {
-    cc.style.display = '';
-    const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
-    const series = [
-      { name:'自評表現', color:CHART.perf, vals: rs.map(r=>parseFloat(r.perf)) },
-      { name:'我的感受', color:CHART.feel, vals: rs.map(r=>parseFloat(r.feel)) },
-      { name:'客戶感受', color:CHART.client, vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
-    ];
-    document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
-  } else cc.style.display = 'none';
-  const rl = rs.slice().reverse();
-  document.getElementById('client-recs').innerHTML = rl.length
-    ? '<div class="ask-sub">會談紀錄（'+rl.length+'）</div>' + rl.map(r=>`<div class="rec" onclick="openDetail(${r.id},'client')">
-        <div class="rec-top"><span class="rec-client">${esc(formatSession(r.session))||'會談'}</span><span class="rec-date">${r.date||''}</span></div>
-        <div class="rec-meta">自評 ${r.perf} · 感受 ${r.feel}${r.clientfeel!=null?' · 客戶 '+r.clientfeel:''}<span class="badge">${accBadgeText(r)}</span></div>
-      </div>`).join('')
-    : '<div class="empty">這位客戶還沒有紀錄</div>';
   showView('clientdetail');
 }
+
 function saveClient(id){
   const cs = loadC(); const c = cs.find(x=>x.id===id); if (!c) return;
   const code = document.getElementById('c-code').value.trim();
@@ -2730,19 +4328,9 @@ function saveClient(id){
   buildClientSel(document.getElementById('f-client-sel').value);
   toast('已儲存'); openClient(id);
 }
-function renumberClient(id){
-  const c = clientById(id); if (!c) return;
-  const off = parseInt(c.preSessions,10)||0;
-  const rs = clientRecs(id).sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
-  if (!rs.length) { toast('沒有紀錄可編號'); return; }
-  if (!confirm('依日期順序重新編號這位客戶的 '+rs.length+' 筆紀錄？\n（從第'+numToCh(off+1)+'次開始「連續」編號，會覆蓋原本的會談次數欄位；若中間有沒記到的會談，請不要用這個，改為手動修正該筆次數）')) return;
-  const map = {};
-  rs.forEach((r,i)=>{ map[r.id] = '第'+numToCh(off+i+1)+'次'; });
-  const recs = load();
-  recs.forEach(r=>{ if (map[r.id]) r.session = map[r.id]; });
-  store(recs);
-  toast('已重新編號'); openClient(id);
-}
+/* 「依日期重新編號」已於 2026-08-23 依 Ann 決定移除。不要加回來。
+   代號與會談次數一旦匯出給導師、或寫進 ICF 時數表，就是對外的識別碼；
+   事後重編會讓已經送出去的 PDF 與時數表全部對不起來。 */
 function deleteClient(id){
   if (clientRecs(id).length) { toast('已有會談紀錄，請改用「已結案」'); return; }
   if (!confirm('刪除這位客戶？')) return;
@@ -2762,7 +4350,7 @@ function buildHistFilter(){
 }
 function onHistFilter(){
   histFilter = document.getElementById('hist-filter').value;
-  renderHist(); renderChart(); renderReflect();
+  renderHist(); renderPractice(); renderChart(); renderReflect();
   if (insightOpen) renderInsight();
 }
 
@@ -2774,16 +4362,6 @@ function toggleInsight(){
   document.getElementById('insight-body').classList.toggle('collapsed', !insightOpen);
   document.getElementById('insight-arrow').textContent = insightOpen ? '收合 ▴' : '展開 ▾';
   if (insightOpen) renderInsight();
-}
-/* §2C 焦點追蹤：只計 prevFocusResult 有值的紀錄 */
-function focusStatsHTML(arr){
-  const n = { done:0, partial:0, missed:0, forgot:0 };
-  let N = 0;
-  (arr||[]).forEach(r=>{ const v = r.prevFocusResult; if (v && n[v] != null){ n[v]++; N++; } });
-  if (!N) return '<div class="reflect-line">🎯 <b>焦點追蹤：</b>'
-    + '<span class="hint">還沒有資料，設過焦點並在下一場回答後就會出現</span></div>';
-  return '<div class="reflect-line">🎯 <b>焦點追蹤：</b>設過 <b>' + N + '</b> 個焦點 — '
-    + '做到 <b>' + n.done + '</b>、部分 <b>' + n.partial + '</b>、沒做到 <b>' + n.missed + '</b>、忘了 <b>' + n.forgot + '</b></div>';
 }
 function renderInsight(){
   let arr = load();
@@ -2816,13 +4394,9 @@ function renderInsight(){
     `<div class="actions" style="margin-top:12px">
       <button class="btn btn-ghost" onclick="copyStrengths()">複製強項清單</button>
       <button class="btn btn-primary" onclick="copyAdvicePrompt()">複製求建議提示詞</button>
-    </div>` + gapHTML(load());   /* §4：缺口掃全部紀錄，不吃客戶篩選 */
+    </div>`;
 }
-/* ===== §4 你的紀錄裡還沒出現過的證據 =====
-   掃全部紀錄的 acc[i].mk，統計每個 marker 編號 on:true 的次數。
-   0 次進「還沒出現過」，1 次進「只出現過一次」。門檻 10 筆，放洞察頁最下方，
-   要滾下去才看得到——不要放在每場都會經過的路徑上。 */
-const GAP_MIN = 10;
+/* marker 命中次數：§2-2 八大職能的累積與待補清單共用同一個計算來源 */
 function markerHitCounts(recs){
   const cnt = {};
   MK.forEach((g,i)=>g.forEach(m=>{ cnt[m.c] = 0; }));
@@ -2833,32 +4407,6 @@ function markerHitCounts(recs){
     });
   });
   return cnt;
-}
-function gapHTML(arr){
-  const head = '<div class="ask-sub" style="margin-top:22px">你的紀錄裡還沒出現過的證據</div>'
-    + '<div class="sub-note">是「沒寫到」，不是「沒做到」。不要為了補這幾條去設計提問。</div>';
-  if (!arr || arr.length < GAP_MIN){
-    return head + '<div class="acc-none" style="margin-top:6px">資料還太少，累積十場以上再看。'
-      + '前幾場的缺口清單幾乎都是全紅，那對你沒有幫助。（目前 ' + (arr ? arr.length : 0) + ' / ' + GAP_MIN + ' 場）</div>';
-  }
-  const cnt = markerHitCounts(arr);
-  const scope = [];
-  MK.forEach((g,i)=>g.forEach(m=>{ if (!mkAccOnly || m.acc) scope.push({m, i}); }));
-  const zero = scope.filter(x=>cnt[x.m.c] === 0);
-  const once = scope.filter(x=>cnt[x.m.c] === 1);
-  if (!zero.length && !once.length){
-    return head + '<div class="acc-none" style="margin-top:6px">' + scope.length + ' 條你都拿到過證據了</div>';
-  }
-  const row = x => '<div class="insight-item">'
-    + '<span class="mk-code">' + x.m.c + '</span>'
-    + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '　'
-    + esc(String(x.m.t).slice(0, 40)) + '</div>';
-  return head
-    + (zero.length ? '<div class="ask-sub" style="margin-top:10px">還沒出現過（' + zero.length + '／' + scope.length + '）</div>' + zero.map(row).join('') : '')
-    + (once.length ? '<div class="ask-sub" style="margin-top:10px">只出現過一次（' + once.length + '）</div>' + once.map(row).join('') : '')
-    + '<div class="sub-note" style="margin-top:8px">目前顯示範圍：'
-    + (mkAccOnly ? 'ACC 也會看的 ' + ACC_MK_N + ' 條' : '全部 ' + scope.length + ' 條')
-    + '（跟上面「先看少一點」的開關連動）</div>';
 }
 function askImprove(i){
   const x = _insightImps[i]; if (!x) return;
@@ -2968,7 +4516,7 @@ const LEGAL_HTML = `
 <p><b>7. 重要提醒：</b>為保護第三人隱私，請勿輸入任何可辨識客戶身分之個人資料，一律使用代號。</p>
 <p><b>8. 未成年人：</b>本工具非為未滿 18 歲者設計。</p>
 <p><b>9. 聯絡方式：</b>yienlee.coaching@gmail.com</p>
-<p style="color:#a39b8e;font-size:12px;margin-top:14px">© 2026 李懿恩. All rights reserved.</p>`;
+<p style="color:var(--ink-4);font-size:12px;margin-top:14px">© 2026 李懿恩. All rights reserved.</p>`;
 const HELP_HTML = `
 <h2>使用說明</h2>
 <div class="lp-sub">會談後快速記錄　·　會談結束 15 分鐘內填寫</div>
@@ -2999,7 +4547,7 @@ const HELP_HTML = `
 <h3>手機登入小提醒</h3>
 <p>若你是從 LINE、IG、FB 等 App 裡點開連結，請先點右上角「⋯」或分享鍵 →「用 Safari／Chrome 開啟」，在瀏覽器裡再登入。（這是 Google 的安全規定。）</p>
 
-<p style="color:#a39b8e;font-size:12px;margin-top:14px">有問題再問 Yi-En 🙂</p>`;
+<p style="color:var(--ink-4);font-size:12px;margin-top:14px">有問題再問 Yi-En 🙂</p>`;
 function openModal(html){
   document.getElementById('legal-content').innerHTML = html;
   document.getElementById('legal-modal').classList.add('show');
@@ -3036,10 +4584,6 @@ function renderReflect(){
   }
   const body = document.getElementById('reflect-body');
   if (!arr.length){ body.innerHTML = '<div class="empty" style="padding:14px 0">這段期間沒有紀錄</div>'; return; }
-  const avg = vals => { const v = vals.filter(x=>!isNaN(x)); return v.length ? Math.round(v.reduce((s,x)=>s+x,0)/v.length*10)/10 : null; };
-  const aPerf = avg(arr.map(r=>parseFloat(r.perf)));
-  const aFeel = avg(arr.map(r=>parseFloat(r.feel)));
-  const aCf   = avg(arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):NaN));
   // 能量對齊指數：每筆三分數的最大差距，取平均（差距越小＝越同頻）
   const spreads = arr.map(r=>{
     const v = [parseFloat(r.perf), parseFloat(r.feel), r.clientfeel!=null?parseFloat(r.clientfeel):NaN].filter(x=>!isNaN(x));
@@ -3069,13 +4613,10 @@ function renderReflect(){
     ? '最常落在「部分到位」的是：' + topP.map(x=>'<b>'+nm(x.i)+'</b>（'+x.n+'/'+arr.length+' 次）').join('、')
       + '。反覆出現的那一項，就是下一階段的練功重點。'
     : '<span class="hint">這段期間沒有標記為部分到位的職能</span>';
-  const cell = (n,name) => '<div class="reflect-score"><div class="rs-num">'+(n!=null?n:'–')+'</div><div class="rs-name">'+name+'</div></div>';
   body.innerHTML =
-    '<div class="reflect-scores">' + cell(aPerf,'平均自評表現') + cell(aFeel,'平均自評感受') + cell(aCf,'平均客戶感受') + '</div>'
-    + '<div class="reflect-line">⚡ <b>能量對齊：</b>' + energyHtml + '</div>'
+    '<div class="reflect-line">⚡ <b>能量對齊：</b>' + energyHtml + '</div>'
     + '<div class="sub-note" style="margin:2px 0 0 22px">自我參考用，不是能力指標。'
       + '這是本工具自訂的計算，沒有外部效度，不能當作認證或能力的證據。它只適合跟你自己的過去比。</div>'
-    + focusStatsHTML(arr)
     + '<div class="reflect-line">🌟 <b>職能亮點：</b>' + accHtml + '</div>'
     + '<div class="reflect-line">🌱 <b>成長重點：</b>' + growHtml + '</div>'
     + '<div class="reflect-line" style="color:var(--ink-4);font-size:12px">共 ' + arr.length + ' 筆紀錄'
@@ -3186,6 +4727,12 @@ function openHelp(){
   openModal(HELP_HTML + extra);
 }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
+
+/* ② 離開頁面或切到背景時把等待中的推送送出去。
+   手機上分頁被收走不一定會觸發 beforeunload，所以 pagehide 與 visibilitychange 都掛。 */
+window.addEventListener('pagehide', () => { flushPush(); });
+window.addEventListener('beforeunload', () => { flushPush(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPush(); });
 
 /* 表單任何輸入都重算進度列（§6 黏著進度列） */
 (function(){
