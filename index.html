@@ -418,7 +418,12 @@ textarea { resize: vertical; min-height: 46px; }
 .cred-track { position: relative; height: 14px; background: var(--line-3); border-radius: 7px; overflow: hidden; }
 .cred-fill { height: 100%; background: linear-gradient(90deg, var(--cool-2), var(--cool)); border-radius: 7px; }
 .cred-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--warm); }
-.cred-scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-4); margin-top: 5px; }
+/* §12-3：軸上的文字標籤要用「該值的位置」定位。
+   用 space-between 會把「ACC 100」推到中間（45%），但它的刻度其實在 20%。 */
+.cred-scale { position: relative; height: 16px; font-size: 11.5px; color: var(--ink-4); margin-top: 5px; }
+.cred-scale span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.cred-scale span.at-start { transform: none; }
+.cred-scale span.at-end { transform: translateX(-100%); }
 .cred-line { font-size: 13.5px; line-height: 1.7; margin-top: 6px; }
 .cred-line b { color: var(--cool-d); }
 .cred-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; margin-top: 8px; }
@@ -990,11 +995,11 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
-      <div class="sub-note">格子的深淺是這項職能所有標記的平均命中次數。暖色是還沒怎麼寫到的，藍色是已經經常出現的。暖色那些不是你做不到，是你沒記下來。</div>
+      <div class="sub-note">格子的數字是這項職能判為「到位」的場次。暖色是還沒怎麼累積的，藍色是已經經常出現的。暖色那些不是你做不到，是你還沒累積到。</div>
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
-        <div class="sub-note">最少寫到的排最前面・例句可以直接用</div>
+        <div class="sub-note">送審時每條需要時間戳，這幾條還沒有・例句可以直接用</div>
         <div id="cum-todo-list"></div>
       </div>
     </div>
@@ -2971,16 +2976,28 @@ function getAcc() {
 /* 把一筆紀錄的 marker 整理成可讀的行（給詳情、PDF、文字匯出共用） */
 /* accBadgeText 已於 2026-08-23 移除：§2-3 的每一場改成兩層列（用職能格子表達）、
    §4 的客戶頁改成議題列之後，這顆「ACC n/8」徽章就沒有任何畫面在用了。 */
+/* §5：每一條 marker 要帶出「每一個時間戳與它對應的實例」——
+   實例正是要配逐字稿丟給 AI 的內容，先前只留一行時間戳等於把它丟掉了。
+   只勾了「做到」卻一個時間戳都沒有的，標「送審前要補」但不擋。
+   詳情頁、PDF、匯出文字、督導包共用這一個函式，改一次四處都會帶到。
+   縮排用全形空白，HTML 不會把它折疊掉。 */
 function mkLines(x, i){
   const mk = (x && x.mk) || {};
   const out = [];
   (MK[i]||[]).forEach(m=>{
     const v = mk[m.c];
     if (!v) return;
-    const on = mkOn(v), ev = mkEv(v), imp = mkImp(v);
-    if (!on && !ev && !imp) return;
-    if (on || ev) out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + (ev ? '　' + ev : ''));
-    if (imp) out.push('  ' + m.c + ' 要改的：' + imp);
+    const on = mkOn(v), imp = mkImp(v);
+    const rows = mkRows(v).filter(r=>String(r.t||'').trim() || String(r.x||'').trim());
+    if (!on && !rows.length && !imp) return;
+    const short = MK_SHORT[m.c] ? '　' + MK_SHORT[m.c] : '';
+    const needFix = on && evCount(rowsToEv(rows)) === 0;
+    out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + short + (needFix ? '　（送審前要補時間戳）' : ''));
+    rows.forEach(r=>{
+      const t = String(r.t||'').trim(), ex = String(r.x||'').trim();
+      out.push('　　' + (t || '（沒有時間戳）') + (ex ? '　' + ex : ''));
+    });
+    if (imp) out.push('　　' + m.c + ' 要改的：' + imp);
   });
   return out;
 }
@@ -3590,7 +3607,11 @@ function renderCred(){
   document.getElementById('cred-axis').innerHTML =
     '<div class="cred-track"><div class="cred-fill" style="width:' + pct.toFixed(1) + '%"></div>'
       + '<div class="cred-mark" style="left:' + accMark.toFixed(1) + '%"></div></div>'
-    + '<div class="cred-scale"><span>0</span><span>ACC ' + CRED.acc.hours + '</span><span>PCC ' + CRED.pcc.hours + '</span></div>'
+    + '<div class="cred-scale">'
+      + '<span class="at-start" style="left:0">0</span>'
+      + '<span style="left:' + accMark.toFixed(1) + '%">ACC ' + CRED.acc.hours + '</span>'
+      + '<span class="at-end" style="left:100%">PCC ' + CRED.pcc.hours + '</span>'
+    + '</div>'
     + '<div class="cred-line">目前累積 <b>' + st.totalH + '</b> 小時、<b>' + st.clients + '</b> 位不重複客戶。</div>'
     + ['acc','pcc'].map(k=>{
         const c = CRED[k];
@@ -3667,16 +3688,34 @@ function stLevel(n){ return n <= 0 ? 0 : (n <= 2 ? 1 : (n <= 4 ? 2 : (n <= 8 ? 3
 const ST_LV_NAME = ['一次都沒寫到', '寫過 1–2 次', '寫過 3–4 次', '寫過 5–8 次', '寫過 9 次以上'];
 
 /* 每項職能：所有標記的平均命中次數、寫到過幾條、共幾條 */
+/* 2026-08-24 起「累積」改成優先採計職能層的到位狀態。
+   原因：這個工具的核心是「快速紀錄」。如果只有逐條勾完 39 條 marker 才算數，
+   等於變相要求每場都做完整細節填寫，違反設計初衷——寧可使用者只花 30 秒選「這職能整體到位」，
+   也不要因為填寫門檻高而乾脆不記。
+   marker 逐條仍然保留，但退到「送審前要補時間戳」的清單，不再是累積的唯一來源。
+   到位怎麼算：accSt(x) === 2 才算一場，部分到位不算 0.5 場（數字要好解釋）。 */
 function accCumStats(recs){
-  const cnt = markerHitCounts(recs);
+  const rs = recs || [];
   return ACC.map((a,i)=>{
-    const ms = MK[i] || [];
-    const hits = ms.map(m=>cnt[m.c] || 0);
-    const total = hits.reduce((x,y)=>x+y, 0);
-    const avg = ms.length ? total / ms.length : 0;
-    return { i, n: ms.length, written: hits.filter(h=>h>0).length, total,
-             avg: Math.round(avg*10)/10, lv: stLevel(avg) };
+    const done = rs.filter(r=>accSt((r.acc || [])[i]) === 2).length;
+    return { i, done, sessions: rs.length, lv: stLevel(done) };
   });
+}
+/* 每條 marker 在幾場留過「真的時間戳」（No／無 不算）。送審缺證據清單用這個，不是用 on。 */
+function markerEvidenceCounts(recs){
+  const cnt = {};
+  MK.forEach(g=>g.forEach(m=>{ cnt[m.c] = 0; }));
+  (recs || []).forEach(r=>{
+    (r.acc || []).forEach((x,i)=>{
+      const mk = (x && x.mk) || {};
+      (MK[i] || []).forEach(m=>{
+        const v = mk[m.c];
+        if (v === undefined) return;
+        if (evCount(rowsToEv(mkRows(v))) > 0) cnt[m.c]++;
+      });
+    });
+  });
+  return cnt;
 }
 /* 歷史紀錄頁的唯一算繪入口：空狀態判斷在這裡算一次，底下三處共用 */
 function renderHistPage(){
@@ -3706,42 +3745,43 @@ function renderAccCum(){
   todoBox.classList.toggle('hidden', _histEmpty);
   if (_histEmpty){ grid.innerHTML = ''; return; }
   const st = accCumStats(recs);
-  /* 八欄橫排，repeat(8, minmax(0,1fr))。不可用 auto-fit——窄視窗會塌成四欄，1→8 的閱讀順序就消失了 */
+  /* 八欄橫排，repeat(8, minmax(0,1fr))。不可用 auto-fit——窄視窗會塌成四欄，1→8 的閱讀順序就消失了。
+     大方格＝這項判為「到位」的場次；比數＝到位幾場／共幾場（單位統一，都是場次）。 */
   grid.innerHTML = st.map(x=>
     '<div class="cum-col">'
       + '<div class="cum-name">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</div>'
-      + '<div class="cum-box" data-lv="' + x.lv + '" title="' + ST_LV_NAME[x.lv] + '">'
-        + (Number.isInteger(x.avg) ? x.avg : x.avg.toFixed(1)) + '</div>'
-      + '<div class="cum-ratio">' + x.written + '/' + x.n + '</div>'
+      + '<div class="cum-box" data-lv="' + x.lv + '" title="判為到位 ' + x.done + ' 場／共 ' + x.sessions + ' 場">'
+        + x.done + '</div>'
+      + '<div class="cum-ratio">' + x.done + '/' + x.sessions + '</div>'
     + '</div>').join('');
 
-  /* 待補清單：只列命中 2 次以下，次數少的在前，同分時 ACC 必評優先，最多五條 */
-  const cnt = markerHitCounts(recs);
+  /* 待補清單：送審時每條需要時間戳，這裡列還沒有時間戳的。
+     只列「這項職能你標過到位」的，否則等於在問你還沒開始練的東西。
+     排序：ACC 必評優先，再照編號。最多五條——超過就不是待辦而是壓力。 */
+  const ev = markerEvidenceCounts(recs);
   const todo = [];
-  MK.forEach((g,i)=>g.forEach(m=>{
-    const n = cnt[m.c] || 0;
-    if (n <= 2) todo.push({ m, i, n });
-  }));
-  todo.sort((a,b)=> a.n - b.n || (b.m.acc?1:0) - (a.m.acc?1:0) || a.m.c.localeCompare(b.m.c));
+  MK.forEach((g,i)=>{
+    if (!st[i].done) return;                       // 這項還沒標過到位，先不催
+    g.forEach(m=>{ if ((ev[m.c] || 0) === 0) todo.push({ m, i }); });
+  });
+  todo.sort((a,b)=> (b.m.acc?1:0) - (a.m.acc?1:0) || a.m.c.localeCompare(b.m.c));
   const five = todo.slice(0, 5);
   const box = document.getElementById('cum-todo-list');
   if (!five.length){
-    box.innerHTML = '<div class="acc-none">39 條你都寫到過三次以上了。</div>';
+    box.innerHTML = '<div class="acc-none">你標過到位的職能，每一條都留過時間戳了。</div>';
     return;
   }
-  box.innerHTML = five.map(x=>{
-    const state = x.n === 0 ? '還沒寫到' : (x.n === 1 ? '只寫過 1 次' : '寫過 2 次');
-    return '<div class="todo-row" data-n="' + (x.n === 0 ? '0' : 'few') + '">'
+  box.innerHTML = five.map(x=>
+    '<div class="todo-row" data-n="0">'
       + '<div class="todo-l1">'
         + '<span class="mk-code">' + x.m.c + '</span>'
         + '<span class="todo-short">' + esc(MK_SHORT[x.m.c] || x.m.c) + '</span>'
         + '<span class="todo-acc">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</span>'
         + (x.m.acc ? '<span class="mk-tag acc">ACC 必評</span>' : '')
-        + '<span class="todo-state">' + state + '</span>'
+        + '<span class="todo-state">還沒有時間戳</span>'
       + '</div>'
       + '<div class="todo-ex">' + esc(MK_EX[x.m.c] || '') + '</div>'
-    + '</div>';
-  }).join('');
+    + '</div>').join('');
 }
 
 /* ═══ §2-3 每一場 ═════════════════════════════════════
@@ -3770,13 +3810,17 @@ function histFiltered(){
     return true;
   }).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
 }
-/* 每一場那一列的職能格子：用狀態五級的淡色系，不要飽和實色——
-   第一場就很搶眼的話，看不出累積。 */
-function cellLevel(n){ return n <= 0 ? 0 : (n === 1 ? 1 : (n === 2 ? 2 : 3)); }
+/* 每一場那一列的職能格子：看的是那一場的職能四態，不是 marker 勾了幾條。
+   只勾職能到位、沒逐條標 marker 的場次，先前會整排灰掉，看起來像那場什麼都沒做。
+   用狀態五級的淡色系，不要飽和實色——第一場就很搶眼的話，看不出累積。
+   由淡到深：未評 → 未到位 → 部分到位 → 到位（暖 → 冷）。 */
+const CELL_LV = { '-1': 0, '0': 1, '1': 2, '2': 3 };
+function cellLevel(st){ return CELL_LV[String(st)] != null ? CELL_LV[String(st)] : 0; }
 const ACK_MK = ['4.1','4.3','8.5'];   // 認可
 const EMP_MK = ['4.2','6.4'];         // 同理
 function sessionMkCounts(r){
   const per = ACC.map(()=>0);
+  const st  = ACC.map((a,i)=>accSt((r.acc || [])[i]));   // 那一場每項職能的四態
   let ack = 0, emp = 0, total = 0;
   (r.acc||[]).forEach((x,i)=>{
     const mk = (x && x.mk) || {};
@@ -3787,7 +3831,8 @@ function sessionMkCounts(r){
       if (EMP_MK.indexOf(m.c) >= 0) emp++;
     });
   });
-  return { per, ack: Math.min(ack,2), emp: Math.min(emp,2), total };
+  return { per, st, done: st.filter(v=>v === 2).length,
+           ack: Math.min(ack,2), emp: Math.min(emp,2), total };
 }
 function renderHistLegend(){
   const el = document.getElementById('hist-legend');
@@ -3795,9 +3840,9 @@ function renderHistLegend(){
   /* ③ 一場都沒有時沒有格子可對照，圖例先不出現 */
   el.classList.toggle('hidden', _histEmpty);
   if (_histEmpty){ el.innerHTML = ''; return; }
-  el.innerHTML = '<span class="lg-t">寫到次數</span>'
+  el.innerHTML = '<span class="lg-t">未評</span>'
     + [0,1,2,3].map(l=>'<span class="cell lg" data-lv="' + l + '"></span>').join('')
-    + '<span class="lg-t">少 → 多</span>';
+    + '<span class="lg-t">到位</span>';
 }
 function renderHist() {
   const list = document.getElementById('hist-list');
@@ -3827,14 +3872,15 @@ function renderHist() {
      這張表曾經四次把議題欄壓到讀不到——五欄擠同一列時，句子欄永遠輸。不要改回單層。 */
   list.innerHTML = arr.map(r=>{
     const c = sessionMkCounts(r);
-    const cells = c.per.map((n,i)=>'<span class="cell" data-lv="' + cellLevel(n) + '">' + (i+1) + '</span>').join('');
+    const cells = c.st.map((v,i)=>'<span class="cell" data-lv="' + cellLevel(v)
+      + '" title="核心職能 ' + ACC[i][0] + '：' + stLabel(v) + '">' + (i+1) + '</span>').join('');
     return '<div class="sess" onclick="openDetail(' + r.id + ')">'
       + '<div class="sess-top">'
         + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
         + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
         + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
           + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
-        + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '標記 ' + c.total + '</span>'
+        + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 ' + c.done + ' 項</span>'
         + '<span class="sess-arrow">›</span>'
       + '</div>'
       + '<div class="sess-bot">'
@@ -4135,14 +4181,14 @@ function addClient(){
 function clientStats(id){
   const rs = clientRecs(id).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
   const mins = rs.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
-  const marks = rs.map(r=>sessionMkCounts(r).total);
+  const dones = rs.map(r=>(r.acc || []).filter(x=>accSt(x) === 2).length);
   const focusDone = rs.filter(r=>r.prevFocusResult === 'done').length;
   const focusAns  = rs.filter(r=>r.prevFocusResult).length;
   return {
     rs, n: rs.length,
     hours: Math.round(mins / 60 * 10) / 10,
     last: rs.length ? (rs[0].date || '') : '',
-    marksAvg: rs.length ? Math.round(marks.reduce((x,y)=>x+y, 0) / rs.length * 10) / 10 : 0,
+    doneAvg: rs.length ? Math.round(dones.reduce((x,y)=>x+y, 0) / rs.length * 10) / 10 : 0,
     focusDone, focusAns
   };
 }
@@ -4244,7 +4290,7 @@ function openClient(id){
       stat(st.n, '場次', pre ? '另有工具前 ' + pre + ' 場' : '')
     + stat(st.hours, '小時', '')
     + stat(st.focusAns ? st.focusDone + '/' + st.focusAns : '—', '焦點達成', st.focusAns ? '' : '還沒回答過焦點')
-    + stat(st.marksAvg, '平均標記', '每場命中幾條');
+    + stat(st.doneAvg, '平均到位', '每場到位幾項職能');
 
   /* 2. 每一場的議題：整列，每列可點進單場詳情 */
   const rl = rs.slice().reverse();
@@ -4258,7 +4304,7 @@ function openClient(id){
             + '<span class="sess-client">' + (esc(formatSession(r.session)) || '會談') + '</span>'
             + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
               + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
-            + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '標記 ' + mk.total + '</span>'
+            + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 ' + mk.done + ' 項</span>'
             + '<span class="sess-arrow">›</span>'
           + '</div></div>';
       }).join('')
@@ -4397,17 +4443,8 @@ function renderInsight(){
     </div>`;
 }
 /* marker 命中次數：§2-2 八大職能的累積與待補清單共用同一個計算來源 */
-function markerHitCounts(recs){
-  const cnt = {};
-  MK.forEach((g,i)=>g.forEach(m=>{ cnt[m.c] = 0; }));
-  (recs||[]).forEach(r=>{
-    (r.acc||[]).forEach((x,i)=>{
-      const mk = (x && x.mk) || {};
-      (MK[i]||[]).forEach(m=>{ if (mkOn(mk[m.c])) cnt[m.c]++; });
-    });
-  });
-  return cnt;
-}
+/* markerHitCounts 已於 2026-08-24 移除：累積改成優先採計職能到位，
+   marker 的計數改由 markerEvidenceCounts()（看有沒有留時間戳）承接。 */
 function askImprove(i){
   const x = _insightImps[i]; if (!x) return;
   const q = '如何改進：' + x.t;
@@ -4657,15 +4694,25 @@ function buildMentorPack(){
   if (imps.length) imps.forEach(x=>L.push('- '+(x.r.date||'')+'（'+(x.r.client||'')+'）：'+x.t));
   else L.push('（無）');
   L.push('');
-  L.push('## 四、ACC 標記自評（部分到位／未到位）');
+  L.push('## 四、ACC 自評與標記證據');
   L.push('');
   const accRows = [];
   recs.forEach(r=>{
     (r.acc||[]).forEach((x,i)=>{
       const st = accSt(x);
-      if (st === ST_NE && !x.imp) return;      // 沒評估又沒筆記的，不進督導包
-      if (st === 2 && !x.imp) return;
-      if (!x.imp && st === 0) return;          // 只標未到位、沒寫改善筆記的略過，避免洗版
+      /* 到位優先：只要有「真的 marker 內容」就收，不能因為職能層停在「尚未評估」
+         就把實例丟掉。但「只寫了 No／無」不算內容——那是「我確認過沒有」，
+         不該把整個職能拉進督導包洗版。 */
+      const hasMk = (MK[i] || []).some(m=>{
+        const v = (x.mk || {})[m.c];
+        if (v === undefined) return false;
+        return mkOn(v) || evCount(rowsToEv(mkRows(v))) > 0 || !!mkImp(v);
+      });
+      if (!hasMk){
+        if (st === ST_NE && !x.imp) return;
+        if (st === 2 && !x.imp) return;
+        if (!x.imp && st === 0) return;
+      }
       accRows.push('- '+(r.date||'')+'（'+ctx(r)+'）核心職能 '+ACC[i][0]+'　'+stLabel(st)
         + (x.imp ? '\n　需要改善：'+x.imp : '')
         + (mkLines(x,i).length ? '\n　'+mkLines(x,i).join('\n　') : ''));
