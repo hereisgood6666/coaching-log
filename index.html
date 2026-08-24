@@ -443,7 +443,10 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   .wrap { max-width: 1320px; padding-left: 240px; padding-right: 20px; }
   .tabs {
     position: fixed; top: 0; bottom: 0; left: 0; width: 216px; margin: 0;
-    flex-direction: column; gap: 4px; padding: 20px 12px;
+    /* flex-wrap 必須關掉：欄方向 ＋ 固定高度 ＋ wrap ＝ 內容比視窗高時折成第二欄，
+       第二欄超出 216px 會被下面的 overflow-y 裁掉（側欄看起來像被切一半）。
+       改成 nowrap，超高就照 overflow-y 垂直捲。 */
+    flex-direction: column; flex-wrap: nowrap; gap: 4px; padding: 20px 12px;
     background: var(--surface-2); border-right: 1px solid var(--line-2); overflow-y: auto; z-index: 30;
   }
   .tab { flex: 0 0 auto; text-align: left; padding: 11px 12px; font-size: 14px; }
