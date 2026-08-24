@@ -447,18 +447,15 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     background: var(--surface-2); border-right: 1px solid var(--line-2); overflow-y: auto; z-index: 30;
   }
   .tab { flex: 0 0 auto; text-align: left; padding: 11px 12px; font-size: 14px; }
-  /* 桌機唯一真正的優勢是「同時看得到」：左欄會談內容不動，右欄標職能 */
+  /* §13-B/D 步驟 1：左欄寫會談、右欄是段落導覽與下一步。
+     步驟 2 只有職能，吃滿整個內容寬。 */
   #view-new { display: grid; grid-template-columns: minmax(360px, 470px) minmax(0, 1fr); gap: 0 20px; align-items: start; }
   /* ID 選擇器（1-0-0）會壓過 .hidden（0-1-0），不補這行的話 showView() 藏不掉新增紀錄頁 */
   #view-new.hidden { display: none; }
-  #view-new > * { grid-column: 1; }
-  /* segbar 佔第 1 列跨兩欄；ICF 從第 2 列起吃滿右欄。
-     若讓 ICF 從第 1 列開始，跨欄的 segbar 會被擠到 ICF 之後（第 100 列），整頁往下掉。 */
-  #segbar { grid-column: 1 / -1; grid-row: 1; }
-  #view-new > [data-fold="acc"] {
-    grid-column: 2; grid-row: 2 / span 99;
-    position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow-y: auto;
-  }
+  #form-step1 { grid-column: 1; }
+  #form-side  { grid-column: 2; position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow-y: auto; }
+  #form-step2 { grid-column: 1 / -1; }
+  /* .hidden 帶 !important，藏起來的那一步不會佔格線 */
   .cred-wrap { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 }
 @media (min-width: 1180px) {
@@ -750,25 +747,96 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   white-space: nowrap; pointer-events: none;
 }
 .step-eyebrow:empty { display: none; }
+.step-eyebrow-sub { color: var(--ink-3); font-weight: 600; }
+
+/* ═══ §13-D 右欄：段落導覽與下一步 ═══ */
+#form-side { display: block; }
+.navcard { padding: 12px 13px 13px; }
+.navcard-title { font-size: 12.5px; font-weight: 700; color: var(--ink-2); margin-bottom: 8px; }
+.navrow {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: none; background: none; font-family: inherit; cursor: pointer;
+  padding: 7px 8px; border-radius: 8px; text-align: left; color: var(--ink-2);
+}
+.navrow:hover { background: var(--surface-2); }
+.navrow.on { background: var(--cool-bg); color: var(--ink); font-weight: 600; }
+.navdot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.navrow.done .navdot { background: var(--cool); }
+.navrow.on .navdot { background: var(--cool-d); }
+.navrow.na .navdot { background: var(--line-3); }
+.navname { flex: 1 1 auto; min-width: 0; font-size: 13.5px; }
+.navstate { flex: 0 0 auto; font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.navrow.done .navstate { color: var(--cool-d); font-weight: 700; }
+.navcard-tip {
+  margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line-2);
+  font-size: 12px; color: var(--ink-2); line-height: 1.6;
+}
+/* 下一步：深藍實心卡 */
+.nextcard {
+  background: var(--cool-d); border-radius: 12px; padding: 14px 15px 15px; margin-top: 12px;
+}
+.next-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .4px; color: var(--st4-fg); opacity: .75; }
+.next-title { font-size: 19px; font-weight: 700; color: var(--st4-fg); margin-top: 3px; }
+.next-sub { font-size: 12.5px; color: var(--st4-fg); opacity: .85; line-height: 1.6; margin-top: 6px; }
+.next-btn {
+  width: 100%; margin-top: 11px; background: var(--surface); color: var(--cool-d);
+  border: none; font-weight: 700;
+}
+.savelater-btn { width: 100%; margin-top: 10px; background: var(--surface); }
+
+/* ═══ §13-E 側欄標題區、徽章與底部 ═══ */
+.nav-brand { flex: 1 1 100%; padding: 0 2px 4px; }
+.nav-brand-name { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.nav-brand-user { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; word-break: break-all; }
+.nav-brand-user:empty { display: none; }
+.nav-foot { display: none; }
+.nav-badge {
+  margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 700;
+  color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.nav-badge:empty { display: none; }
+/* 選中的分頁是深底，徽章跟著吃分頁的文字色，否則灰字在深底上讀不到 */
+.tab.active .nav-badge { color: inherit; opacity: .85; }
+@media (min-width: 1024px) {
+  .nav-brand { display: block; padding: 0 12px 12px; }
+  .nav-brand-name { font-size: 14.5px; }
+  /* 徽章靠右對齊：分頁鈕本身改成一列 flex */
+  .tab { display: flex; align-items: center; gap: 6px; }
+  .nav-foot { display: block; margin-top: auto; padding: 14px 12px 4px; }
+  .nav-foot-ver { font-size: 11px; color: var(--ink-4); }
+  .nav-foot-links { font-size: 11.5px; margin-top: 4px; }
+  .nav-foot-links a { color: var(--warm-d); font-weight: 600; cursor: pointer; }
+}
+@media (min-width: 1024px) and (max-width: 1179.98px) {
+  .nav-brand, .nav-foot-links { display: none; }
+  .nav-foot { padding: 10px 4px 4px; text-align: center; }
+  /* 76px 寬放不下「v5.0 · 本機模式」一整行，拆兩行，中間那個點就不需要了 */
+  .nav-foot-ver { display: flex; flex-direction: column; line-height: 1.5; }
+  .nav-foot-dot { display: none; }
+  .tab { flex-direction: column; gap: 1px; }
+  .nav-badge { margin-left: 0; }
+}
+/* 回顧卡右上角的上一場日期 */
+.fr-date { margin-left: auto; font-size: 11.5px; color: var(--warm-d); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
   <header class="page-head">
-    <!-- 「1 / 2」是常數：新增紀錄頁固定兩步——先填內容，再標職能（§6 明講不做 step 狀態機，
-         所以沒有「目前在第幾步」的狀態可讀）。步數若日後改變，改這裡的 STEP_TOTAL。 -->
-    <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"></span>
-    <h1>會談後快速記錄</h1>
-    <div class="sub">會談結束了嗎？花 15 分鐘，陪自己回顧這一場。</div>
+    <!-- §13-A 眉標：「步驟 N / 2」後面接一句灰字說明現在在哪一步。
+         總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。 -->
+    <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"><span id="step-eyebrow-n"></span><span class="step-eyebrow-sub" id="step-eyebrow-sub"></span></span>
+    <h1 id="page-h1">這一場發生了什麼</h1>
+    <div class="sub" id="page-sub">趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。</div>
   </header>
   <div class="stats-line" id="stats-line"></div>
 
-  <div class="acct-bar hidden" id="acct-bar">
-    <span id="acct-email"></span>
-    <span><button onclick="openHelp()">使用說明</button>　<button onclick="doLogout()">登出</button></span>
-  </div>
-
   <nav class="tabs">
+    <!-- §13-E 側欄標題區：站名搬到這裡，內容區的 h1 讓給當頁標題 -->
+    <div class="nav-brand">
+      <div class="nav-brand-name">會談後快速記錄</div>
+      <div class="nav-brand-user" id="acct-email"></div>
+    </div>
     <!-- §7 ACC 認證卡：側欄最上方，可點進認證進度頁；切換鈕跟卡片本體分開，點切換不會誤觸導頁 -->
     <div class="credcard" id="credcard">
       <div class="cc-head">
@@ -787,22 +855,31 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     </div>
     <span class="nav-group">記錄</span>
     <button class="tab active" id="tabNew" onclick="showView('new')"><span class="t-full">新增紀錄</span><span class="t-short">新增</span></button>
+    <button class="tab" id="tabMark" onclick="goStep(2)"><span class="t-full">職能標記</span><span class="t-short">職能</span> <span class="nav-badge" id="markCnt"></span></button>
     <span class="nav-group">回顧</span>
-    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span id="clientCnt"></span></button>
-    <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span id="cnt"></span></button>
+    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
+    <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span class="nav-badge" id="cnt"></span></button>
     <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span></button>
-    <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span id="askCnt"></span></button>
+    <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span class="nav-badge" id="askCnt"></span></button>
     <span class="nav-group">手邊</span>
-    <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span id="jCnt"></span></button>
+    <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span class="nav-badge" id="jCnt"></span></button>
+    <!-- §13-E 側欄底部：版本、同步狀態、兩個連結 -->
+    <div class="nav-foot" id="nav-foot">
+      <div class="nav-foot-ver"><span id="side-ver"></span><span class="nav-foot-dot"> · </span><span id="side-sync">本機模式</span></div>
+      <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"> / <a onclick="doLogout()">登出</a></span></div>
+    </div>
   </nav>
 
   <!-- ===== NEW / EDIT FORM ===== -->
-  <div id="view-new">
-    <!-- §6 黏著進度列：六段，已填的上色 -->
-    <div class="segbar" id="segbar"></div>
+  <!-- §13-B 兩步驟：步驟 1 只有會談本身，步驟 2 才是 ICF 八大職能。
+       兩步只是顯示切換，欄位一直都在 DOM 裡 → 來回切換不會掉資料。 -->
+  <div id="view-new" data-step="1">
+
+    <!-- ── 步驟 1：會談本身（左欄） ── -->
+    <div id="form-step1" data-step-only="1">
 
     <!-- 1. 會談基本資料 -->
-    <section class="card fold" data-fold="basic">
+    <section class="card fold" data-fold="basic" id="sec-basic">
       <button type="button" class="fold-head" onclick="toggleFold('basic')">
         <span class="fold-title">會談基本資料</span>
         <span class="fold-state" data-state="basic"></span>
@@ -831,8 +908,12 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
         <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
       </div>
       <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
+      <!-- §13-C1 送審是獨立欄位，有自己的標籤，不是掛在客戶欄下面的裸勾選框 -->
+      <div class="fld-div"></div>
+      <label>送審錄音</label>
+      <div class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</div>
       <label class="submit-cand"><input type="checkbox" id="f-submitcand">
-        這場可以當送審錄音<span class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</span></label>
+        這場可以當送審錄音</label>
       <div class="fld-div"></div>
       <label>這一場的議題</label>
       <div class="hint">他帶來想談的事</div>
@@ -840,24 +921,39 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </div>
     </section>
 
-    <!-- 2. 焦點回顧（§2B）：不符合條件整張卡不渲染 -->
+    <!-- 2. 上一場留下的（§2B / §13-C2）：不符合條件整張卡不渲染 -->
     <div id="focus-review"></div>
 
-    <!-- 3. 第一個念頭 -->
-    <section class="card fold" data-fold="instant">
-      <button type="button" class="fold-head" onclick="toggleFold('instant')">
-        <span class="fold-title">馬上掉出來的問題</span>
-        <span class="fold-state" data-state="instant"></span>
+    <!-- 3. 這一場（§13-C3：第一個念頭與客戶那一半合成一段） -->
+    <section class="card fold" data-fold="this" id="sec-this">
+      <button type="button" class="fold-head" onclick="toggleFold('this')">
+        <span class="fold-title">這一場</span>
+        <span class="fold-state" data-state="this"></span>
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
+      <label>馬上掉出來的問題</label>
       <div class="hint">會談後第一個浮現的念頭</div>
       <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
+      <div class="fld-div"></div>
+      <div class="sub-note">下面兩欄只記他說的那個詞或畫面，不記事件細節與人名。</div>
+      <label>他自己說的一句話</label>
+      <input type="text" id="f-clientquote" placeholder="例：32:10「我好像一直在幫別人活」">
+      <label>我注意到但沒接的</label>
+      <textarea id="f-notcaught" rows="2" placeholder="例：他講到媽媽時停了一下，我沒有停下來問"></textarea>
+      <div id="f-insight-legacy" class="hidden"></div>
+      <div class="fld-div"></div>
+      <label>我做得好的（1–3 個）</label>
+      <div id="good-list"></div>
+      <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
+      <label>我覺得我可以改進的部分</label>
+      <div id="improve-list"></div>
+      <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
       </div>
     </section>
 
-    <!-- 4. 三個評分 -->
-    <section class="card fold" data-fold="score">
+    <!-- 4. 這一場的衡量（§13-C4：四條滑桿） -->
+    <section class="card fold" data-fold="score" id="sec-score">
       <button type="button" class="fold-head" onclick="toggleFold('score')">
         <span class="fold-title">這一場的衡量</span>
         <span class="fold-state" data-state="score"></span>
@@ -865,19 +961,25 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </button>
       <div class="fold-body">
       <div class="hint">0–10，可以拉半格。這不是評分，只是給自己一個衡量——第一個直覺通常最準。</div>
-      <label>給我自己的表現</label>
+      <label>我的專注程度 <span class="hint">全程有在他身上嗎</span></label>
       <div class="score-wrap">
         <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="perfVal">7</span>
       </div>
-      <label>我自己的感受 <span class="hint">0–10</span></label>
+      <label>客戶的投入程度 <span class="hint">他真的想、還是在撐？</span></label>
       <div class="score-wrap">
         <input type="range" id="f-feel" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('feelVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="feelVal">7</span>
       </div>
-      <label>我覺得客戶的感受 <span class="hint">0–10</span></label>
+      <label>這一場的推進感 <span class="hint">他離目標更近了嗎</span></label>
+      <div class="score-wrap">
+        <input type="range" id="f-progress" min="0" max="10" step="0.5" value="7"
+               oninput="document.getElementById('progressVal').textContent=this.value;markTouched('score')">
+        <span class="score-val" id="progressVal">7</span>
+      </div>
+      <label>我猜客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
       <div class="score-wrap">
         <input type="range" id="f-clientfeel" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('clientfeelVal').textContent=this.value;markTouched('score')">
@@ -888,40 +990,60 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </div>
     </section>
 
-    <!-- 5. 下一場只盯這一件事（§2A）：放三個評分之後、ICF 之前 -->
-    <section class="card fold focus-card" data-fold="focus">
+    <!-- 5. 下一場只盯這一件事（§2A / §13-C5） -->
+    <section class="card fold focus-card" data-fold="focus" id="sec-focus">
       <button type="button" class="fold-head" onclick="toggleFold('focus')">
         <span class="fold-title">下一場只盯這一件事</span>
         <span class="fold-state" data-state="focus"></span>
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <div class="hint">一次只盯一件才練得動。寫成動作，例如「客戶講超過兩分鐘就出手」</div>
+      <div class="hint">一次只盯一件才練得動。寫成動作，例如「客戶講超過兩分鐘就出手」。</div>
       <input type="text" id="f-focus" maxlength="40" placeholder="例：客戶講超過兩分鐘就出手"
              oninput="updateFocusCount()">
       <div class="cnt-row"><span id="focus-count">0 / 40</span></div>
       </div>
     </section>
 
-    <!-- 6. 客戶那一半（§3） -->
-    <section class="card fold" data-fold="client">
-      <button type="button" class="fold-head" onclick="toggleFold('client')">
-        <span class="fold-title">客戶那一半</span>
-        <span class="fold-state" data-state="client"></span>
-        <span class="fold-act">收起 ▴</span>
+    <!-- 6. 這次的特殊狀況（§13-C6：預設收合） -->
+    <section class="card fold folded" data-fold="special" id="sec-special">
+      <button type="button" class="fold-head" onclick="toggleFold('special')">
+        <span class="fold-title">這次的特殊狀況</span>
+        <span class="fold-state" data-state="special"></span>
+        <span class="fold-act">展開 ＋</span>
       </button>
       <div class="fold-body">
-      <div class="sub-note">只記他說的那個詞或畫面，不記事件細節與人名。</div>
-      <label>他自己說的一句話</label>
-      <input type="text" id="f-clientquote" placeholder="例：32:10「我好像一直在幫別人活」">
-      <label>我注意到但沒接的</label>
-      <textarea id="f-notcaught" rows="2" placeholder="例：他講到媽媽時停了一下，我沒有停下來問"></textarea>
-      <div id="f-insight-legacy" class="hidden"></div>
+      <div id="special-list"></div>
+      <button class="add-btn" onclick="addItem('special-list')">＋ 再加一項</button>
       </div>
     </section>
 
-    <!-- 7. ICF 八大核心職能 -->
-    <section class="card fold" data-fold="acc">
+    <div class="actions" id="step1-reset">
+      <button class="btn btn-ghost" onclick="confirmReset()">清空</button>
+    </div>
+    <div style="height:24px"></div>
+    </div><!-- /#form-step1 -->
+
+    <!-- ── 步驟 1：右欄段落導覽（§13-D） ── -->
+    <aside id="form-side" data-step-only="1">
+      <section class="card navcard">
+        <div class="navcard-title">這一場的段落</div>
+        <div id="form-nav"></div>
+        <div class="navcard-tip" id="form-nav-tip"></div>
+      </section>
+      <section class="nextcard">
+        <div class="next-eyebrow">下一步</div>
+        <div class="next-title">標 ICF 八大職能</div>
+        <div class="next-sub">趁還記得，把這一場對得上的職能標一標。沒把握的留著「尚未評估」就好。</div>
+        <button class="btn next-btn" onclick="goStep(2)">去標職能 →</button>
+      </section>
+      <button class="btn btn-ghost savelater-btn" id="saveLaterBtn" onclick="saveRecord(true)">先存起來，稍後再標職能</button>
+      <div style="height:24px"></div>
+    </aside>
+
+    <!-- ── 步驟 2：ICF 八大職能 ── -->
+    <div id="form-step2" data-step-only="2" class="hidden">
+    <section class="card fold" data-fold="acc" id="sec-acc">
       <button type="button" class="fold-head" onclick="toggleFold('acc')">
         <span class="fold-title">ICF 八大核心職能</span>
         <span class="fold-state" data-state="acc"></span>
@@ -937,38 +1059,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </div>
     </section>
 
-    <!-- 8. 反思 -->
-    <section class="card fold" data-fold="reflect">
-      <button type="button" class="fold-head" onclick="toggleFold('reflect')">
-        <span class="fold-title">反思</span>
-        <span class="fold-state" data-state="reflect"></span>
-        <span class="fold-act">收起 ▴</span>
-      </button>
-      <div class="fold-body">
-      <label>我做得好的（1–3 個）</label>
-      <div id="good-list"></div>
-      <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
-      <label>我覺得我可以改進的部分</label>
-      <div id="improve-list"></div>
-      <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
-      </div>
-    </section>
-
-    <!-- 9. 特殊狀況 -->
-    <section class="card fold" data-fold="special">
-      <button type="button" class="fold-head" onclick="toggleFold('special')">
-        <span class="fold-title">這次的特殊狀況</span>
-        <span class="fold-state" data-state="special"></span>
-        <span class="fold-act">收起 ▴</span>
-      </button>
-      <div class="fold-body">
-      <div id="special-list"></div>
-      <button class="add-btn" onclick="addItem('special-list')">＋ 再加一項</button>
-      </div>
-    </section>
-
-    <!-- 10. AI 逐字稿（§5.4：入口與三步驟保留，長提示詞縮成一句話＋複製鈕） -->
-    <section class="card fold" data-fold="ai">
+    <!-- AI 逐字稿（§5.4）：產出就是職能判斷，跟著職能放在步驟 2 -->
+    <section class="card fold" data-fold="ai" id="sec-ai">
       <button type="button" class="fold-head" onclick="toggleFold('ai')">
         <span class="fold-title">用 AI 分析逐字稿</span>
         <span class="fold-state" data-state="ai"></span>
@@ -981,13 +1073,11 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     </section>
 
     <div class="actions">
-      <button class="btn btn-ghost" onclick="confirmReset()">清空</button>
+      <button class="btn btn-ghost" onclick="goStep(1)">← 回會談記錄</button>
       <button class="btn btn-primary" id="saveBtn" onclick="saveRecord()">儲存這一場</button>
     </div>
-    <div class="actions" style="margin-top:8px">
-      <button class="btn btn-ghost" id="saveLaterBtn" onclick="saveRecord(true)">先存起來，稍後再標職能</button>
-    </div>
     <div style="height:24px"></div>
+    </div><!-- /#form-step2 -->
   </div>
 
   <!-- ===== HISTORY ===== -->
@@ -1190,12 +1280,13 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   <div id="view-detail" class="hidden">
     <div class="card" id="detail-body"></div>
     <div class="actions">
-      <button class="btn btn-ghost" onclick="backFromDetail()">返回</button>
+      <button class="btn btn-ghost" id="btn-detail-back" onclick="backFromDetail()">返回</button>
       <button class="btn btn-ghost" onclick="copyDetail()">複製文字</button>
       <button class="btn btn-primary" onclick="editCurrent()">編輯</button>
     </div>
     <div class="actions" style="margin-top:8px">
       <button class="btn btn-primary" id="btn-exp-one" onclick="exportTwoStep('one')">匯出 PDF</button>
+      <button class="btn btn-ghost" onclick="copySessionPrompt()">複製分析提示詞</button>
       <button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteCurrent()">刪除這筆</button>
     </div>
     <div id="expbox-one"></div>
@@ -1729,8 +1820,9 @@ async function onLogin(user){
   authMsg('');
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('acct-email').textContent = '已登入：' + (user.displayName || user.email || '');
-  document.getElementById('acct-bar').classList.remove('hidden');
+  document.getElementById('acct-email').textContent = (user.displayName || user.email || '');
+  document.getElementById('nav-foot-sep').classList.remove('hidden');
+  updateSideFoot();
   renderAdminBackup();
   /* §0B 機制一：遷移／同步之前，先在雲端留一份未遷移的原樣。寫不成功就不往下走。 */
   const okSnap = await ensureCloudSnapshot(SCHEMA_VER);
@@ -1745,7 +1837,9 @@ async function doLogout(){
   localStorage.removeItem(KEY); localStorage.removeItem(QKEY); localStorage.removeItem(CKEY);
   localStorage.removeItem(DKEY); localStorage.removeItem(SKEY);
   updateCount(); updateAskCount();
-  document.getElementById('acct-bar').classList.add('hidden');
+  document.getElementById('acct-email').textContent = '';
+  document.getElementById('nav-foot-sep').classList.add('hidden');
+  updateSideFoot();
   renderAdminBackup();
   showAuth();
 }
@@ -2064,7 +2158,7 @@ function qStateLabel(x){ return Q_STATE_LABEL[qState(x)]; }
 function qState(x){ return !x.answered ? 'pending' : (x.digested ? 'digested' : 'answered'); }
 function updateAskCount() {
   const n = loadQ().filter(x=>qState(x) === 'pending').length;
-  document.getElementById('askCnt').textContent = n ? '('+n+')' : '';
+  document.getElementById('askCnt').textContent = n ? String(n) : '';
   updateJCount();
 }
 function addQuestion() {
@@ -2862,6 +2956,7 @@ function setAccSt(i, v){
   item.querySelectorAll('#acc-seg-'+i+' button').forEach(b=>
     b.classList.toggle('on', parseInt(b.dataset.v,10) === v));
   updateAccProgress();
+  updateSegbar();      /* §13-E 側欄「n/8」徽章跟著這一場的四態走 */
 }
 /* 已評估幾項——提醒使用者哪些還沒看過，避免「沒填」被當成「未到位」 */
 function updateAccProgress(){
@@ -3004,10 +3099,45 @@ function mkLines(x, i){
 
 /* ---- views ---- */
 const STEP_TOTAL = 2;      // 新增紀錄頁：填內容 → 標職能
+let formStep = 1;          // §13-B 目前在第幾步。欄位一直在 DOM 裡，這裡只切顯示
+/* 切步驟：兩步都只是顯示切換，填過的內容不會被清掉。
+   從側欄「職能標記」進來時 v 可能不是 new，所以順手把頁面切過去。 */
+function goStep(n){
+  formStep = (n === 2) ? 2 : 1;
+  const v = document.getElementById('view-new');
+  if (v) v.setAttribute('data-step', String(formStep));
+  document.querySelectorAll('#view-new [data-step-only]').forEach(el => {
+    el.classList.toggle('hidden', el.getAttribute('data-step-only') !== String(formStep));
+  });
+  if (document.getElementById('view-new').classList.contains('hidden')) showView('new');
+  else { applyPageHead('new');
+         document.getElementById('tabNew').classList.toggle('active', formStep===1);
+         document.getElementById('tabMark').classList.toggle('active', formStep===2); }
+  window.scrollTo(0, 0);
+  updateSegbar();
+}
+/* §13-A 每一頁自己的標題。新增紀錄頁兩步各有標題，其餘頁沿用站名。
+   標題文字集中在這裡，頁面上不再寫死。 */
+const VIEW_HEAD = {
+  new1: ['這一場發生了什麼', '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。'],
+  new2: ['標 ICF 八大職能', '對得上的標一標，沒把握的留著「尚未評估」就好——沒填不等於沒做到。'],
+  other: ['會談後快速記錄', '會談結束了嗎？花 15 分鐘，陪自己回顧這一場。']
+};
+function applyPageHead(v){
+  const key = v !== 'new' ? 'other' : (formStep === 2 ? 'new2' : 'new1');
+  const [t, sub] = VIEW_HEAD[key];
+  const h1 = document.getElementById('page-h1');
+  const sb = document.getElementById('page-sub');
+  if (h1) h1.textContent = t;
+  if (sb) sb.textContent = sub;
+  const n = document.getElementById('step-eyebrow-n');
+  const es = document.getElementById('step-eyebrow-sub');
+  if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL) : '';
+  if (es) es.textContent = (v === 'new') ? (formStep === 2 ? '　職能標記' : '　會談記錄') : '';
+}
 function showView(v) {
   exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
-  const eb = document.getElementById('step-eyebrow');
-  if (eb) eb.textContent = (v === 'new') ? ('步驟 1 / ' + STEP_TOTAL) : '';
+  applyPageHead(v);
   document.getElementById('view-new').classList.toggle('hidden', v!=='new');
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
   document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
@@ -3016,7 +3146,8 @@ function showView(v) {
   document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
   document.getElementById('view-cred').classList.toggle('hidden', v!=='cred');
   document.getElementById('view-journal').classList.toggle('hidden', v!=='journal');
-  document.getElementById('tabNew').classList.toggle('active', v==='new');
+  document.getElementById('tabNew').classList.toggle('active', v==='new' && formStep===1);
+  document.getElementById('tabMark').classList.toggle('active', v==='new' && formStep===2);
   document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
   document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
@@ -3038,6 +3169,7 @@ const FOCUS_RESULTS = [['done','做到'],['partial','部分'],['missed','沒做�
 function focusResultLabel(v){ const f = FOCUS_RESULTS.find(x=>x[0]===v); return f ? f[1] : ''; }
 let _prevFocusText = '', _prevFocusResult = '', _scoreTouched = false;
 let _lastImproveText = '';   // 回顧卡第二行：同一位客戶上次寫的「可以改進的部分」
+let _prevSessDate = '';      // §13-C2 回顧卡右上角：同一位客戶上一場的日期
 let _legacyInsight = '';   // 編輯舊紀錄時保留的 r.insight（表單不再並列這一問，但資料不刪）
 
 function fv(id){ const el = document.getElementById(id); return el ? String(el.value||'').trim() : ''; }
@@ -3073,6 +3205,7 @@ function renderFocusReview(text, result){
     '<section class="card fold review-card" data-fold="review">' +
       '<button type="button" class="fold-head" onclick="toggleFold(\'review\')">' +
         '<span class="fold-title">上一場留下的</span>' +
+        (_prevSessDate ? '<span class="fr-date">' + esc(_prevSessDate) + '</span>' : '') +
         '<span class="fold-state" data-state="review"></span>' +
         '<span class="fold-act">收起 ▴</span>' +
       '</button>' +
@@ -3100,34 +3233,79 @@ function refreshFocusReview(){
   renderFocusReview(v && v !== '__new__' ? focusPrevFor(v, null) : '', '');
 }
 
-/* ===== §6 分段折疊 ===== */
-const SEGS = [['review','回顧'],['instant','問題'],['score','自評'],['focus','焦點'],['client','客戶'],['acc','職能']];
+/* ===== §6／§13-D 分段折疊與右欄段落導覽 =====
+   SEGS 是步驟 1 左欄的段落，順序＝畫面順序。
+   每一項三個值：key／導覽與標題用的全名／提示句用的短名。 */
+const SEGS = [
+  ['basic',  '會談基本資料',     '基本資料'],
+  ['review', '上一場留下的',     '上一場'],
+  ['this',   '這一場',           '這一場'],
+  ['score',  '這一場的衡量',     '衡量'],
+  ['focus',  '下一場只盯這一件事','焦點'],
+  ['special','這次的特殊狀況',   '特殊狀況']
+];
+/* 有狀態籤（已填／未填）的段落：左欄六段加上步驟 2 的職能 */
+const STATE_SEGS = SEGS.map(x=>x[0]).concat(['acc']);
 function accFilledCount(){
   return document.querySelectorAll('#acc-list .acc-item:not([data-st="-1"])').length;
 }
+function getItemsLen(id){ return getItems(id).length; }
 /* true 已填／false 未填／null 這一場用不到 */
 function segFilled(k){
   switch(k){
+    case 'basic':   return !!(fv('f-date') && document.getElementById('f-client-sel').value);
     case 'review':  return _prevFocusText ? !!_prevFocusResult : null;
-    case 'instant': return !!fv('f-instant');
+    case 'this':    return !!(fv('f-instant') || fv('f-clientquote') || fv('f-notcaught')
+                              || getItemsLen('good-list') || getItemsLen('improve-list'));
     case 'score':   return _scoreTouched;
     case 'focus':   return !!fv('f-focus');
-    case 'client':  return !!(fv('f-clientquote') || fv('f-notcaught'));
+    case 'special': return getItemsLen('special-list') > 0;
     case 'acc':     return accFilledCount() > 0;
   }
   return false;
 }
 function markTouched(k){ if (k === 'score') _scoreTouched = true; updateSegbar(); }
+/* 目前在哪一段：捲到視窗上緣以上的最後一段。都還沒捲就是第一段。 */
+function currentSeg(){
+  let cur = SEGS[0][0];
+  SEGS.forEach(([k]) => {
+    const el = document.querySelector('[data-fold="' + k + '"]');
+    if (el && el.getBoundingClientRect().top <= 120) cur = k;
+  });
+  return cur;
+}
+function scrollToSeg(k){
+  const el = document.querySelector('[data-fold="' + k + '"]');
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+/* §13-D 提示句：從實際狀態推導，不寫死。語氣只說「沒動過」，不說沒做到。 */
+function navTipText(){
+  const open = SEGS.filter(([k]) => segFilled(k) === false).map(x => x[2]);
+  if (!open.length) return '每一段都動過了。可以去標職能了。';
+  if (open.length === 1) return '還有「' + open[0] + '」沒動過。其他都填了。';
+  return '還有' + open.map(n => '「' + n + '」').join('') + '沒動過。';
+}
 function updateSegbar(){
-  const bar = document.getElementById('segbar');
-  if (!bar) return;
-  bar.innerHTML = SEGS.map(([k,n]) => {
-    const f = segFilled(k);
-    const cls = f === null ? 'seg-na' : (f ? 'seg-on' : '');
-    return '<span class="segb ' + cls + '">' + n + '</span>';
-  }).join('');
-  SEGS.forEach(([k]) => updateFoldHead(k));
-  ['reflect','special','ai','basic'].forEach(updateFoldHead);
+  const nav = document.getElementById('form-nav');
+  if (nav) {
+    const cur = currentSeg();
+    nav.innerHTML = SEGS.map(([k,n]) => {
+      const f = segFilled(k);
+      const state = f === null ? '—' : (f ? '已填' : '未填');
+      const cls = 'navrow' + (k === cur ? ' on' : '') + (f === null ? ' na' : (f ? ' done' : ''));
+      return '<button type="button" class="' + cls + '" data-seg="' + k + '" onclick="scrollToSeg(\'' + k + '\')">'
+        + '<span class="navdot"></span><span class="navname">' + n + '</span>'
+        + '<span class="navstate">' + state + '</span></button>';
+    }).join('');
+    const tip = document.getElementById('form-nav-tip');
+    if (tip) tip.textContent = navTipText();
+  }
+  /* §13-E 側欄「職能標記」徽章：這一場已標幾項／共八項 */
+  const mc = document.getElementById('markCnt');
+  if (mc) mc.textContent = accFilledCount() + '/' + ACC.length;
+  STATE_SEGS.forEach(updateFoldHead);
+  ['ai'].forEach(updateFoldHead);
 }
 /* 收合標題同時顯示狀態與動作，不只有箭頭 */
 function updateFoldHead(k){
@@ -3135,10 +3313,10 @@ function updateFoldHead(k){
   if (!el) return;
   const folded = el.classList.contains('folded');
   const act = el.querySelector('.fold-act');
-  if (act) act.textContent = folded ? '展開 ▾' : '收起 ▴';
+  if (act) act.textContent = folded ? '展開 ＋' : '收起 ▴';
   const st = el.querySelector('.fold-state');
   if (st){
-    const f = SEGS.some(x=>x[0]===k) ? segFilled(k) : null;
+    const f = STATE_SEGS.indexOf(k) >= 0 ? segFilled(k) : null;
     st.textContent = f === true ? '✓ 已填' : (f === false ? '未填' : '');
     st.className = 'fold-state' + (f === true ? ' ok' : '');
   }
@@ -3179,6 +3357,9 @@ function saveRecord(later) {
     instant: document.getElementById('f-instant').value.trim(),
     perf: document.getElementById('f-perf').value,
     feel: document.getElementById('f-feel').value,
+    /* §13-C4 第四條滑桿。舊紀錄沒有這個欄位，所有讀取端一律 ?? ''，
+       畫面上不會出現 undefined，也不必改寫磁碟上的舊資料。 */
+    progress: document.getElementById('f-progress').value,
     clientfeel: document.getElementById('f-clientfeel').value,
     because: document.getElementById('f-because').value.trim(),
     good: getItems('good-list'),
@@ -3233,6 +3414,7 @@ function resetForm() {
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
+  document.getElementById('f-progress').value = 7; document.getElementById('progressVal').textContent = '7';
   document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
@@ -3249,6 +3431,7 @@ function resetForm() {
   addItem('special-list');
   buildAcc();
   editId = null;
+  goStep(1);                       /* §13-B 新的一場一律從步驟 1 開始 */
   buildClientSel('');
   document.getElementById('saveBtn').textContent = '儲存這一場';
   _scoreTouched = false;
@@ -3264,10 +3447,10 @@ function resetForm() {
 function clientCount(){ return loadC().length; }
 function updateCount() {
   const n = load().length;
-  document.getElementById('cnt').textContent = n ? '('+n+')' : '';
+  document.getElementById('cnt').textContent = n ? String(n) : '';
   const cc = clientCount();
   const cEl = document.getElementById('clientCnt');
-  if (cEl) cEl.textContent = cc ? '('+cc+')' : '';
+  if (cEl) cEl.textContent = cc ? String(cc) : '';
   renderCredCard();
   updateStats();
 }
@@ -3342,7 +3525,7 @@ function jQuestionById(id){ return loadQ().find(q=>q.id === id); }
 function updateJCount(){
   const el = document.getElementById('jCnt');
   const n = loadJ().length;
-  if (el) el.textContent = n ? '(' + n + ')' : '';
+  if (el) el.textContent = n ? String(n) : '';
 }
 function jNew(){
   jEditing = 'new';
@@ -3958,6 +4141,8 @@ function openDetail(id, from) {
   currentId = id;
   const r = load().find(x=>x.id===id);
   if (!r) return;
+  const backBtn = document.getElementById('btn-detail-back');
+  if (backBtn) backBtn.textContent = detailBackLabel(r);
   const listBlock = (title, items) => items && items.length
     ? `<div class="detail-field"><div class="detail-label">${title}</div><div class="detail-val"><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul></div></div>` : '';
   const groups = {};   // 依四態分組
@@ -4013,6 +4198,8 @@ function editCurrent() {
   document.getElementById('f-instant').value = r.instant || '';
   document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
   document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
+  const pg = (r.progress!=null ? r.progress : 7);
+  document.getElementById('f-progress').value = pg; document.getElementById('progressVal').textContent = pg;
   const cf = (r.clientfeel!=null?r.clientfeel:7);
   document.getElementById('f-clientfeel').value = cf; document.getElementById('clientfeelVal').textContent = cf;
   document.getElementById('f-because').value = r.because || '';
@@ -4092,12 +4279,42 @@ function copyDetail() {
   });
 }
 
+/* §5 複製分析提示詞：把這一場打包成一段可以直接貼給外部 AI 的指令。
+   工具本身不接任何模型，只負責把文字複製出去。內容一律用代號、不含逐字稿。
+   會談內容用 recordToText() 產生——詳情、匯出文字、這裡共用同一個來源。 */
+function copySessionPrompt(){
+  const r = load().find(x=>x.id===currentId);
+  if (!r) { toast('找不到這一場'); return; }
+  const text = `你是一位 ICF（國際教練聯盟）資深導師教練（Mentor Coach）。以下是我在一場教練會談結束後十五分鐘內寫的自我記錄，已去識別化：客戶只以代號出現，沒有逐字稿。請依序回答：
+
+一、先回述你從這份記錄看到的這一場長什麼樣子。不要評分，也不要下結論說我做得好或不好。
+二、指出這一場最值得延續的兩件事，各引記錄裡的一句話當根據。
+三、指出一件下一場可以練的事，並給一句可以直接照唸的示範句。
+四、依 ICF ACC 績效評估標準，說明哪些核心職能從這份記錄看得出來、哪些看不出來。看不出來只代表記錄裡沒寫到，不代表沒做到——請不要把「沒寫到」講成「沒做到」。
+五、如果記錄裡有標成「尚未評估」的職能，列出我下次可以回頭補看的觀察點。
+
+記錄如下：
+
+` + recordToText(r);
+  copyText(text, '已複製，貼到你慣用的 AI');
+}
+
 function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ---- clients (CRM) ---- */
 function backFromDetail(){
   if (detailFrom === 'client' && currentClientId) openClient(currentClientId);
   else showView('hist');
+}
+/* §5 返回連結跟著來路：從客戶頁進來寫那位客戶的代號，從歷史紀錄進來寫「回歷史紀錄」。
+   代號以客戶名冊為準（改過代號要跟著變），名冊查不到才退回紀錄上存的字串。 */
+function detailBackLabel(r){
+  if (detailFrom === 'client' && currentClientId) {
+    const c = clientById(currentClientId);
+    const code = (c && c.code) || (r && r.client) || '';
+    if (code) return '\u2190 \u56de ' + code;
+  }
+  return '\u2190 \u56de\u6b77\u53f2\u7d00\u9304';
 }
 function buildClientSel(selId){
   const sel = document.getElementById('f-client-sel');
@@ -4125,10 +4342,14 @@ function onClientSelChange(){
 /* 只負責算出「上次要改」那一行的文字，實際呈現在回顧卡裡（合成一張卡） */
 function showLastImprove(clientId){
   _lastImproveText = '';
+  _prevSessDate = '';
   if (clientId && !editId){          // 編輯舊紀錄時不顯示，避免時間對不上
     const rs = clientRecs(clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+    if (rs.length) _prevSessDate = rs[0].date || '';
     const last = rs.find(r=>r.improve && r.improve.length);
-    if (last) _lastImproveText = '（' + (last.date||'') + '）'
+    /* 「上次要改」可能來自更早的一場；日期跟卡片右上角不同時才自己再標一次，
+       同一場就不重複寫日期。 */
+    if (last) _lastImproveText = ((last.date||'') !== _prevSessDate ? '（' + (last.date||'') + '）' : '')
       + last.improve.filter(Boolean).map(t=>'「' + t + '」').join('、');
   }
   renderFocusReview(_prevFocusText, _prevFocusResult);
@@ -4786,11 +5007,26 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   const v = document.getElementById('view-new');
   if (!v) return;
   ['input','change'].forEach(ev => v.addEventListener(ev, () => updateSegbar()));
+  /* §13-D 右欄導覽要標出「目前在哪一段」，所以捲動也要重繪 */
+  let _navTick = 0;
+  window.addEventListener('scroll', () => {
+    if (_navTick) return;
+    _navTick = requestAnimationFrame(() => { _navTick = 0; updateSegbar(); });
+  }, { passive: true });
 })();
+
+/* §13-E 側欄底部：版本號與同步狀態。兩個字串都從既有狀態推導，不手寫。 */
+function updateSideFoot(){
+  const v = document.getElementById('side-ver');
+  if (v) v.textContent = APP_VER;
+  const st = document.getElementById('side-sync');
+  if (st) st.textContent = currentUser ? '已同步' : '本機模式';
+}
 
 /* init */
 const _ver = document.getElementById('app-ver');
 if (_ver) _ver.textContent = APP_VER;
+updateSideFoot();
 runMigrations();
 resetForm();
 updateCount();
