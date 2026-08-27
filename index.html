@@ -271,9 +271,16 @@ textarea { resize: vertical; min-height: 46px; }
 .rec-meta { color: var(--ink-3); font-size: 13px; margin-top: 3px; }
 .badge { display: inline-block; background: var(--cool-bg); color: var(--cool-d); border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 6px; }
 .empty { text-align: center; color: var(--ink-4); padding: 40px 0; }
-.detail-field { margin-bottom: 12px; }
-.detail-label { font-weight: 700; font-size: 13px; color: var(--ink-2); margin-bottom: 3px; }
-.detail-val { white-space: pre-wrap; }
+/* M2（2026-08-28）：單場詳情的標題與內文原本只差 13px 與 3px 下距，難以區分。
+   拉開層級：標題轉成小型大寫標籤、內文加大行高、欄組之間加分隔。
+   只作用在 .detail-* ——沒有動全域 label，其他頁面不受影響。 */
+.detail-field { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--edge-soft, var(--line-2)); }
+.detail-field:last-child { border-bottom: none; padding-bottom: 0; }
+.detail-label {
+  font-weight: 700; font-size: 11.5px; letter-spacing: .06em;
+  color: var(--ink-3); margin-bottom: 7px; text-transform: none;
+}
+.detail-val { white-space: pre-wrap; font-size: 15px; line-height: 1.85; color: var(--ink); }
 .detail-val ul { margin: 4px 0; padding-left: 20px; }
 .score-lines {
   background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 12px;
@@ -455,6 +462,87 @@ input[type=text], input[type=date], select { min-height: 44px; }
 /* 表單元件的內建寬度（約 170–185px）會變成 flex/grid 軌道的最小值，撐破容器；一律解除 */
 input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; min-width: 0; }
 
+/* ═══ M1 手機頂欄與抽屜導覽（2026-08-28）═══
+   問題成因：DOM 先畫 .page-head 再畫含 .nav-brand 的 .tabs，手機自然把站名塞在頁標題下面；
+   而七個頁面連結用 flex-wrap 鋪成多排大按鈕，佔掉整個首屏。
+   做法照 Material 3 自適應導覽：小螢幕用 modal drawer，大螢幕保留 permanent sidebar。
+   桌機（≥1024px）整組手機件隱藏，側欄與版面完全不動。 */
+.appbar {
+  position: sticky; top: 0; z-index: 60;
+  /* 拉出 #app 的左右與上方內距，讓頂欄貼滿螢幕寬度（負 margin 對應 #app 的 padding） */
+  margin: -16px -16px 12px; 
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; min-height: 52px;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.ab-burger {
+  flex: 0 0 auto; width: 44px; height: 44px;      /* 觸控目標 44px */
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer; border-radius: 9px; padding: 0;
+}
+.ab-burger span { display: block; width: 20px; height: 2px; background: var(--ink); border-radius: 2px; }
+.ab-burger:hover { background: var(--surface-2); }
+.ab-brand { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ink);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-auth {
+  flex: 0 0 auto; min-height: 44px; padding: 0 14px;
+  background: none; border: 1px solid var(--line); border-radius: 999px;
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer;
+}
+.ab-auth:hover { background: var(--surface-2); }
+/* M2：客戶詳情頂端的標題＋狀態 */
+.cd-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cd-status { display: flex; align-items: center; gap: 8px; }
+.cd-status select { width: auto; min-height: 36px; font-size: 13px; }
+
+.nav-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(30,26,22,.42); }
+.nav-scrim[hidden] { display: none; }
+.drawer-close {
+  position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
+  background: none; border: none; font-size: 26px; line-height: 1; color: var(--ink-3);
+  cursor: pointer; border-radius: 9px;
+}
+.drawer-close:hover { background: var(--surface-2); }
+body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景捲動 */
+
+/* 手機：.tabs 變成 modal drawer，預設收在畫面外 */
+@media (max-width: 1023.98px) {
+  .tabs {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 80;
+    width: min(84vw, 300px); margin: 0; padding: 20px 14px 24px;
+    background: var(--surface); border-right: 1px solid var(--line);
+    overflow-y: auto; display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+    transform: translateX(-100%); transition: transform .2s ease;
+    box-shadow: 0 0 30px rgba(0,0,0,.14);
+  }
+  body.drawer-open .tabs { transform: translateX(0); }
+  /* 基礎規則是 .tab{flex:1 1 30%}（舊的手機多排大按鈕），抽屜要覆蓋成整列直式清單。
+     不改基礎規則本身——桌機側欄也吃它。 */
+  .tabs .tab {
+    flex: 0 0 auto; width: 100%; min-height: 44px;
+    text-align: left; padding: 11px 12px; white-space: normal;
+    background: none; color: var(--ink-2); font-size: 15px; border-radius: 9px;
+  }
+  .tabs .tab:hover { background: var(--surface-2); }
+  .tabs .tab.active { background: var(--warm-bg); color: var(--warm-ink); }
+  .tabs .nav-group { padding: 12px 12px 4px; }
+  .tabs .credcard { margin: 8px 0 4px; }
+  .nav-brand { display: none; }                 /* 站名已在頂欄，抽屜不重複 */
+  .nav-foot { display: block; margin-top: auto; padding-top: 14px; }
+}
+/* 桌機：手機件全部不存在 */
+@media (max-width: 1023.98px) {
+  /* 頂欄是 sticky（min-height 52px ＋ 1px 框線）。步驟 1 右欄導覽用 scrollToSeg() 捲過去時，
+     段落標題會剛好落在頂欄底下（實測 top=23 vs 頂欄底 61），所以留一個頂欄的高度。
+     桌機沒有頂欄，不需要這個位移。
+     抽屜的「資料與備份」是頁尾最後一張卡，捲到底就停住、蓋不到，不必也不能靠這條。 */
+  [data-fold] { scroll-margin-top: 64px; }
+}
+@media (min-width: 1024px) {
+  .appbar, .nav-scrim, .drawer-close { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { .tabs { transition: none; } }
+
 /* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
 @media (min-width: 1024px) {
   body { font-size: 16px; }
@@ -506,11 +594,12 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   #view-new { grid-template-columns: minmax(0, 1fr) 232px; gap: 0 24px; }
 }
 @media (min-width: 1180px) {
-  /* ICF 攤成 2×4 格子，點「逐條」才展開完整 marker 清單 */
-  /* 1fr = minmax(auto,1fr)，auto 會拿 input/textarea 的內建寬度當軌道最小值，軌道就不肯縮 → 欄位溢出被裁掉 */
-  #acc-list { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 9px; align-items: stretch; }
+  /* 2026-08-27：這裡原本是「ICF 攤成 2×4 格子」的兩欄規則，但 §14-A 已改成主從版面、
+     一次只顯示一項職能。兩欄留著的結果是第二欄永遠空著——實測容器 768px、內容只佔
+     380px，右邊空出 389px。改成單欄。
+     （若日後又改回一次顯示多項，這裡要一起改回來。） */
+  #acc-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 9px; align-items: stretch; }
   #acc-list .acc-item { margin-bottom: 0; display: flex; flex-direction: column; }
-  #acc-list .acc-item .mk-toggle { margin-top: auto; }   /* 同列等高後，展開按鈕永遠在同一條線上 */
 }
 @media (min-width: 1024px) and (max-width: 1099.98px) {
   /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
@@ -524,7 +613,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
 /* ═══ §2-2 八大職能的累積 ═══ */
 /* 八欄固定，不用 auto-fit：窄視窗塌成四欄的話，1→8 的閱讀順序就不存在了 */
-.cum-grid { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 18px; margin: 12px 0 4px; align-items: end; }
+/* 2026-08-27：原本是八欄格線（一欄一個職能的大方格）。§23 改成 marker 層之後，
+   容器裡放的是「一個職能一排」的區塊，不再需要格線——留著會把新區塊塞進八欄裡，實測會破版。 */
+.cum-grid { display: block; margin: 12px 0 4px; }
 .cum-col { display: grid; grid-template-rows: auto 58px auto; gap: 5px; min-width: 0; }
 .cum-name { font-size: 12px; line-height: 1.3; text-align: center; color: var(--ink-2); align-self: end; word-break: break-word; }
 .cum-box {
@@ -537,6 +628,41 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .cum-box[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
 .cum-box[data-lv="4"] { background: var(--st4-bg); color: var(--st4-fg); border-color: var(--st4-line); }
 .cum-ratio { font-size: 12px; text-align: center; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* ═══ §23 marker 層熱力圖（2026-08-27）═══
+   每一排是一個職能，一格是一條 marker。顏色只在同一排內有意義——
+   不同職能的 marker 條數差很多（1 條到 9 條），跨排比顏色沒有意義。 */
+.hm-sect { margin-top: 14px; }
+.hm-head { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink-3); margin-bottom: 6px; }
+.hm-note { font-size: 11.5px; line-height: 1.7; color: var(--ink-3); background: var(--surface-2);
+           border-radius: 7px; padding: 8px 10px; margin-bottom: 9px; }
+.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr) 84px;
+          gap: 10px; align-items: center; padding: 5px 0; }
+.hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0; }
+.hm-name b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hm-cells { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.hm-den { font-size: 11px; color: var(--ink-4); text-align: right; white-space: nowrap;
+          font-variant-numeric: tabular-nums; }
+.hm-cell {
+  flex: 0 0 auto; min-width: 34px; height: 22px; border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10.5px; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line); background: var(--surface);
+}
+/* 0 次＝從來沒點到。空心，跟「最冷的顏色」明確區分——這是盲點，不是弱項。 */
+.hm-cell[data-lv="none"] { background: transparent; border-style: dashed; color: var(--ink-4); }
+.hm-cell[data-lv="1"] { background: var(--st1-bg); color: var(--st1-fg); border-color: var(--st1-line); }
+.hm-cell[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
+.hm-cell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
+.hm-cell[data-lv="4"] { background: var(--st4-bg); color: var(--st4-fg); border-color: var(--st4-line); }
+.hm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px;
+             margin-top: 12px; font-size: 11px; color: var(--ink-3); }
+.hm-caveat { font-size: 11px; line-height: 1.7; color: var(--ink-4); margin-top: 7px; }
+.hm-legend .hm-cell { min-width: 22px; }
+@media (max-width: 700px) {
+  .hm-row { grid-template-columns: minmax(0,1fr); gap: 4px; padding: 8px 0; }
+  .hm-den { text-align: left; }
+}
 .cum-todo { margin-top: 18px; border-top: 1px solid var(--line-2); padding-top: 12px; }
 .todo-row { border-left: 3px solid var(--st1-line); padding: 8px 0 8px 11px; margin-top: 10px; }
 .todo-row[data-n="0"] { border-left-color: var(--st0-bg); }
@@ -572,6 +698,24 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 /* 五欄對齊：日期｜客戶｜議題（可伸縮）｜時長・到位｜›
    欄寬寫在同一個常數式的 grid-template 上，標題列與每一列共用，所以永遠對得齊。
    第二層（職能格子＋認可／同理）從第 3 欄開始，剛好落在議題底下。 */
+/* ═══ M4 月份分組 ═════════════════════════════════════
+   歷史頁的清單會一直長。最新的月份預設展開，較舊的收起來，
+   搜尋或篩選命中時全部展開——不然使用者要先猜對月份才找得到那一場。 */
+.hmonth { margin-bottom: 4px; }
+.hmonth-head {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 8px 12px; margin: 0 0 6px;
+  background: none; border: 0; border-top: 1px solid var(--line-2);
+  font: inherit; color: var(--ink-2); text-align: left; cursor: pointer;
+}
+.hmonth:first-child .hmonth-head { border-top: 0; }
+.hmonth-head:hover { color: var(--warm-ink); }
+.hm-arrow { flex: 0 0 auto; font-size: 11px; color: var(--ink-4); transition: transform .15s; }
+.hmonth[data-open="1"] .hm-arrow { transform: rotate(90deg); }
+.hm-t { flex: 1 1 auto; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hm-n { flex: 0 0 auto; font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.hmonth[data-open="0"] .hmonth-body { display: none; }
+
 .sess-cols { display: grid; grid-template-columns: 64px 70px minmax(0,1fr) 104px 20px; gap: 7px 10px; }
 .sess-head {
   padding: 0 12px 9px; border-bottom: 1px solid var(--line-2); margin-bottom: 9px;
@@ -586,6 +730,12 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .15s;
 }
 .sess:hover { border-color: #B99C82; }
+/* 2026-08-27：客戶詳情的每一列把五個 span 包在 .sess-top 裡，但全檔沒有任何 .sess-top 規則，
+   於是它們以 inline 流排、字全部黏在一起（「08-24第四次會談想更清楚未來的方向…60 分・到位 7 項」）。
+   歷史紀錄頁走的是 .sess-cols grid（有 gap）所以沒事，這個容器是漏掉的。 */
+.sess-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sess-top .sess-topic { flex: 1 1 auto; }
+.sess-top .sess-meta { margin-left: auto; }
 .sess-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sess-client { font-size: 12.5px; color: var(--ink-2); min-width: 0; overflow: hidden;
                text-overflow: ellipsis; white-space: nowrap; }
@@ -748,6 +898,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     border-radius: var(--r-pill); padding: 2px 7px; font-size: 10px; font-weight: 700;
     letter-spacing: .04em; font-family: inherit; cursor: pointer; line-height: 1.4;
     white-space: nowrap;
+    /* 2026-08-28：原本 20px。這顆只出現在桌機側欄（手機在抽屜裡不顯示），是滑鼠目標，
+       不套 44px——44px 會把側欄那張認證卡撐開。28px 是滑鼠能穩定點到的下限。 */
+    min-height: 28px; display: inline-flex; align-items: center; justify-content: center;
   }
   .cc-switch button.on { background: var(--cc-bar); border-color: var(--cc-bar); color: var(--surface); }
   .cc-body {
@@ -973,6 +1126,42 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .ai-step-t { font-size: 11.5px; color: var(--cool-d); line-height: 1.65; }
 .ai-warn { background: var(--warm-bg-2); border-left: 3px solid var(--amber); border-radius: 0 7px 7px 0;
            padding: 9px 11px; margin-top: 11px; font-size: 11px; color: var(--warm-ink); line-height: 1.65; }
+
+/* ═══ C1／C2：只在 <1024px 生效，桌機一律維持設計稿原樣 ═══
+   設計稿（桌機版設計稿.dc.html）@media 命中 0 次——它從來沒有規範過手機。
+   所以手機的尺寸沒有基準可以違反，以下由 Yi-En 2026-08-27 定案。 */
+
+/* C2：AI 卡的收合開關。桌機隱藏開關、內容強制展開，等於這段不存在。 */
+.ai-open-cb { position: absolute; opacity: 0; pointer-events: none; }
+.ai-toggle { display: block; }
+.ai-toggle .ai-title { margin-bottom: 7px; }
+.ai-chev { display: none; }
+
+@media (max-width: 1023px) {
+  /* C1：八項導覽從直式清單收成一列可橫向捲動的籤。
+     ACC/PCC 計數在手機上藏起來——當前那一項的計數在右側主面板本來就看得到，
+     這裡重複顯示只是把籤撐寬。橫向捲動限制在 .acc-nav 內，不會讓整頁左右滑。 */
+  .acc-nav { flex-direction: row; overflow-x: auto; gap: 6px; padding: 8px;
+             -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .acc-navrow { width: auto; flex: 0 0 auto; align-items: center;
+                padding: 7px 11px; border: 1px solid var(--line); }
+  .acc-navrow.on { border-color: var(--cool); }
+  .an-dot { margin-top: 0; }
+  .an-body { flex-direction: row; align-items: center; gap: 7px; }
+  .an-name { white-space: nowrap; font-size: 12.5px; }
+  .an-meta { display: none; }
+
+  /* C2：預設收合，只留眉標、標題與箭頭。 */
+  .ai-toggle { display: flex; align-items: center; justify-content: space-between;
+               gap: 10px; cursor: pointer; }
+  .ai-toggle .ai-title { margin-bottom: 0; }
+  .ai-chev { display: inline-block; color: var(--cool-d); font-size: 12px;
+             transition: transform .15s ease; }
+  .ai-body { display: none; }
+  .ai-open-cb:checked ~ .ai-toggle .ai-chev { transform: rotate(180deg); }
+  .ai-open-cb:checked ~ .ai-body { display: block; }
+  .ai-open-cb:focus-visible ~ .ai-toggle { outline: 2px solid var(--cool); outline-offset: 2px; }
+}
 /* 右欄面板 */
 .acc-cur-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
 .acc-cur-num { font-size: 11.5px; font-weight: 700; color: var(--ink-4); letter-spacing: .06em; }
@@ -1271,10 +1460,45 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
      選中態的白字會被暖色字蓋掉；這裡把選中態的前景補回來。 */
   #form-step1 .fr-btn.on { color: var(--st0-fg); font-weight: 650; }
 }
+/* ═══ 觸控目標：手機一律 44px ══════════════════════════
+   2026-08-28。實測（375px）這四個分別是 23–26／18／25／28px。
+   做法刻意分兩種，不是偷懶——量過周圍空間才決定的：
+
+   · .fold-head 下方只剩 8px、.mini-link 上方只剩 16px。直接長高會蓋到隔壁的
+     輸入框與文字區，所以用「padding 撐開 ＋ 等量負 margin 收回」——
+     版面位置與 M1／M4 調過的密度完全不變，只有點擊區變大。
+   · .pchip 與 .recap-copy 上下都有 32px 以上的空間，直接給 min-height 才不會
+     出現「看起來小、點擊區莫名很大」的錯位感。
+
+   只在 <1024px 套用：桌機是滑鼠，44px 反而讓版面鬆散。 */
+@media (max-width: 1023.98px) {
+  /* 五個折疊標題的內容高度不一（26／26／26／26／23px），只加 padding 的話最後一個
+     只到 41px。補 min-height 讓短的那個也滿 44。 */
+  .fold-head { padding: 9px 0 11px; margin: -9px 0 -11px; min-height: 44px; }
+  .mini-link { padding: 13px 0; margin: -13px 0; }
+  /* .quickfilters .pchip 另外釘了 min-height:34px（特異性較高），要一起提上來，
+     否則歷史頁那三顆快篩會停在 34px。 */
+  .pchip, .quickfilters .pchip { min-height: 44px; display: inline-flex; align-items: center; }
+  .recap-copy{ height: auto; min-height: 44px; }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
+  <!-- ═══ M1 手機頂欄（2026-08-28）═══
+       桌機（≥1024px）整組隱藏，側欄照舊；手機才出現。
+       站名與全域動作屬於頂欄，頁面 h1 留在內容區——這是 #1 的成因修正。 -->
+  <header class="appbar" id="appbar">
+    <button type="button" class="ab-burger" id="ab-burger"
+            aria-label="開啟選單" aria-expanded="false" aria-controls="tabs-nav"
+            onclick="toggleDrawer()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="ab-brand">會談後快速記錄</div>
+    <button type="button" class="ab-auth" id="ab-auth" onclick="appbarAuth()"></button>
+  </header>
+  <div class="nav-scrim" id="nav-scrim" onclick="closeDrawer()" hidden></div>
   <header class="page-head">
     <!-- §13-A 眉標：「步驟 N / 2」後面接一句灰字說明現在在哪一步。
          總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。
@@ -1291,7 +1515,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     </div>
   </header>
 
-  <nav class="tabs">
+  <nav class="tabs" id="tabs-nav">
+    <button type="button" class="drawer-close" id="drawer-close"
+            aria-label="關閉選單" onclick="closeDrawer()">×</button>
     <!-- §13-E 側欄標題區：站名搬到這裡，內容區的 h1 讓給當頁標題 -->
     <div class="nav-brand">
       <div class="nav-brand-name">會談後快速記錄</div>
@@ -1324,6 +1550,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     <span class="nav-group">手邊</span>
     <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span class="nav-badge" id="jCnt"></span></button>
     <!-- §13-E 側欄底部：版本、同步狀態、兩個連結 -->
+    <!-- M1：備份／還原是資料安全功能，不能刪，只能移位。手機從這裡進。 -->
+    <span class="nav-group">資料</span>
+    <button class="tab" id="tabData" onclick="openDataTools()"><span class="t-full">資料與備份</span><span class="t-short">資料</span></button>
     <div class="nav-foot" id="nav-foot">
       <div class="nav-foot-ver"><span id="side-ver"></span><span class="nav-foot-dot"> · </span><span id="side-sync">本機模式</span></div>
       <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"><a onclick="doLogout()">登出</a></span></div>
@@ -1373,12 +1602,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
           </div>
           <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
         </div>
-        <div class="f2col-cell">
-          <label>送審錄音</label>
-          <label class="submit-cand"><input type="checkbox" id="f-submitcand">
-            這場可以當送審錄音</label>
-          <div class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</div>
-        </div>
+        <!-- M3（2026-08-28）：撤下送審錄音勾選。教練學院已處理，本工具不再要使用者記錄。
+             舊紀錄的 submitCandidate 欄位保留相容，載入不壞；新存檔不再產生它。 -->
       </div>
       <div class="fld-div"></div>
       <label>這一場的議題</label>
@@ -1528,8 +1753,16 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <aside class="acc-side">
         <nav class="card acc-nav" id="acc-nav"></nav>
         <section class="ai-card">
+          <!-- C2：手機上這張卡預設收合。用 checkbox＋label 做純 CSS 的收合，
+               不加 JS、不動任何既有 id（#ai-steps／#ai-steps-btn 都還在原位）。
+               桌機上 .ai-toggle 隱藏、.ai-body 強制展開，維持設計稿原樣。 -->
+          <input type="checkbox" id="ai-open" class="ai-open-cb">
           <div class="ai-eyebrow">選用</div>
-          <h2 class="ai-title">想看得更客觀？用 AI 分析逐字稿</h2>
+          <label for="ai-open" class="ai-toggle">
+            <h2 class="ai-title">想看得更客觀？用 AI 分析逐字稿</h2>
+            <span class="ai-chev" aria-hidden="true">▾</span>
+          </label>
+          <div class="ai-body">
           <p class="ai-sub">自己評容易全給到位。提示詞依 ICF ACC 績效評估標準寫，會要 AI 逐項引原文當證據，看不出來就標「無法從逐字稿判斷」，不猜。</p>
           <div class="ai-btns">
             <button type="button" class="btn ai-primary" onclick="copyAccPrompt()">複製分析提示詞</button>
@@ -1537,6 +1770,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
           </div>
           <div class="ai-steps hidden" id="ai-steps"></div>
           <div class="ai-warn">錄音先取得同意；貼給 AI 前先去辨識；<b>逐字稿不要存進本工具</b>。</div>
+          </div>
         </section>
       </aside>
 
@@ -1548,16 +1782,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
             <span class="acc-cur-alt" id="acc-cur-alt"></span>
           </div>
           <p class="acc-cur-desc" id="acc-cur-desc"></p>
-          <div class="acc-meters">
-            <div class="acc-meter" data-lv="acc">
-              <div class="am-top"><span class="am-lbl">ACC</span><span class="am-n" id="am-acc-n"></span></div>
-              <div class="am-track"><div class="am-fill" id="am-acc-fill"></div></div>
-            </div>
-            <div class="acc-meter" data-lv="pcc">
-              <div class="am-top"><span class="am-lbl">PCC</span><span class="am-n" id="am-pcc-n"></span></div>
-              <div class="am-track"><div class="am-fill" id="am-pcc-fill"></div></div>
-            </div>
-          </div>
+          <!-- M3（2026-08-28）：撤下每項職能的 ACC／PCC 迷你比較區。
+               資訊量過高，而且容易被讀成分數。acc、marker、四態與所有計算資料完全保留，
+               只移除這組比較 UI；渲染端的 am-* 寫入已改為安全存取。 -->
           <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
           <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
             先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
@@ -1589,11 +1816,11 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
-      <div class="sub-note">格子的數字是這項職能判為「到位」的場次。暖色是還沒怎麼累積的，藍色是已經經常出現的。暖色那些不是你做不到，是你還沒累積到。</div>
+      <div class="sub-note">一格是一條標記，顏色深淺＝標過幾次。虛線空格是還沒點到的——那是還沒走到，不是做不到。滑過格子可以看次數與比例。</div>
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
-        <div class="sub-note">送審時每條需要時間戳，這幾條還沒有・例句可以直接用</div>
+        <div class="sub-note">這幾條還沒有留下發生的時刻・例句可以直接用</div>
         <div id="cum-todo-list"></div>
       </div>
     </div>
@@ -1602,7 +1829,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     <div class="card">
       <div class="hist-head">
         <label style="margin:0">每一場 <span class="hint" id="hist-count"></span></label>
-        <div class="cum-legend" id="hist-legend"></div>
+        <!-- M4：清單改成緊湊摘要，八個職能格子不再常駐，對應的圖例一併撤下。
+             renderHistLegend() 保留並自帶 null 守衛。八大職能在單場詳情裡看。 -->
       </div>
       <input type="text" id="hist-q" placeholder="搜尋日期、客戶或議題" oninput="onHistFilter()">
       <div class="hist-filters">
@@ -1616,20 +1844,12 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <div id="hist-list"></div>
     </div>
 
-    <!-- ③ 你在練的事（§2-4） -->
-    <div class="card" id="practice-card">
-      <label style="margin-top:0">你在練的事</label>
-      <div class="sub-note">每一場設一個焦點，下一場回來回答。同一件事練幾場都可以——練的場數就是你的累積。</div>
-      <div id="practice-body"></div>
-    </div>
+    <!-- M4（2026-08-28）：撤下「你在練的事」。歷史頁只做兩件事——看跨場 marker 分布、
+         快速找到一場紀錄。practiceItems() 保留在相容層。 -->
 
-    <div class="card">
-      <label style="margin-top:0">給導師的督導包</label>
-      <div class="sub-note">去識別化打包待問問題、浮現的問題與待改進，貼給導師。匯出 PDF／文字在頁首右上角。</div>
-      <div class="actions" style="margin-top:10px">
-        <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
-      </div>
-    </div>
+    <!-- M3（2026-08-28）：撤下「給導師的督導包」入口。
+         buildMentorPack()／openMentorPack()／copyMentorPack() 暫留為死碼，等確認無其他依賴再清；
+         mkLines() 絕對不能一起刪——詳情、PDF、文字匯出共用它（引用掃描：4 處，其中僅 1 處在督導包內）。 -->
     <div class="card phrase-card">
       <div class="phrase-head" onclick="toggleInsight()">
         <label style="margin:0;cursor:pointer">洞察 <span class="hint">強項與待改進彙整</span></label>
@@ -1637,26 +1857,20 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </div>
       <div class="phrase-body collapsed" id="insight-body"></div>
     </div>
-    <div class="card" id="chart-card">
-      <label style="margin-top:0">自評趨勢 <span class="hint">專注・投入・推進感・客戶感受 <span id="chart-hint"></span></span></label>
-      <div class="chart-box" id="trendChart"></div>
-    </div>
-    <div class="card" id="reflect-card" style="display:none">
-      <div class="reflect-head">
-        <label style="margin:0">教練反思統計</label>
-        <span>
-          <button class="pchip" data-d="7"  onclick="setReflectPeriod(7)">近 7 天</button>
-          <button class="pchip" data-d="30" onclick="setReflectPeriod(30)">近 30 天</button>
-          <button class="pchip" data-d="0"  onclick="setReflectPeriod(0)">全部</button>
-        </span>
+    <!-- M4（2026-08-28）：撤下全域自評趨勢與教練反思統計。
+         單一客戶詳情裡的個別趨勢保留（那一份對單一客戶才有意義）。 -->
+
+    <!-- M4：備份／還原是資料安全功能，不能刪，只能移位。
+         這張卡就是抽屜「資料與備份」指向的目的地；函式、格式與能力完全不變。 -->
+    <div class="card" id="data-tools">
+      <label style="margin-top:0">資料與備份</label>
+      <div class="sub-note">備份會把六個集合完整下載成一個 JSON 檔。還原是「匯入並合併」，同 ID 保留現有那一筆。</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
+        <span id="admin-backup-slot"></span>
+        <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
+        <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
       </div>
-      <div id="reflect-body"></div>
-    </div>
-    <div class="actions" style="margin:10px 0 14px">
-      <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
-      <span id="admin-backup-slot"></span>
-      <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
-      <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
     </div>
   </div>
 
@@ -1677,12 +1891,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <div class="sub-note">裡面有他的儀表板跟每一場紀錄。</div>
       <div id="client-list"></div>
     </div>
-    <!-- ② 洞察卡在列表下面 -->
-    <div class="card" id="client-insight-card">
-      <label style="margin-top:0">你一直在練同一件事</label>
-      <div class="sub-note">同一個焦點連續出現兩場以上就會列在這裡。通常不是你忘了——而是這件事對你重要，而且它真的不容易。</div>
-      <div id="client-insight"></div>
-    </div>
+    <!-- M2（2026-08-28）：撤下「你一直在練同一件事」——與歷史頁的「你在練的事」重複。
+         practiceItems() 保留，歷史頁那邊的處置由 M4 統一決定。 -->
     <div style="height:24px"></div>
   </div>
 
@@ -1696,11 +1906,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     </div>
     <div id="cred-warn"></div>
     <div class="cred-wrap" id="cred-cards"></div>
-    <div class="card">
-      <label style="margin-top:0">送審錄音候選</label>
-      <div class="sub-note">在新增紀錄時勾「這場可以當送審錄音」，就會出現在這裡。ACC 要 1 份、PCC 要 2 份，均 20–60 分並附逐字稿。</div>
-      <div id="cred-cands" style="margin-top:8px"></div>
-    </div>
+    <!-- M3（2026-08-28）：撤下整張「送審錄音候選」卡。教練學院已處理送審，本工具不追蹤。 -->
     <div class="card">
       <label style="margin-top:0">匯出 ICF 時數表</label>
       <div class="sub-note">工具裡只有客戶代號、日期、會談次數、時長。ICF 的時數表另外要求客戶<b>真實姓名、聯絡方式、關係起訖日</b>——
@@ -1711,9 +1917,13 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
   <!-- ===== CLIENT DETAIL ===== -->
   <div id="view-client-detail" class="hidden">
-    <!-- 1. 四張統計卡 -->
+    <!-- 1. 客戶標題 ＋ 狀態（M2 2026-08-28：狀態從最下方搬到最上方，底部不再重複）
+         ＋ 兩張統計卡（場次、小時） -->
     <div class="card">
-      <label style="margin-top:0" id="cd-title"></label>
+      <div class="cd-head">
+        <label style="margin-top:0" id="cd-title"></label>
+        <div class="cd-status" id="cd-status-top"></div>
+      </div>
       <div class="stat4" id="client-stats"></div>
     </div>
     <!-- 2. 每一場的議題（整列，每列可點進單場詳情） -->
@@ -1721,13 +1931,11 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <label style="margin-top:0">每一場的議題 <span class="hint" id="cd-sess-count"></span></label>
       <div id="client-recs"></div>
     </div>
-    <!-- 3. 兩欄並排、底部對齊：兩張卡直接當 grid 項目，中間不包容器 -->
-    <div class="two-col">
-      <div class="card" id="client-chart-card">
-        <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
-        <div class="chart-box" id="clientChart"></div>
-      </div>
-      <div class="card" id="client-recap"></div>
+    <!-- 3. 自評趨勢（M2 2026-08-28：原本與 recap 卡並排兩欄，recap 撤下後改為整欄，
+         否則第二欄會留一塊空白——跟 #acc-list 同一種殘留） -->
+    <div class="card" id="client-chart-card">
+      <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
+      <div class="chart-box" id="clientChart"></div>
     </div>
     <div class="card" id="client-info"></div>
     <div class="actions">
@@ -2739,8 +2947,10 @@ function onAnswerBlur(id){
 }
 const Q_STATE_LABEL = { pending: '待問', answered: '已問', digested: '已消化' };
 function qStateLabel(x){ return Q_STATE_LABEL[qState(x)]; }
-/* 三態：待問（!answered）→ 已回答（answered && !digested）→ 已消化（digested） */
-function qState(x){ return !x.answered ? 'pending' : (x.digested ? 'digested' : 'answered'); }
+/* M3（2026-08-28）：改成兩態——待問（!answered）／已問（answered）。
+   舊資料的 digested:true 一律映射成「已問」：不會消失，也不會被推回待問。
+   digested 欄位保留在 payload 相容層，只是不再參與畫面狀態，不需要升 SCHEMA_VER。 */
+function qState(x){ return !x.answered ? 'pending' : 'answered'; }
 function updateAskCount() {
   const n = loadQ().filter(x=>qState(x) === 'pending').length;
   document.getElementById('askCnt').textContent = n ? String(n) : '';
@@ -2788,7 +2998,8 @@ function renderAsk() {
     ${x.ctx?`<div class="qctx">情境：${esc(x.ctx)}</div>`:''}
     <textarea class="qans" id="ans-${x.id}" oninput="onAnswerInput(${x.id})" onblur="onAnswerBlur(${x.id})">${esc(x.answer||'')}</textarea>
     <div class="qbtns">
-      <button class="mini-link" onclick="jFromQuestion(${x.id})">→ 加進覺察手帳</button>
+      ${String(x.answer||'').trim()
+        ? `<button class="mini-link" onclick="jFromQuestion(${x.id})">→ 加進覺察手帳</button>` : ''}
       <button class="mini-link" onclick="reopenQuestion(${x.id})">改回待問</button>
       <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
     </div></div>`;
@@ -2802,12 +3013,11 @@ function renderAsk() {
       <button class="mini-link" onclick="undigestQuestion(${x.id})">改回已回答</button>
       <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
     </div></div>`;
-  /* §14-B 四籤：全部／待問／已問／已消化。狀態名沿用既有的 Q_STATE_LABEL，
+  /* M3（2026-08-28）：三籤——全部／待問／已問。「已消化」已撤下。
      數量全部從資料推導。當前籤只存在記憶體，不進 localStorage。 */
-  const tabs = [['all','全部', pend.length + done.length + dig.length],
+  const tabs = [['all','全部', pend.length + done.length],
                 ['pending', Q_STATE_LABEL.pending, pend.length],
-                ['answered', Q_STATE_LABEL.answered, done.length],
-                ['digested', Q_STATE_LABEL.digested, dig.length]];
+                ['answered', Q_STATE_LABEL.answered, done.length]];
   const chips = '<div class="ask-tabs">' + tabs.map(([v,label,n])=>
     '<button type="button" class="ask-tab' + (_askTab === v ? ' on' : '') + '"'
     + ' data-tab="' + v + '" onclick="setAskTab(\'' + v + '\')">' + label + ' ' + n + '</button>').join('')
@@ -2818,8 +3028,7 @@ function renderAsk() {
       + (arr.length ? arr.map(render).join('') : '<div class="empty" style="padding:14px 0">' + empty + '</div>');
   document.getElementById('ask-list').innerHTML = chips
     + sec('pending', '待回答', pend, pItem, '目前沒有待問的問題')
-    + sec('answered', '已回答', done, dItem, '還沒有已回答的問題')
-    + sec('digested', '已消化', dig, gItem, '加進覺察手帳的問題會收到這裡');
+    + sec('answered', '已回答', done, dItem, '還沒有已回答的問題');
 }
 /* 當前籤只存記憶體（不新增 localStorage 鍵）；切頁回來重置成「全部」是可接受的 */
 let _askTab = 'all';
@@ -3257,6 +3466,7 @@ function renderChart() {
   arr = arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
   const card = document.getElementById('chart-card');
   const hintEl = document.getElementById('chart-hint');
+  if (!card) return;   /* M4：全域自評趨勢卡已從歷史頁撤下；客戶詳情頁的趨勢走 renderClientChart() */
   if (arr.length < 2) { card.style.display = 'none'; return; }
   card.style.display = '';
   if (hintEl) hintEl.textContent = (!histFilter && arr.length > 20) ? '（最近 20 筆）' : '';
@@ -3695,9 +3905,9 @@ function refreshMk(i, code){
   const m = (MK[i]||[]).find(x=>x.c === code) || {};
   let txt = '', warn = false;
   if (chk.checked && n === 0){
-    txt = '只勾了「做到」，送審前再回來補時間戳就好'; warn = true;
+    txt = '只勾了「做到」，之後回來補時間戳就好'; warn = true;
   } else if (needsTwo(i, m) && chk.checked && n < 2){
-    txt = '這項送審時建議 2 個以上證據（目前 ' + n + ' 個）'; warn = true;
+    txt = '這項建議 2 個以上證據（目前 ' + n + ' 個）'; warn = true;
   } else if (n){
     txt = '證據 ' + n + ' 個';
   }
@@ -3786,7 +3996,7 @@ function refreshAccPanel(){
     const gaps = accGaps(i);
     gapBox.classList.toggle('hidden', gaps.length === 0);
     if (gaps.length) gapBox.innerHTML =
-      '<div class="acc-gap-head">送審前這幾條要補時間戳</div>'
+      '<div class="acc-gap-head">這幾條還沒有時間戳</div>'
       + '<div class="acc-gap-sub">你勾了「做到」，但還沒留下發生的時刻。現在補最快，之後翻紀錄很難想起來。</div>'
       + gaps.map(m=>'<div class="acc-gap-row"><span class="acc-gap-code">' + esc(m.c) + '</span>'
         + '<span>' + esc(MK_SHORT[m.c] || m.t) + '</span></div>').join('');
@@ -3852,8 +4062,9 @@ function mkLines(x, i){
     const rows = mkRows(v).filter(r=>String(r.t||'').trim() || String(r.x||'').trim());
     if (!on && !rows.length && !imp) return;
     const short = MK_SHORT[m.c] ? '　' + MK_SHORT[m.c] : '';
-    const needFix = on && evCount(rowsToEv(rows)) === 0;
-    out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + short + (needFix ? '　（送審前要補時間戳）' : ''));
+    /* M3（2026-08-28）：移除「送審前要補時間戳」。教練學院已處理送審，本工具不追蹤。
+       mkLines() 本身保留——詳情、PDF、文字匯出共用它，只是不再輸出送審語意。 */
+    out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + short);
     rows.forEach(r=>{
       const t = String(r.t||'').trim(), ex = String(r.x||'').trim();
       out.push('　　' + (t || '（沒有時間戳）') + (ex ? '　' + ex : ''));
@@ -3881,6 +4092,7 @@ function goStep(n){
          document.getElementById('tabMark').classList.toggle('active', formStep===2); }
   window.scrollTo(0, 0);
   updateSegbar();
+  closeDrawer();          /* M1：抽屜裡點「新增紀錄／職能標記」也要關 */
 }
 /* §13-A 每一頁自己的標題。新增紀錄頁兩步各有標題，其餘頁沿用站名。
    標題文字集中在這裡，頁面上不再寫死。 */
@@ -3911,7 +4123,7 @@ function detailHeadSub(){
   if (!r) return '';
   const c = sessionMkCounts(r);
   return [ r.mins ? r.mins + ' 分鐘' : '', '到位 ' + c.done + ' 項',
-           r.submitCandidate ? '已勾為送審錄音候選' : '' ].filter(Boolean).join(' · ');
+           /* M3：不再顯示送審候選 */ '' ].filter(Boolean).join(' · ');
 }
 const VIEW_HEAD = {
   new1: { title: '這一場發生了什麼',
@@ -3956,7 +4168,7 @@ const VIEW_HEAD = {
          sub: '會談當下冒出來的疑問，記下來，下次 1on1 一次問完。',
          actions: [['＋ 新增問題', 'toggleCompose()', 'btn-primary', 'btn-new-ask']] },
   journal: { title: '覺察手帳',
-             sub: '導師說的是原料。你自己重寫過的那一句，才放進手帳。',
+             sub: '一起茁壯的成長夥伴',
              actions: [['＋ 寫一條提醒', 'jNew()', 'btn-primary', 'btn-new-journal'],
                        ['匯出手帳（PDF）', "exportTwoStep('journal')", 'btn-ghost', 'btn-exp-journal']] }
 };
@@ -4041,6 +4253,7 @@ function showView(v) {
   if (v==='clients') renderClients();
   if (v==='cred') renderCred();
   if (v==='journal') renderJournal();
+  closeDrawer();          /* M1：選取頁面後關閉抽屜 */
 }
 
 /* ---- save ---- */
@@ -4271,7 +4484,8 @@ function saveRecord(later) {
     topic: fv('f-topic'),
     clientQuote: fv('f-clientquote'),
     notCaught: fv('f-notcaught'),
-    submitCandidate: !!(document.getElementById('f-submitcand') || {}).checked
+    /* M3（2026-08-28）：送審勾選已撤下，新存檔不再產生 submitCandidate。
+       舊紀錄裡的值保留在 payload 相容層，載入不壞。 */
   };
   /* 表單不再並列「受到啟發／頓悟的時刻」，但舊欄位的資料不刪 */
   if (_legacyInsight) rec.insight = _legacyInsight;
@@ -4322,7 +4536,7 @@ function resetForm() {
   document.getElementById('f-topic').value = '';
   document.getElementById('f-clientquote').value = '';
   document.getElementById('f-notcaught').value = '';
-  document.getElementById('f-submitcand').checked = false;
+  /* M3：送審勾選已撤下，這裡不再重設它 */
   _legacyInsight = '';
   const lg = document.getElementById('f-insight-legacy');
   if (lg){ lg.classList.add('hidden'); lg.innerHTML = ''; }
@@ -4520,16 +4734,38 @@ function jManageTags(){
         : '<div class="acc-none">還沒有標籤。編輯任一張卡片，在「＋新標籤」按 Enter 就會建立。</div>'));
 }
 /* 從導師提問加進手帳：跳到手帳、開新卡、來源已填好、標題與提醒留白 */
+/* M3（2026-08-28）：導師回答一鍵成為手帳。
+   舊行為是把提問標成「已消化」，再開一張標題與提醒都空白的草稿要使用者重填。
+   新行為：直接建立內容完整的手帳（標題＝提問、提醒＝導師回答、保留 srcQ），建立後仍可編輯；
+   提問維持「已問」，不再轉成已消化。
+   冪等：同一個 srcQ 已經有手帳時不建第二張，改成定位到既有那張並提示。 */
 function jFromQuestion(qid){
   const q = jQuestionById(qid);
   if (!q) return;
-  const arr = loadQ(); const it = arr.find(x=>x.id === qid);
-  if (it){ it.digested = true; storeQ(arr); }      /* 那則提問標記為「已消化」 */
-  jEditing = 'new';
-  jDraft = { id: 'new', title: '', note: '', why: '', example: '', srcQ: qid, tags: [] };
-  updateAskCount(); showView('journal');
-  const el = document.querySelector('#j-list .j-edit input');
-  if (el) el.focus();
+  const ans = String(q.answer || '').trim();
+  if (!ans){ toast('這題還沒有導師的回答'); return; }
+
+  const arr = loadJ();
+  const exist = arr.find(j => j && j.srcQ != null && String(j.srcQ) === String(qid));
+  if (exist){                                   /* 冪等：不建第二張 */
+    showView('journal');
+    jEditing = exist.id;
+    jDraft = { id: exist.id, title: exist.title||'', note: exist.note||'', why: exist.why||'',
+               example: exist.example||'', srcQ: exist.srcQ, tags: (exist.tags||[]).slice() };
+    renderJournal();
+    toast('這題已經在手帳裡了');
+    return;
+  }
+  const id = Date.now();
+  arr.push({ id, title: String(q.q || '').trim(), note: ans, why: '', example: '',
+             srcQ: qid, tags: [], created: todayStr() });
+  storeJ(arr);
+  updateJCount(); updateAskCount();
+  showView('journal');
+  jEditing = id;                                /* 建立後直接進編輯狀態，可以再改 */
+  jDraft = { id, title: String(q.q || '').trim(), note: ans, why: '', example: '', srcQ: qid, tags: [] };
+  renderJournal();
+  toast('已加進覺察手帳');
 }
 function jSrcLine(j){
   const q = j.srcQ != null ? jQuestionById(j.srcQ) : null;
@@ -4608,7 +4844,8 @@ function credProgress(level, recs){
     { key:'hours',   name:'總時數',                 val: st.totalH,       goal: c.hours,   unit:'小時', rate: true  },
     { key:'clients', name:'不重複客戶',             val: st.clients,      goal: c.clients, unit:'位',   rate: true  },
     { key:'recent',  name:'近 ' + c.months + ' 個月', val: st.recentH,    goal: c.recent,  unit:'小時', rate: true  },
-    { key:'rec',     name:'送審錄音',               val: st.cands.length, goal: c.rec,     unit:'份',   rate: false }
+    /* M3（2026-08-28）：移除「送審錄音」這一項進度。教練學院已處理，本工具不追蹤。
+       st.cands 仍在相容層計算，只是不再進入進度與側欄摘要。 */
   ].map(x=>{
     const pct = x.goal ? Math.min(100, x.val / x.goal * 100) : 100;
     return { key:x.key, name:x.name, val:x.val, goal:x.goal, unit:x.unit, pct: pct, rate: x.rate,
@@ -4673,7 +4910,7 @@ function renderCredCard(){
   document.getElementById('cc-miss').textContent = p.missing.length
     ? p.missing.filter(x=>x.key !== 'hours')
         .map(x=>x.name + '還差 ' + x.gap + ' ' + x.unit).join(' · ')
-    : '可以準備送審';
+    : '門檻都到了';
   card.querySelectorAll('.cc-switch button').forEach(b=>
     b.classList.toggle('on', b.dataset.lv === credLevel));
 }
@@ -4692,16 +4929,8 @@ function renderCred(){
       + '<span class="at-end" style="left:100%">PCC ' + CRED.pcc.hours + '</span>'
     + '</div>'
     + '<div class="cred-line">目前累積 <b>' + st.totalH + '</b> 小時、<b>' + st.clients + '</b> 位不重複客戶。</div>'
-    + ['acc','pcc'].map(k=>{
-        const c = CRED[k];
-        const need = [];
-        if (st.totalH  < c.hours)   need.push('時數還差 ' + Math.round((c.hours - st.totalH)*10)/10 + ' 小時');
-        if (st.clients < c.clients) need.push('客戶還差 ' + (c.clients - st.clients) + ' 位');
-        if (st.recentH < c.recent)  need.push('近 ' + c.months + ' 個月還差 ' + Math.round((c.recent - st.recentH)*10)/10 + ' 小時');
-        need.push('送審錄音 ' + c.rec + ' 份');
-        need.push('導師教練 ' + CRED_MENTOR_NOTE);
-        return '<div class="cred-line"><b>' + c.name + '：</b>' + need.join('、') + '</div>';
-      }).join('')
+    /* M3（2026-08-28）：移除 ACC／PCC 上方那段冗長的缺口小字。
+       同樣的資訊在下方門檻卡已用大標籤、數字與進度條表達，這裡重複而且難掃讀。 */
     + (st.noMins ? '<div class="pb-note">有 ' + st.noMins + ' 筆未填時長，未計入時數</div>' : '');
 
   /* 18 個月近期性視窗：這條規則跟總時數無關，累積多年的人最容易在這裡被卡 */
@@ -4719,21 +4948,15 @@ function renderCred(){
       + credBar('付費時數', st.totalH, c.paid, '小時')
       + credBar('不重複客戶', st.clients, c.clients, '位')
       + credBar('近 ' + c.months + ' 個月', st.recentH, c.recent, '小時')
-      + credBar('送審錄音', st.cands.length, c.rec, '份')
-      + '<div class="cred-note">導師教練：' + CRED_MENTOR_NOTE + '（工具不追蹤，請自行記錄）<br>'
-      + '「付費時數」用總時數估算——工具沒有記錄每場是否付費，這條要自己核對。</div></div>';
+      /* M3（2026-08-28）：移除「送審錄音」進度與「導師教練」小字。
+         兩者都由教練學院處理，本工具不追蹤。保留本工具算得出來的四項。 */
+      + '<div class="cred-note">「付費時數」用總時數估算——工具沒有記錄每場是否付費，這條要自己核對。</div></div>';
   }).join('');
 
-  /* 送審錄音候選：當場才知道哪場談得好，三個月後翻紀錄挑不出來 */
-  const cands = st.cands.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
-  document.getElementById('cred-cands').innerHTML = cands.length
-    ? cands.map(r=>{
-        const n = (r.acc||[]).filter(x=>accSt(x) === 2).length;
-        return '<div class="cand-row"><span>' + (r.date||'') + '　' + esc(r.client||'（未填）')
-          + (r.mins ? '　' + r.mins + ' 分' : '') + '</span>'
-          + '<span class="cr-n">到位 ' + n + ' 項</span></div>';
-      }).join('')
-    : '<div class="acc-none">還沒有標記候選場次</div>';
+  /* M3（2026-08-28）：送審錄音候選清單整段撤下。
+     clientStats/credStats 仍會算 st.cands（舊資料相容），只是不再渲染。 */
+  const candsBox = document.getElementById('cred-cands');
+  if (candsBox) candsBox.innerHTML = '';
 
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     document.querySelectorAll('#cred-cards .pb-fill').forEach(el=>{ el.style.width = el.dataset.w + '%'; });
@@ -4780,6 +5003,48 @@ function accCumStats(recs){
     return { i, done, sessions: rs.length, lv: stLevel(done) };
   });
 }
+/* §23 marker 層熱力圖（2026-08-27 Yi-En 定案）
+   為什麼不用職能層的加總：職能 1、2 各只有 1 條 marker，職能 8 有 9 條。
+   職能 1 是用「不做什麼」定義的（不當顧問、不做治療），職能 2 是 being（一貫的存在方式）——
+   這兩項容易做到但難舉證，跟 3–8 那種「當場可指認的動作」不是同一種東西。
+   把它們排在同一排比高低，等於拿蘋果比橘子，會讓使用者以為自己在基礎項最差。
+
+   熱度＝這條 marker 被勾「到位」的場次 ÷ 該職能「有評估過」的場次。
+   分母排除 st === -1（尚未評估）——把沒評估當成沒做到，違反 §七第 1 條。
+   熱度來源用 mkOn 不用時間戳：這是十五分鐘快速紀錄工具，先求有。 */
+function markerHitStats(recs){
+  const rs = recs || [];
+  return MK.map((g, i) => {
+    let assessed = 0;
+    const hits = {};
+    g.forEach(m => { hits[m.c] = 0; });
+    rs.forEach(r => {
+      const x = (r.acc || [])[i];
+      if (accSt(x) === ST_NE) return;          /* 沒評估的那一場，這一項整個不計入分母 */
+      assessed++;
+      const mk = (x && x.mk) || {};
+      g.forEach(m => { if (mkOn(mk[m.c])) hits[m.c]++; });
+    });
+    return { i, assessed, markers: g.map(m => ({
+      c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
+    })) };
+  });
+}
+/* 0 次是「從來沒點到」，跟「點過但次數少」意義完全不同，所以獨立成 none（空心），
+   不是最冷的那一級。使用者要看的正是這個盲點。
+
+   2026-08-27 實測後改用「次數」而不是「比例」：真實資料裡 39 條 marker 的命中率
+   全部落在 4%–20%（中位數 11%），用比例當顏色永遠分不出深淺。
+   原因是這個工具鼓勵在職能層快速記錄，marker 是零星補的——統計口徑要對齊使用者
+   真的會填的東西，不是理想中最完整的填法。
+   門檻按實測分布定：0／1／2／3–4／5 次以上。比例仍然算，放在 tooltip 當參考。 */
+function hitLevel(hits, rate){
+  if (!hits) return 'none';
+  return hits === 1 ? '1' : hits === 2 ? '2' : hits <= 4 ? '3' : '4';
+}
+/* 基礎狀態（1、2）與當場動作（3–8）分兩區，不互相比較 */
+const MK_BASE_COUNT = 2;
+
 /* 每條 marker 在幾場留過「真的時間戳」（No／無 不算）。送審缺證據清單用這個，不是用 on。 */
 function markerEvidenceCounts(recs){
   const cnt = {};
@@ -4823,16 +5088,43 @@ function renderAccCum(){
   grid.classList.toggle('hidden', _histEmpty);
   todoBox.classList.toggle('hidden', _histEmpty);
   if (_histEmpty){ grid.innerHTML = ''; return; }
-  const st = accCumStats(recs);
-  /* 八欄橫排，repeat(8, minmax(0,1fr))。不可用 auto-fit——窄視窗會塌成四欄，1→8 的閱讀順序就消失了。
-     大方格＝這項判為「到位」的場次；比數＝到位幾場／共幾場（單位統一，都是場次）。 */
-  grid.innerHTML = st.map(x=>
-    '<div class="cum-col">'
-      + '<div class="cum-name">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</div>'
-      + '<div class="cum-box" data-lv="' + x.lv + '" title="判為到位 ' + x.done + ' 場／共 ' + x.sessions + ' 場">'
-        + x.done + '</div>'
-      + '<div class="cum-ratio">' + x.done + '/' + x.sessions + '</div>'
-    + '</div>').join('');
+  const st = accCumStats(recs);                 /* 待補清單仍用它 */
+  const hs = markerHitStats(recs);
+  const rowHTML = x => {
+    const name = esc(ACC[x.i][0].replace(/^\d+ · /, ''));
+    const cells = x.markers.map(m =>
+      '<span class="hm-cell" data-lv="' + hitLevel(m.hits, m.rate) + '"'
+      + ' title="' + esc(m.c + ' ' + (MK_SHORT[m.c] || '')) + '：'
+      + (x.assessed ? '標過 ' + m.hits + ' 次（這項共評估 ' + x.assessed + ' 場，'
+                       + Math.round(m.rate * 100) + '%）'
+                    : '這項還沒評估過') + '">'
+      + m.c + '</span>').join('');
+    return '<div class="hm-row">'
+      + '<div class="hm-name"><b>' + (x.i + 1) + '</b> ' + name + '</div>'
+      + '<div class="hm-cells">' + cells + '</div>'
+      + '<div class="hm-den">' + (x.assessed ? x.assessed + ' 場評估過' : '尚未評估') + '</div>'
+    + '</div>';
+  };
+  grid.innerHTML =
+    '<div class="hm-sect">'
+      + '<div class="hm-head">基礎｜核心職能 1–2</div>'
+      + '<div class="hm-note">核心職能 1、2 屬於基礎，較多反映跨場次的一貫實踐；'
+        + '單場難以完整舉證，不代表沒有做到。</div>'
+      + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
+    + '</div>'
+    + '<div class="hm-sect">'
+      + '<div class="hm-head">會談中的實踐｜核心職能 3–8</div>'
+      + hs.slice(MK_BASE_COUNT).map(rowHTML).join('')
+    + '</div>'
+    + '<div class="hm-legend">'
+      + '<span class="hm-cell" data-lv="none"></span>還沒點到'
+      + '<span class="hm-cell" data-lv="1"></span>1 次'
+      + '<span class="hm-cell" data-lv="2"></span>2 次'
+      + '<span class="hm-cell" data-lv="3"></span>3–4 次'
+      + '<span class="hm-cell" data-lv="4"></span>5 次以上'
+    + '</div>'
+    + '<div class="hm-caveat">顏色表示這段期間記錄到的證據分布，不是職能分數；'
+      + '不同職能之間不直接比較。marker 沒有證據不代表這項職能未到位。</div>';
 
   /* 待補清單：送審時每條需要時間戳，這裡列還沒有時間戳的。
      只列「這項職能你標過到位」的，否則等於在問你還沒開始練的東西。
@@ -4946,35 +5238,74 @@ function renderHist() {
       : '<div class="empty">這些條件下沒有紀錄。<br>換個關鍵字，或按「全部」看所有場次。</div>';
     return;
   }
-  /* 兩層列：上層 日期｜客戶｜議題（可伸縮）｜時長・到位｜›
-     下層 八個職能格子跨到議題欄下方，空一格後接認可／同理。
-     這張表曾經四次把議題欄壓到讀不到——五欄擠同一列時，句子欄永遠輸。不要改回單層。
-     欄寬由 .sess-cols 一份 grid-template 決定，標題列與資料列共用，所以永遠對得齊。 */
+  /* M4（2026-08-28）：清單收斂成緊湊摘要——日期｜客戶｜議題｜時長・到位｜›。
+     八個職能格子與認可／同理不再常駐；點進單場詳情看完整的八大職能。
+     欄寬仍由 .sess-cols 一份 grid-template 決定，標題列與資料列共用，所以永遠對得齊。
+     議題欄用 minmax(0,1fr) 獨佔剩餘寬度——這張表曾經四次把議題壓到讀不到，不要再加欄位進去。 */
+  const groups = [];                       // [{key, label, arr}]，順序沿用 histFiltered() 的新到舊
+  arr.forEach(r=>{
+    const key = (r.date||'').slice(0,7) || '';
+    const g = groups.length && groups[groups.length-1].key === key ? groups[groups.length-1] : null;
+    if (g) g.arr.push(r); else groups.push({ key: key, arr: [r] });
+  });
+  const newest = groups.length ? groups[0].key : null;
+  const filtering = histIsFiltering();
   list.innerHTML =
     '<div class="sess-cols sess-head">'
       + '<span>日期</span><span>客戶</span>'
-      + '<span class="sh-topic">這一場的議題・八大職能・認可與同理</span>'
+      + '<span class="sh-topic">這一場的議題</span>'
       + '<span class="sh-meta">時長・到位</span><span></span>'
     + '</div>'
-    + arr.map(r=>{
-    const c = sessionMkCounts(r);
-    const cells = c.st.map((v,i)=>'<span class="cell" data-lv="' + cellLevel(v)
-      + '" title="核心職能 ' + ACC[i][0] + '：' + stLabel(v) + '">' + (i+1) + '</span>').join('');
-    return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
-      + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
-      + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
-      + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
-        + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
-      + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 <b>' + c.done + '</b> 項</span>'
-      + '<span class="sess-arrow">›</span>'
-      + '<div class="sess-bot">'
-        + '<span class="sess-cells">' + cells + '</span>'
-        + '<span class="sess-gap"></span>'
-        + '<span class="sess-tag" data-n="' + c.ack + '">認可 ' + c.ack + '/2</span>'
-        + '<span class="sess-tag" data-n="' + c.emp + '">同理 ' + c.emp + '/2</span>'
-      + '</div>'
+    + groups.map(g=>{
+    const open = histMonthOpen(g.key, newest, filtering);
+    return '<div class="hmonth" data-open="' + (open ? '1' : '0') + '" data-k="' + esc(g.key) + '">'
+      + '<button type="button" class="hmonth-head" aria-expanded="' + (open ? 'true' : 'false') + '"'
+        + ' onclick="toggleHistMonth(\'' + esc(g.key) + '\')">'
+        + '<span class="hm-arrow">▸</span>'
+        + '<span class="hm-t">' + esc(histMonthLabel(g.key)) + '</span>'
+        + '<span class="hm-n">' + g.arr.length + ' 場</span>'
+      + '</button>'
+      + '<div class="hmonth-body">' + g.arr.map(r=>{
+        const c = sessionMkCounts(r);
+        return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
+          + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
+          + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
+          + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
+            + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
+          + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 <b>' + c.done + '</b> 項</span>'
+          + '<span class="sess-arrow">›</span>'
+        + '</div>';
+      }).join('') + '</div>'
     + '</div>';
   }).join('');
+}
+/* ── M4 月份分組的展開狀態 ───────────────────────────
+   規則只有三條，順序不可調換：
+   ① 使用者手動點過的月份 → 照他點的（_histMonthOpen 的覆寫）
+   ② 搜尋框有字／選了客戶／按了快篩 → 命中的月份全部展開（不然要先猜對月份才找得到）
+   ③ 什麼都沒篩 → 只有最新的月份展開
+   換篩選條件時覆寫要清掉，否則上一輪手動收起的月份會蓋掉②。 */
+let _histMonthOpen = {};
+function histIsFiltering(){
+  const el = document.getElementById('hist-q');
+  const kw = (el ? el.value : '').trim();
+  return !!(kw || histFilter || histQuick !== 'all');
+}
+function histMonthLabel(key){
+  if (!key) return '未填日期';
+  const y = key.slice(0,4), m = key.slice(5,7);
+  return y + ' 年 ' + String(Number(m)) + ' 月';
+}
+function histMonthOpen(key, newest, filtering){
+  if (Object.prototype.hasOwnProperty.call(_histMonthOpen, key)) return !!_histMonthOpen[key];
+  if (filtering) return true;
+  return key === newest;
+}
+function toggleHistMonth(key){
+  const box = document.querySelector('#hist-list .hmonth[data-k="' + key + '"]');
+  const now = box ? box.getAttribute('data-open') === '1' : false;
+  _histMonthOpen[key] = !now;
+  renderHist();
 }
 
 /* ═══ §2-4 你在練的事 ══════════════════════════════════
@@ -5128,7 +5459,7 @@ function editCurrent() {
   document.getElementById('f-topic').value = r.topic || '';
   document.getElementById('f-clientquote').value = r.clientQuote || '';
   document.getElementById('f-notcaught').value = r.notCaught || '';
-  document.getElementById('f-submitcand').checked = !!r.submitCandidate;
+  /* M3：送審勾選已撤下。舊紀錄的 r.submitCandidate 仍然讀得到、不會被清掉，只是不再有對應的控制項。 */
   _scoreTouched = true;
   _lastImproveText = '';           /* 編輯舊紀錄時不帶「上次要改」，避免時間對不上 */
   /* 這一筆存的是當時看到的原文，不重算 */
@@ -5385,6 +5716,20 @@ function renderClients(){
   </div>`;}).join('') + '</div>';
   renderClientInsight();
 }
+/* M2（2026-08-28）：客戶詳情最上方的狀態控制。
+   直接寫回 c.status 並存檔，同時同步底部那個隱藏欄位，兩邊不會互相覆蓋。
+   資料欄位與語意完全不變，只是控制項換了位置。 */
+function setClientStatusTop(id, val){
+  const cs = loadC();
+  const c = cs.find(x => String(x.id) === String(id));
+  if (!c) return;
+  c.status = (val === 'closed') ? 'closed' : 'active';
+  storeC(cs);
+  const hid = document.getElementById('c-status'); if (hid) hid.value = c.status;
+  openClient(id);                       /* 重繪：狀態籤與列表一起更新 */
+  toast(c.status === 'closed' ? '已標記為結案' : '已標記為進行中');
+}
+
 /* 洞察卡：同一個焦點連續出現兩場以上。沿用 §2-4 的 practiceItems()，不另外算一次 */
 function renderClientInsight(){
   const box = document.getElementById('client-insight');
@@ -5452,16 +5797,27 @@ function openClient(id){
   const rs = st.rs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
 
   /* 1. 四張統計卡（數字全部從資料推導） */
-  document.getElementById('cd-title').textContent = c.code + (c.status==='closed' ? '（已結案）' : '');
+  document.getElementById('cd-title').textContent = c.code;
+  /* M2：狀態改放最上方。這裡與底部編輯區共用同一份 c.status，資料欄位不變。
+     兩邊都在時會互相覆蓋，所以底部那一份已改成唯讀提示（見下方 client-info）。 */
+  const stTop = document.getElementById('cd-status-top');
+  if (stTop) stTop.innerHTML =
+    '<span class="ccard-st" data-s="' + (c.status==='closed' ? 'closed' : 'active') + '">'
+      + (c.status==='closed' ? '已結案' : '進行中') + '</span>'
+    + '<select id="cd-status-sel" onchange="setClientStatusTop(\'' + c.id + '\', this.value)">'
+      + '<option value="active"' + (c.status!=='closed' ? ' selected' : '') + '>進行中</option>'
+      + '<option value="closed"' + (c.status==='closed' ? ' selected' : '') + '>已結案</option>'
+    + '</select>';
   const pre = parseInt(c.preSessions,10) || 0;
   const stat = (n, name, note) => '<div class="stat1"><div class="stat-n">' + n + '</div>'
     + '<div class="stat-name">' + name + '</div>'
     + (note ? '<div class="stat-note">' + note + '</div>' : '') + '</div>';
   document.getElementById('client-stats').innerHTML =
       stat(st.n, '場次', pre ? '另有工具前 ' + pre + ' 場' : '')
-    + stat(st.hours, '小時', '')
-    + stat(st.focusAns ? st.focusDone + '/' + st.focusAns : '—', '焦點達成', st.focusAns ? '' : '還沒回答過焦點')
-    + stat(st.doneAvg, '平均到位', '每場到位幾項職能');
+    + stat(st.hours, '小時', '');
+  /* M2（2026-08-28）：撤下「焦點達成」「平均到位」兩張卡。
+     只撤渲染入口——clientStats() 仍然算 focusAns／focusDone／doneAvg，
+     舊資料與其他頁面的計算不受影響，也不做 schema 變更。 */
 
   /* 2. 每一場的議題：整列，每列可點進單場詳情 */
   const rl = rs.slice().reverse();
@@ -5494,28 +5850,15 @@ function openClient(id){
   } else {
     cc.classList.add('hidden');
   }
-  /* recap 卡：白底、標籤在上值在下（固定寬度的標籤欄會把值擠成三行） */
-  document.getElementById('client-recap').innerHTML =
-    '<div class="recap-head">'
-      + '<label style="margin:0">開頭要盤點的重點</label>'
-      + '<button type="button" class="recap-copy" onclick="copyClientRecap(\'' + c.id + '\')">複製 recap</button>'
-    + '</div>'
-    + '<div class="sub-note">下次會談前看這個。</div>'
-    + (rl.length
-        ? clientRecapRows(rs).map(x=>'<div class="recap-row">'
-            + '<div class="recap-label">' + x.label + (x.from ? '　<span class="recap-from">' + x.from.slice(5) + '</span>' : '') + '</div>'
-            + '<div class="recap-val' + (x.val ? '' : ' none') + '">' + (x.val ? esc(x.val) : '—') + '</div>'
-          + '</div>').join('')
-        : '<div class="acc-none">還沒有紀錄可以盤點。</div>');
+  /* M2（2026-08-28）：recap 卡已撤下（與歷史紀錄重複）。容器不在 DOM 裡，這裡不再渲染。
+     clientRecapRows()／copyClientRecap() 暫留在相容層，等確認無其他依賴再清死碼。 */
 
   /* 客戶資料編輯（規格的版面三段之外，保留在最下面） */
   document.getElementById('client-info').innerHTML = `
     <label style="margin-top:0">客戶代號</label><input type="text" id="c-code" value="${esc(c.code)}">
-    <label>狀態</label>
-    <select id="c-status">
-      <option value="active"${c.status!=='closed'?' selected':''}>進行中</option>
-      <option value="closed"${c.status==='closed'?' selected':''}>已結案</option>
-    </select>
+    <!-- M2（2026-08-28）：狀態已移到本頁最上方，這裡不再重複；
+         saveClient() 仍會讀 #c-status，所以保留一個隱藏欄位承接目前值，避免存檔時把狀態清掉。 -->
+    <input type="hidden" id="c-status" value="${c.status==='closed'?'closed':'active'}">
     <label>開始記錄前已談次數 <span class="hint">用這工具之前已談過幾次就填幾，都在這裡記就填 0</span></label>
     <input type="text" id="c-pre" inputmode="numeric" value="${pre}">
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
@@ -5566,6 +5909,7 @@ function buildHistFilter(){
 }
 function onHistFilter(){
   histFilter = document.getElementById('hist-filter').value;
+  _histMonthOpen = {};   /* M4：換條件＝重新展開命中的月份，不沿用上一輪的手動收合 */
   renderHist(); renderPractice(); renderChart(); renderReflect();
   if (insightOpen) renderInsight();
 }
@@ -5742,7 +6086,7 @@ const HELP_HTML = `
 <div class="lp-note"><b>請保護客戶隱私：</b>客戶一律使用「代號」，不要輸入真名或任何可辨識的細節。這是自我練習與反思的工具，請勿存放真實客戶個資。</div>
 
 <h3>ACC 標記怎麼填</h3>
-<p><b>四態：</b>每項職能選「尚未評估／未到位／部分到位／到位」。預設是「尚未評估」——沒去看的職能就讓它留著尚未評估，不要讓工具替你判成「未到位」，這兩件事不一樣。「具體事例／證據」和「需要改善的地方」兩個欄位隨時都能寫，不必先選狀態——導師判「部分到位」的那幾項，改善筆記就寫在這裡，會自動彙整進歷史頁的「洞察 → 待改進」和導師督導包。</p>
+<p><b>四態：</b>每項職能選「尚未評估／未到位／部分到位／到位」。預設是「尚未評估」——沒去看的職能就讓它留著尚未評估，不要讓工具替你判成「未到位」，這兩件事不一樣。「具體事例／證據」和「需要改善的地方」兩個欄位隨時都能寫，不必先選狀態——導師判「部分到位」的那幾項，改善筆記就寫在這裡，會自動彙整進歷史頁的「洞察 → 待改進」。</p>
 <p><b>ACC 標記：</b>每項職能下方按「展開 ACC 標記」，裡面是 ICF PCC Markers（2021 官方版）完整 39 條，每條可填證據時間戳，編號跟導師回饋表對得起來。標了 <b>ACC</b> 徽章的 20 條是 ACC 評量會直接看的最低標準技能；其餘是 PCC 才要求的，先填著當練功地圖。上方勾「只顯示 ACC 必備標記」可以把畫面收成 20 條——只是隱藏，已填的資料不會不見。</p>
 <p><b>兩個證據的規則：</b>培養信任(4)、保持臨在(5)、喚起覺察(7) 這三項的 ACC 必備標記，ICF 規定每條要有 2 個以上證據才能勾選，工具會自動數——證據不足時勾選鍵鎖住，但文字欄位一直都能打字。沒有證據就照導師的寫法填 No（No 不計入證據數）。</p>
 <p><b>紅字綠字：</b>展開後每項職能上方會列出「直接扣分」的行為和導師提醒，錄音送評前掃一遍。</p>
@@ -5961,7 +6305,51 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 })();
 
 /* §13-E 側欄底部：版本號與同步狀態。兩個字串都從既有狀態推導，不手寫。 */
+/* ═══ M1 抽屜導覽（2026-08-28）═══
+   開關條件：漢堡、關閉鈕、點遮罩、Esc、選取頁面。
+   開啟時鎖背景捲動；關閉後焦點回到漢堡鈕。ARIA 由 aria-expanded 表達。 */
+let _drawerOpen = false;
+function openDrawer(){
+  if (_drawerOpen) return;
+  _drawerOpen = true;
+  document.body.classList.add('drawer-open');
+  const sc = document.getElementById('nav-scrim'); if (sc) sc.hidden = false;
+  const b = document.getElementById('ab-burger'); if (b) b.setAttribute('aria-expanded', 'true');
+  const c = document.getElementById('drawer-close'); if (c) c.focus();
+}
+function closeDrawer(){
+  if (!_drawerOpen) return;
+  _drawerOpen = false;
+  document.body.classList.remove('drawer-open');
+  const sc = document.getElementById('nav-scrim'); if (sc) sc.hidden = true;
+  const b = document.getElementById('ab-burger');
+  if (b){ b.setAttribute('aria-expanded', 'false'); b.focus(); }   /* 焦點回到漢堡 */
+}
+function toggleDrawer(){ _drawerOpen ? closeDrawer() : openDrawer(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && _drawerOpen) closeDrawer(); });
+
+/* 頂欄右側：讀現有 auth 狀態決定顯示登入還是登出，不硬編碼 */
+function updateAppbarAuth(){
+  const el = document.getElementById('ab-auth');
+  if (!el) return;
+  const inCloud = !!(typeof currentUser !== 'undefined' && currentUser);
+  el.textContent = inCloud ? '登出' : '登入';
+  el.dataset.mode = inCloud ? 'out' : 'in';
+}
+function appbarAuth(){
+  const inCloud = !!(typeof currentUser !== 'undefined' && currentUser);
+  if (inCloud) doLogout(); else doGoogleLogin();
+}
+/* M1：備份／還原移到抽屜。功能與格式不變，只是入口位置改變。 */
+function openDataTools(){
+  closeDrawer();
+  showView('hist');
+  const card = document.getElementById('data-tools');
+  if (card && card.scrollIntoView) card.scrollIntoView({ block: 'start' });
+}
+
 function updateSideFoot(){
+  updateAppbarAuth();
   const v = document.getElementById('side-ver');
   if (v) v.textContent = APP_VER;
   const st = document.getElementById('side-sync');
