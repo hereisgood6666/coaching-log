@@ -59,6 +59,26 @@
   --seg2-bar: #B57A26; --seg2-bg: #FBF0DC;   /*  34–66%  在路上 */
   --seg3-bar: #16748C; --seg3-bg: #E7F1F4;   /*  67–99%  快到了 */
   --seg4-bar: #2F6B45; --seg4-bg: #E4F0E5;   /* 100%     可以送審 */
+  /* 認證卡四段的描邊與深字（設計稿 credInfo() 的 tone[2] / tone[0]）。
+     bar 已是 tone[3]、bg 已是 tone[1]，這裡補齊剩下兩個角色，卡片才有完整一組色。 */
+  --seg1-line: #E8D2C7; --seg1-ink: #8A4630;
+  --seg2-line: #EBD9A8; --seg2-ink: #8A6A18;
+  --seg3-line: #C0DAE2; --seg3-ink: #0F5A6D;
+  --seg4-line: #CBE0CF; --seg4-ink: #1F6B3D;
+
+  /* ═══ 全域外框（設計稿 桌機版設計稿.dc.html 26–101 行）═══
+     側欄寬與主內容寬只在這裡定義一次，.tabs 與 body 都讀這兩個值，
+     不要在別處再寫一次數字（改一個地方就會對不起來）。 */
+  --nav-w:        232px;   /* 桌機側欄 */
+  --nav-w-narrow:  76px;   /* 1024–1180px 的窄側欄 */
+  --content-max: 1180px;   /* 主內容最大寬 */
+  --content-pad:   40px;   /* 主內容左右留白 */
+  --nav-hover:  #EFE9E0;   /* 導覽項目 hover 底色 */
+  /* 圓角與陰影：外框層先定義，各頁卡片沿用既有寫法，這一包不改 */
+  --r-card: 12px;   /* 卡片 */
+  --r-btn:   8px;   /* 按鈕、導覽項目 */
+  --r-pill:  5px;   /* 小籤、進度條 */
+  --shadow-card: 0 1px 3px rgba(0,0,0,.04);
 }
 
 :root { color-scheme: light; }
@@ -74,11 +94,6 @@ body {
 .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
 h1 { font-size: 20px; margin: 4px 0 2px; }
 .sub { color: var(--ink-3); font-size: 13px; margin-bottom: 14px; }
-.stats-line {
-  display: inline-block; background: var(--cool-bg); color: var(--cool-d);
-  font-size: 12.5px; border-radius: 8px; padding: 4px 11px; margin: -6px 0 14px;
-}
-.stats-line:empty { display: none; margin: 0; }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .t-short { display: none; }   /* 只有 1024–1180px 的窄側欄才用短標籤 */
 .tab {
@@ -155,6 +170,9 @@ textarea { resize: vertical; min-height: 46px; }
   min-width: 42px; text-align: center; font-weight: 700; font-size: 17px;
   color: var(--cool-d); background: var(--cool-bg); border-radius: 8px; padding: 3px 0;
 }
+/* A2 未評估：這一場沒評過這一項。灰用 .hint 那個 --ink-4，不新增色票 */
+.score-val.unset { font-size: 12.5px; letter-spacing: 0.02em; font-weight: 600;
+                   color: var(--ink-2); background: var(--line-3); }
 .multi-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
 .multi-item textarea { flex: 1; }
 .mini-btn {
@@ -440,19 +458,38 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 /* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
 @media (min-width: 1024px) {
   body { font-size: 16px; }
-  .wrap { max-width: 1320px; padding-left: 240px; padding-right: 20px; }
+  /* 側欄是 fixed，主內容用左內距讓出它的寬度。外框寬取「內容最大寬＋側欄寬」，
+     margin:0 auto 之後，內容在側欄右側那塊區域裡置中——等同設計稿的
+     main{justify-content:center} ＋ 內容 max-width:1180px。
+     只掛在 #app：#auth-screen 也吃 .wrap，掛在 body 或 .wrap 會把登入頁一起推開。 */
+  #app {
+    max-width: calc(var(--content-max) + var(--nav-w));
+    margin: 0 auto;
+    padding: 34px var(--content-pad) 80px calc(var(--nav-w) + var(--content-pad));
+  }
   .tabs {
-    position: fixed; top: 0; bottom: 0; left: 0; width: 216px; margin: 0;
+    position: fixed; top: 0; bottom: 0; left: 0; width: var(--nav-w); margin: 0;
     /* flex-wrap 必須關掉：欄方向 ＋ 固定高度 ＋ wrap ＝ 內容比視窗高時折成第二欄，
-       第二欄超出 216px 會被下面的 overflow-y 裁掉（側欄看起來像被切一半）。
+       第二欄超出側欄寬會被下面的 overflow-y 裁掉（側欄看起來像被切一半）。
        改成 nowrap，超高就照 overflow-y 垂直捲。 */
-    flex-direction: column; flex-wrap: nowrap; gap: 4px; padding: 20px 12px;
+    flex-direction: column; flex-wrap: nowrap; gap: 2px; padding: 34px 14px 22px;
     background: var(--surface-2); border-right: 1px solid var(--line-2); overflow-y: auto; z-index: 30;
   }
-  .tab { flex: 0 0 auto; text-align: left; padding: 11px 12px; font-size: 14px; }
+  /* 未選中是透明底（設計稿 navStyle()），不是灰底色塊；灰底會讓六個項目糊成一片 */
+  .tab {
+    flex: 0 0 auto; text-align: left; padding: 9px 11px; font-size: 13.5px;
+    border-radius: var(--r-btn); background: transparent; color: var(--ink-2);
+    font-weight: 500; transition: .12s;
+  }
+  .tab:hover { background: var(--nav-hover); }
+  .tab.active { background: var(--warm); color: var(--surface); font-weight: 650; }
+  .tab.active:hover { background: var(--warm); }
   /* §13-B/D 步驟 1：左欄寫會談、右欄是段落導覽與下一步。
      步驟 2 只有職能，吃滿整個內容寬。 */
-  #view-new { display: grid; grid-template-columns: minmax(360px, 470px) minmax(0, 1fr); gap: 0 20px; align-items: start; }
+  /* 主角是左邊的填表欄：吃剩餘空間。右邊的段落導覽／下一步是輔助，固定 268px。
+     欄距 34px。三個數字都照設計稿 桌機版設計稿.dc.html 第 108 行。
+     舊寫法把左欄封在 470px、讓右欄吃 1fr，主次剛好顛倒。 */
+  #view-new { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 0 34px; align-items: start; }
   /* ID 選擇器（1-0-0）會壓過 .hidden（0-1-0），不補這行的話 showView() 藏不掉新增紀錄頁 */
   #view-new.hidden { display: none; }
   #form-step1 { grid-column: 1; }
@@ -461,6 +498,13 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   /* .hidden 帶 !important，藏起來的那一步不會佔格線 */
   .cred-wrap { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 }
+/* 1100–1180：側欄用回完整 232px（導覽全名、認證卡與 1440px 相同）。
+   少掉的寬度從右欄（268→232）與欄距（34→24）取回，左欄仍吃剩餘空間。
+   1100px 實際：1100 − 252（側欄+左內距）− 20（右內距）= 828；828 − 232 − 24 = 572。 */
+@media (min-width: 1100px) and (max-width: 1179.98px) {
+  #app { max-width: none; margin: 0; padding: 24px 20px 60px calc(var(--nav-w) + 20px); }
+  #view-new { grid-template-columns: minmax(0, 1fr) 232px; gap: 0 24px; }
+}
 @media (min-width: 1180px) {
   /* ICF 攤成 2×4 格子，點「逐條」才展開完整 marker 清單 */
   /* 1fr = minmax(auto,1fr)，auto 會拿 input/textarea 的內建寬度當軌道最小值，軌道就不肯縮 → 欄位溢出被裁掉 */
@@ -468,10 +512,11 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   #acc-list .acc-item { margin-bottom: 0; display: flex; flex-direction: column; }
   #acc-list .acc-item .mk-toggle { margin-top: auto; }   /* 同列等高後，展開按鈕永遠在同一條線上 */
 }
-@media (min-width: 1024px) and (max-width: 1179.98px) {
+@media (min-width: 1024px) and (max-width: 1099.98px) {
   /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
-  .wrap { padding-left: 96px; }
-  .tabs { width: 76px; padding: 20px 8px; align-items: stretch; }
+  #app { max-width: none; margin: 0; padding: 24px 20px 60px calc(var(--nav-w-narrow) + 20px); }
+  .tabs { width: var(--nav-w-narrow); padding: 20px 8px; align-items: stretch; }
+  .credcard { margin-top: 0; }
   .tab { text-align: center; padding: 11px 4px; font-size: 12.5px; }
   .t-full { display: none; }
   .t-short { display: inline; }
@@ -524,29 +569,88 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .cell[data-lv="1"] { background: var(--st2-bg); color: var(--st2-fg); }
 .cell[data-lv="2"] { background: var(--st1-bg); color: var(--st1-fg); }
 .cell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); }
+/* 五欄對齊：日期｜客戶｜議題（可伸縮）｜時長・到位｜›
+   欄寬寫在同一個常數式的 grid-template 上，標題列與每一列共用，所以永遠對得齊。
+   第二層（職能格子＋認可／同理）從第 3 欄開始，剛好落在議題底下。 */
+.sess-cols { display: grid; grid-template-columns: 64px 70px minmax(0,1fr) 104px 20px; gap: 7px 10px; }
+.sess-head {
+  padding: 0 12px 9px; border-bottom: 1px solid var(--line-2); margin-bottom: 9px;
+  align-items: baseline;
+}
+.sess-head span { font-size: 11px; font-weight: 700; color: var(--ink-4); }
+.sess-head .sh-topic { color: var(--warm-ink); }
+.sess-head .sh-meta { text-align: right; }
 .sess {
   background: var(--surface); border: 1px solid #E8E2D8; border-radius: 9px;
-  padding: 10px 12px; margin-bottom: 7px; cursor: pointer;
+  padding: 13px 12px; margin-bottom: 7px; cursor: pointer; align-items: center;
   box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .15s;
 }
 .sess:hover { border-color: #B99C82; }
-.sess-top { display: flex; align-items: baseline; gap: 9px; }
-.sess-date { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.sess-client { font-size: 13.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.sess-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sess-client { font-size: 12.5px; color: var(--ink-2); min-width: 0; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
 /* 議題永遠有完整寬度：兩層列就是為了這件事 */
-.sess-topic { flex: 1 1 auto; min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--warm-ink); }
+.sess-topic { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+              font-size: 14px; font-weight: 600; color: var(--warm-ink); }
 .sess-topic.none { color: var(--ink-4); font-weight: 400; }
-.sess-meta { font-size: 12px; color: var(--ink-4); white-space: nowrap; }
-.sess-arrow { color: var(--ink-4); font-size: 16px; }
-.sess-bot { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.sess-meta { font-size: 12px; color: var(--ink-4); white-space: nowrap; text-align: right;
+             font-variant-numeric: tabular-nums; }
+.sess-meta b { font-weight: 600; color: var(--cool-d); }
+.sess-arrow { color: var(--ink-4); font-size: 15px; line-height: 1; text-align: right; }
+.sess-bot { grid-column: 3 / 6; display: flex; align-items: center; gap: 3px; min-width: 0; }
 .sess-cells { display: flex; gap: 3px; flex: 1 1 auto; min-width: 0; }
-.sess-gap { flex: 0 0 10px; }
-.sess-tag { font-size: 11px; color: var(--ink-3); background: var(--line-3); border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
-@media (max-width: 480px) {
-  .sess-top { flex-wrap: wrap; }
-  .sess-topic { flex-basis: 100%; order: 3; }
-  .sess-arrow { margin-left: auto; }
+.sess-gap { flex: 0 0 9px; }
+.sess-tag {
+  flex: 0 0 auto; font-size: 10.5px; font-weight: 700; border-radius: 4px;
+  padding: 0 8px; height: 18px; display: flex; align-items: center; white-space: nowrap;
+  color: var(--ink-3); background: var(--line-3);
 }
+/* 兩條都到位才變綠——半滿不上色，才看得出「還差一條」 */
+.sess-tag[data-n="1"] { background: var(--line-2); color: var(--ink-2); }
+.sess-tag[data-n="2"] { background: var(--ok-bg); color: var(--ok); }
+@media (max-width: 560px) {
+  /* 窄版放不下五欄：議題與第二層各自佔滿一整列，欄位標題列收起來。
+     每一格的列號要寫死——只寫 grid-column 的話，箭頭會被擠到自己一行。 */
+  .sess-cols { grid-template-columns: minmax(0,1fr) auto 20px; }
+  .sess-head { display: none; }
+  .sess-date   { grid-column: 1; grid-row: 1; }
+  .sess-client { grid-column: 2; grid-row: 1; text-align: right; }
+  .sess-arrow  { grid-column: 3; grid-row: 1; }
+  .sess-topic  { grid-column: 1 / -1; grid-row: 2; }
+  .sess-meta   { grid-column: 1 / -1; grid-row: 3; text-align: left; }
+  .sess-bot    { grid-column: 1 / -1; grid-row: 4; }
+}
+
+/* ═══ §14-2 客戶卡片（兩欄） ═══ */
+.client-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+@media (max-width: 700px) { .client-grid { grid-template-columns: minmax(0,1fr); } }
+.ccard {
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px;
+  padding: 16px 18px; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.ccard:hover { background: var(--surface-2); border-color: #B99C82; }
+.ccard-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ccard-id { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+.ccard-code { font-size: 15px; font-weight: 650; color: var(--ink); }
+.ccard-st { flex: 0 0 auto; font-size: 11px; font-weight: 600; border-radius: 5px; padding: 1px 7px; white-space: nowrap; }
+.ccard-st[data-s="active"] { color: var(--cool-d); background: var(--cool-bg); }
+.ccard-st[data-s="closed"] { color: var(--ink-3); background: var(--line-3); }
+.ccard-meta { font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ccard-goal { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+.ctrend { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+.ctrow { display: grid; grid-template-columns: 52px minmax(0,1fr) 64px; gap: 10px; align-items: center; }
+.ct-name { font-size: 11.5px; color: var(--ink-3); }
+.ct-track { height: 6px; background: var(--line-3); border-radius: 3px; overflow: hidden; }
+.ct-fill { height: 100%; border-radius: 3px; background: var(--line); }
+/* 顏色講的是「跟上一場比」的方向，不是分數高低——分數高低看長度就好 */
+.ct-fill[data-lv="up"]   { background: var(--ok); }
+.ct-fill[data-lv="down"] { background: var(--warm-2); }
+.ct-fill[data-lv="flat"] { background: var(--cool); }
+.ct-fill[data-lv="na"]   { background: var(--line); }
+.ct-val { font-size: 11px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.ct-val[data-lv="up"]   { color: var(--ok); }
+.ct-val[data-lv="down"] { color: var(--warm-d); }
+.ct-val[data-lv="na"]   { color: var(--ink-4); }
 
 /* ═══ §2-4 你在練的事 ═══ */
 .prac-sub { font-size: 13.5px; font-weight: 700; color: var(--ink-2); margin: 12px 0 6px; }
@@ -619,47 +723,59 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .tab-soon { opacity: .45; cursor: not-allowed; }
 @media (min-width: 1024px) {
   .tabs { align-items: stretch; }
+  /* 群組之間 26px、群組內 2px（.tabs 的 gap）——設計稿側欄的節奏 */
   .nav-group {
-    display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px;
-    color: var(--ink-4); padding: 12px 12px 2px; text-transform: none;
+    display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    color: var(--ink-4); padding: 0 8px 6px; margin-top: 24px; text-transform: none;
   }
+  /* 認證卡整張跟著進度換段：一張卡只讀 --cc-* 四個角色，
+     四段的實際色票在 :root 的 --segN-*，這裡不重寫顏色。 */
   .credcard {
-    display: block; background: var(--surface); border: 1px solid var(--line-2);
-    border-radius: 12px; padding: 10px 11px 11px; margin-bottom: 6px;
+    display: block; margin: 34px 0 0; padding: 14px 15px; border-radius: 11px;
+    --cc-bg: var(--surface); --cc-line: var(--line-2); --cc-ink: var(--ink-2); --cc-bar: var(--cool);
+    background: var(--cc-bg); border: 1px solid var(--cc-line);
   }
-  .cc-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-  .cc-title { font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+  .credcard[data-seg="1"] { --cc-bg: var(--seg1-bg); --cc-line: var(--seg1-line); --cc-ink: var(--seg1-ink); --cc-bar: var(--seg1-bar); }
+  .credcard[data-seg="2"] { --cc-bg: var(--seg2-bg); --cc-line: var(--seg2-line); --cc-ink: var(--seg2-ink); --cc-bar: var(--seg2-bar); }
+  .credcard[data-seg="3"] { --cc-bg: var(--seg3-bg); --cc-line: var(--seg3-line); --cc-ink: var(--seg3-ink); --cc-bar: var(--seg3-bar); }
+  .credcard[data-seg="4"] { --cc-bg: var(--seg4-bg); --cc-line: var(--seg4-line); --cc-ink: var(--seg4-ink); --cc-bar: var(--seg4-bar); }
+  .credcard:hover { border-color: #B99C82; }
+  .cc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .cc-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--cc-ink); white-space: nowrap; }
   .cc-switch { display: flex; gap: 3px; flex: 0 0 auto; }
   .cc-switch button {
-    border: 1px solid var(--line); background: transparent; color: var(--ink-3);
-    border-radius: 6px; padding: 2px 6px; font-size: 10.5px; font-weight: 700;
-    font-family: inherit; cursor: pointer; line-height: 1.4;
+    border: 1px solid var(--cc-line); background: var(--surface); color: var(--cc-ink);
+    border-radius: var(--r-pill); padding: 2px 7px; font-size: 10px; font-weight: 700;
+    letter-spacing: .04em; font-family: inherit; cursor: pointer; line-height: 1.4;
+    white-space: nowrap;
   }
-  .cc-switch button.on { background: var(--cool); border-color: var(--cool); color: var(--st4-fg); }
+  .cc-switch button.on { background: var(--cc-bar); border-color: var(--cc-bar); color: var(--surface); }
   .cc-body {
     display: block; width: 100%; text-align: left; border: none; background: none;
-    padding: 6px 0 0; margin: 0; cursor: pointer; font-family: inherit;
+    padding: 0; margin: 0; cursor: pointer; font-family: inherit;
   }
   /* 主角是小時數，百分比縮在右下角 */
-  .cc-hours { font-size: 12px; color: var(--ink-3); line-height: 1.15; margin-bottom: 7px; }
-  .cc-hours b { font-size: 30px; font-weight: 700; color: var(--cool-d); font-variant-numeric: tabular-nums; }
-  .cc-track { height: 9px; border-radius: 5px; overflow: hidden; background: var(--line-3); }
-  .cc-track[data-seg="1"] { background: var(--seg1-bg); }
-  .cc-track[data-seg="2"] { background: var(--seg2-bg); }
-  .cc-track[data-seg="3"] { background: var(--seg3-bg); }
-  .cc-track[data-seg="4"] { background: var(--seg4-bg); }
-  .cc-fill { height: 100%; border-radius: 5px; transition: width .5s ease; }
-  .cc-fill[data-seg="1"] { background: var(--seg1-bar); }
-  .cc-fill[data-seg="2"] { background: var(--seg2-bar); }
-  .cc-fill[data-seg="3"] { background: var(--seg3-bar); }
-  .cc-fill[data-seg="4"] { background: var(--seg4-bar); }
-  .cc-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: 6px; }
-  .cc-foot > span:first-child { font-size: 12px; color: var(--ink-2); }
-  .cc-pct { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
-  .cc-miss { font-size: 11px; color: var(--ink-4); line-height: 1.5; margin-top: 5px; }
+  .cc-hours {
+    display: flex; align-items: baseline; gap: 6px; margin: 6px 0 0;
+    font-size: 12px; font-weight: 600; color: var(--cc-bar); line-height: 1.15;
+  }
+  .cc-hours b {
+    font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1;
+    color: var(--cc-ink); font-variant-numeric: tabular-nums;
+  }
+  .cc-hours > span { white-space: nowrap; }
+  .cc-track { height: 8px; border-radius: var(--r-pill); overflow: hidden; background: var(--cc-line); margin-top: 9px; }
+  .cc-fill { height: 100%; border-radius: var(--r-pill); background: var(--cc-bar); transition: width .5s ease; }
+  .cc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
+  .cc-tier {
+    font-size: 10.5px; font-weight: 700; white-space: nowrap; padding: 2px 8px;
+    border-radius: var(--r-pill); color: var(--cc-ink); background: var(--surface);
+  }
+  .cc-pct { font-size: 11.5px; font-weight: 700; color: var(--cc-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cc-miss { font-size: 11px; color: var(--cc-bar); line-height: 1.55; margin-top: 6px; }
   .cc-miss:empty { display: none; }
 }
-@media (min-width: 1024px) and (max-width: 1179.98px) {
+@media (min-width: 1024px) and (max-width: 1099.98px) {
   /* 側欄收成 76px，卡片只留時數與進度條。
      ACC／PCC 兩顆並排會超出 76px 的內容寬，這裡改成上下疊。 */
   .credcard { padding: 7px 5px 8px; }
@@ -668,7 +784,10 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   .cc-switch { flex-direction: column; gap: 2px; width: 100%; }
   .cc-switch button { padding: 2px 0; font-size: 9.5px; text-align: center; }
   .cc-hours b { font-size: 20px; }
-  .cc-hours { text-align: center; font-size: 10.5px; }
+  /* 76px 放不下「118 / 100 小時」一行；桌機版的 flex 一行排版在這裡要允許換行，
+     否則「/ 100 小時」會被側欄裁掉。 */
+  .cc-hours { text-align: center; font-size: 10.5px; flex-wrap: wrap; justify-content: center; gap: 0 4px; }
+  .cc-hours > span { white-space: normal; }
   .cc-foot { justify-content: center; }
 }
 
@@ -743,7 +862,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 /* ═══ §6 步驟眉標 ═══
    眉標用絕對定位，不佔版面高度；page-head 的 padding-top 是常數，
    所有分頁共用同一個 header，大標題的 Y 座標因此不會因為有沒有眉標而位移。 */
-.page-head { position: relative; padding-top: 18px; }
+/* margin-bottom 是必要的：原本那條全站統計條在提供頁首與下方內容的間距，
+   §14-1 把它移除之後，手機版的頁首會直接貼上側欄，看起來像壓在一起。 */
+.page-head { position: relative; padding-top: 18px; margin-bottom: 16px; }
 .step-eyebrow {
   position: absolute; top: 0; left: 0; height: 18px; line-height: 18px;
   font-size: 11px; font-weight: 700; letter-spacing: .3px; color: var(--warm-ink);
@@ -751,6 +872,154 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 }
 .step-eyebrow:empty { display: none; }
 .step-eyebrow-sub { color: var(--ink-3); font-weight: 600; }
+.step-eyebrow-sub.link { color: var(--ink-3); cursor: pointer; pointer-events: auto; text-decoration: none; }
+.step-eyebrow-sub.link:hover { color: var(--warm-d); text-decoration: underline; }
+/* 眉標整體 pointer-events:none，裡面那顆連結要自己開回來 */
+
+/* ═══ §14-1 頁首：返回連結／標題／副標 ＋ 右上動作 ═══ */
+.head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.head-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1 1 260px; }
+.head-back {
+  font-size: 11.5px; color: var(--ink-3); cursor: pointer; text-decoration: none;
+  align-self: flex-start;
+}
+.head-back:hover { color: var(--warm-d); text-decoration: underline; }
+.head-actions { display: flex; align-items: stretch; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.head-actions:empty { display: none; }
+.head-actions .btn { white-space: nowrap; }
+@media (max-width: 560px) {
+  .head-actions { width: 100%; }
+  .head-actions .btn { flex: 1 1 0; }
+}
+
+/* ═══ §14-B 側欄 tone 與四籤 ═══ */
+/* 切換籤與 tier 籤跟著進度分段換色。四段門檻是既有的 credSeg()，
+   色票是既有的 --segN-bar / --segN-bg，沒有新增任何色票。
+   設計稿的 tone[2]（較淺的邊框）與 seg4 深字沒有對應色票，改用該段主色。 */
+.cc-tier { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
+           background: var(--surface); white-space: nowrap; }
+.credcard[data-seg="1"] .cc-tier, .credcard[data-seg="1"] .cc-pct { color: var(--seg1-bar); }
+.credcard[data-seg="2"] .cc-tier, .credcard[data-seg="2"] .cc-pct { color: var(--seg2-bar); }
+.credcard[data-seg="3"] .cc-tier, .credcard[data-seg="3"] .cc-pct { color: var(--seg3-bar); }
+.credcard[data-seg="4"] .cc-tier, .credcard[data-seg="4"] .cc-pct { color: var(--seg4-bar); }
+.cc-pct { font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.credcard[data-seg="1"] .cc-switch button { border-color: var(--seg1-bar); color: var(--seg1-bar); }
+.credcard[data-seg="2"] .cc-switch button { border-color: var(--seg2-bar); color: var(--seg2-bar); }
+.credcard[data-seg="3"] .cc-switch button { border-color: var(--seg3-bar); color: var(--seg3-bar); }
+.credcard[data-seg="4"] .cc-switch button { border-color: var(--seg4-bar); color: var(--seg4-bar); }
+.credcard[data-seg="1"] .cc-switch button.on { background: var(--seg1-bar); color: var(--st4-fg); }
+.credcard[data-seg="2"] .cc-switch button.on { background: var(--seg2-bar); color: var(--st4-fg); }
+.credcard[data-seg="3"] .cc-switch button.on { background: var(--seg3-bar); color: var(--st4-fg); }
+.credcard[data-seg="4"] .cc-switch button.on { background: var(--seg4-bar); color: var(--st4-fg); }
+/* 側欄「進行中」籤：有未存檔草稿才出現 */
+.nav-wip { margin-left: auto; flex: 0 0 auto; font-size: 10.5px; font-weight: 700;
+           padding: 1px 7px; border-radius: 20px; letter-spacing: .02em; white-space: nowrap;
+           background: #F6EBE5; color: var(--warm-d); }
+.tab.active .nav-wip.on { background: rgba(255,252,248,.22); color: var(--st4-fg); }
+/* 導師提問四籤 */
+.ask-tabs { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+.ask-tab { padding: 8px 15px; border-radius: 8px; font-size: 13px; white-space: nowrap;
+           cursor: pointer; font-family: inherit; transition: .12s;
+           background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); font-weight: 500; }
+.ask-tab:hover { background: var(--surface-2); }
+.ask-tab.on { background: var(--warm); color: var(--st0-fg); border-color: transparent; font-weight: 650; }
+
+/* ═══ §14-A 步驟 2：主從版面 ═══ */
+.acc-split { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; align-items: start; }
+/* <1024px 單欄堆疊時，職能本體排第一。
+   原本左欄（八項導覽 ＋ AI 卡）會整個壓在職能表單上面，手機要滑過兩大塊才看得到
+   「核心職能 1」——這是快速記錄工具，進來就該能開始勾。導覽移到後面不影響切換，
+   acc-main 裡本來就有「← 上一項／下一項 →」。1024px 以上維持左右兩欄，order 歸零。 */
+.acc-main { order: 1; }
+.acc-side { order: 2; }
+@media (min-width: 1024px) {
+  .acc-split { grid-template-columns: 274px minmax(0,1fr); gap: 0 26px; }
+  .acc-side { position: sticky; top: 34px; order: 0; }
+  .acc-main { order: 0; }
+}
+.acc-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.acc-main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+/* 左欄八項清單 */
+.acc-nav { padding: 11px; display: flex; flex-direction: column; gap: 1px; }
+.acc-navrow {
+  display: flex; align-items: flex-start; gap: 9px; width: 100%; text-align: left;
+  border: none; background: none; font-family: inherit; cursor: pointer;
+  padding: 8px 9px; border-radius: 8px; color: var(--ink);
+}
+.acc-navrow:hover { background: var(--surface-2); }
+.acc-navrow.on { background: var(--cool-bg); }
+.acc-navrow.on .an-name { color: var(--cool-d); }
+.an-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; }
+/* 圓點沿用四態的既有色階，不新增色票 */
+.an-dot[data-st="-1"] { background: var(--line); }
+.an-dot[data-st="0"]  { background: var(--st1-bg); }
+.an-dot[data-st="1"]  { background: var(--st2-bg); }
+.an-dot[data-st="2"]  { background: var(--cool); }
+.an-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.an-name { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.an-meta { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+/* 左欄 AI 卡 */
+.ai-card { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 12px; padding: 16px 17px; }
+.ai-eyebrow { font-size: 11px; font-weight: 700; color: var(--cool); letter-spacing: .06em; margin-bottom: 5px; }
+.ai-title { font-size: 14.5px; font-weight: 650; margin: 0 0 7px; letter-spacing: -.01em; color: var(--cool-d); line-height: 1.45; }
+.ai-sub { font-size: 11.5px; color: var(--cool-d); margin: 0 0 12px; line-height: 1.7; }
+.ai-btns { display: flex; flex-direction: column; gap: 7px; }
+.ai-primary { background: var(--cool); color: var(--st4-fg); border: none; font-weight: 600; }
+.ai-ghost { background: var(--surface); border: 1px solid var(--cool-line); color: var(--cool-d); font-weight: 600; font-size: 12.5px; }
+.ai-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--cool-line); }
+.ai-step { display: flex; gap: 9px; align-items: flex-start; }
+.ai-step-n { flex: 0 0 18px; height: 18px; border-radius: 50%; background: var(--cool); color: var(--st4-fg);
+             font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.ai-step-t { font-size: 11.5px; color: var(--cool-d); line-height: 1.65; }
+.ai-warn { background: var(--warm-bg-2); border-left: 3px solid var(--amber); border-radius: 0 7px 7px 0;
+           padding: 9px 11px; margin-top: 11px; font-size: 11px; color: var(--warm-ink); line-height: 1.65; }
+/* 右欄面板 */
+.acc-cur-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.acc-cur-num { font-size: 11.5px; font-weight: 700; color: var(--ink-4); letter-spacing: .06em; }
+.acc-cur-name { font-size: 20px; font-weight: 650; margin: 0; letter-spacing: -.01em; }
+.acc-cur-alt { font-size: 12.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 2px 9px; }
+.acc-cur-alt:empty { display: none; }
+.acc-cur-desc { font-size: 13.5px; color: var(--ink-3); margin: 0 0 16px; line-height: 1.7; }
+.acc-meters { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+.acc-meter { border-radius: 10px; padding: 12px 14px; }
+.acc-meter[data-lv="acc"] { background: var(--warm-bg-2); border: 1px solid var(--warm-line); }
+.acc-meter[data-lv="pcc"] { background: var(--cool-bg); border: 1px solid var(--cool-line); }
+.am-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.am-lbl { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; }
+.am-n { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.acc-meter[data-lv="acc"] .am-lbl { color: var(--warm-ink); }
+.acc-meter[data-lv="acc"] .am-n   { color: var(--warm-d); }
+.acc-meter[data-lv="pcc"] .am-lbl { color: var(--cool-d); }
+.acc-meter[data-lv="pcc"] .am-n   { color: var(--cool); }
+.am-track { height: 5px; border-radius: 3px; overflow: hidden; }
+.acc-meter[data-lv="acc"] .am-track { background: var(--warm-line); }
+.acc-meter[data-lv="pcc"] .am-track { background: var(--cool-line); }
+.am-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.acc-meter[data-lv="acc"] .am-fill { background: var(--warm-d); }
+.acc-meter[data-lv="pcc"] .am-fill { background: var(--cool); }
+/* 面板頭已經帶了編號／名稱／官方名／說明，acc-item 自己那份就不用再出現一次。
+   只藏顯示，buildAcc() 產生的結構與 id 一個都沒動。 */
+#acc-list .acc-head { display: none; }
+/* 中性的「還缺什麼」卡 */
+.acc-gap { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 11px; padding: 14px 16px; margin-top: 16px; }
+.acc-gap-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); margin-bottom: 3px; }
+.acc-gap-sub { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-bottom: 8px; }
+.acc-gap-row { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
+.acc-gap-code { font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: var(--ink-2);
+                background: var(--surface); border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+/* 上一項／下一項 */
+.acc-steps { display: flex; justify-content: space-between; gap: 12px; }
+.acc-step-btn { background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-size: 13.5px; }
+.acc-step-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* 頁首右上的 ACC／PCC 計數卡 */
+.hd-count { border-radius: 8px; padding: 5px 11px; text-align: center; min-width: 62px;
+            display: flex; flex-direction: column; justify-content: center; }
+.hd-count[data-lv="acc"] { background: var(--warm-bg-2); border: 1px solid var(--warm-line); }
+.hd-count[data-lv="pcc"] { background: var(--cool-bg); border: 1px solid var(--cool-line); }
+.hd-count b { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; display: block; }
+.hd-count span { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hd-count[data-lv="acc"] b { color: var(--warm-ink); } .hd-count[data-lv="acc"] span { color: var(--warm-d); }
+.hd-count[data-lv="pcc"] b { color: var(--cool-d); }   .hd-count[data-lv="pcc"] span { color: var(--cool); }
 
 /* ═══ §13-D 右欄：段落導覽與下一步 ═══ */
 #form-side { display: block; }
@@ -794,23 +1063,28 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .nav-brand-user:empty { display: none; }
 .nav-foot { display: none; }
 .nav-badge {
-  margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 700;
-  color: var(--ink-3); font-variant-numeric: tabular-nums;
+  margin-left: auto; flex: 0 0 auto; font-size: 11.5px; font-weight: 400;
+  color: var(--ink-4); font-variant-numeric: tabular-nums;
 }
 .nav-badge:empty { display: none; }
 /* 選中的分頁是深底，徽章跟著吃分頁的文字色，否則灰字在深底上讀不到 */
-.tab.active .nav-badge { color: inherit; opacity: .85; }
+.tab.active .nav-badge { color: var(--surface); opacity: 1; }
 @media (min-width: 1024px) {
-  .nav-brand { display: block; padding: 0 12px 12px; }
-  .nav-brand-name { font-size: 14.5px; }
+  /* 手機版的 flex:1 1 100% 是為了換行版面；在直向側欄裡 grow:1 會把品牌區
+     撐成一大塊，把認證卡與導覽整個往下推。桌機一律不長不縮。 */
+  .nav-brand { display: block; flex: 0 0 auto; padding: 0 8px; }
+  /* 行高沿用內文的 1.65：品牌區高度＝47px，往下的認證卡與三個群組才會落在設計稿的位置 */
+  .nav-brand-name { font-size: 15px; letter-spacing: -.01em; line-height: 1.65; }
+  .nav-brand-user { font-size: 12px; color: var(--ink-4); }
   /* 徽章靠右對齊：分頁鈕本身改成一列 flex */
-  .tab { display: flex; align-items: center; gap: 6px; }
-  .nav-foot { display: block; margin-top: auto; padding: 14px 12px 4px; }
-  .nav-foot-ver { font-size: 11px; color: var(--ink-4); }
-  .nav-foot-links { font-size: 11.5px; margin-top: 4px; }
-  .nav-foot-links a { color: var(--warm-d); font-weight: 600; cursor: pointer; }
+  .tab { display: flex; align-items: center; gap: 8px; }
+  .nav-foot { display: block; margin-top: auto; padding: 24px 8px 0; }
+  .nav-foot-ver { font-size: 11.5px; color: var(--ink-4); }
+  .nav-foot-links { display: flex; gap: 12px; font-size: 12px; margin-top: 8px; }
+  .nav-foot-links a { color: var(--ink-3); font-weight: 400; cursor: pointer; }
+  .nav-foot-links a:hover { color: var(--ink-2); }
 }
-@media (min-width: 1024px) and (max-width: 1179.98px) {
+@media (min-width: 1024px) and (max-width: 1099.98px) {
   .nav-brand, .nav-foot-links { display: none; }
   .nav-foot { padding: 10px 4px 4px; text-align: center; }
   /* 76px 寬放不下「v5.0 · 本機模式」一整行，拆兩行，中間那個點就不需要了 */
@@ -821,18 +1095,201 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 }
 /* 回顧卡右上角的上一場日期 */
 .fr-date { margin-left: auto; font-size: 11.5px; color: var(--warm-d); font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   §15 第二包：新增紀錄「步驟 1」對齊設計稿
+   規格：文件/第二包_新增紀錄步驟1_交辦稿_2026-08-25.md（44 條 ＋ Q1–Q7 定案）
+   來源：桌機版設計稿.dc.html 105–290 行（步驟 1）／292–307 行（僅共用頁首對照）
+
+   硬限制（§11-1）：本節所有選擇器一律鎖在 #view-new / #form-step1 / #form-side
+   或步驟 1 專用 class 之內。**不得改全域 .card / h1 / label / .hint /
+   input / textarea / select 這些規則本身**——上面那些全域規則一行都沒動，
+   這裡全部是加範圍的覆寫。
+   唯一例外是 A4–A6 的共用頁首（#page-h1 / #page-sub / .step-eyebrow），
+   理由見規格 §4-1；步驟 2 的內部版面（#form-step2 底下）一行未動。
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── A4／A5／A6：共用頁首（本包唯一的共享元件例外）──────────────
+   設計稿步驟 1（113 行）與步驟 2（301 行）的 h1／副標／眉標同規格，
+   所以改一次兩步都對；改完必須驗步驟 2 沒破版。
+   眉標高度從 18→19px 是為了對上設計稿的 top:-19px。 */
+.page-head { padding-top: 19px; }
+.step-eyebrow { height: 19px; line-height: 19px; font-size: 11.5px; letter-spacing: .06em; color: var(--warm); }
+.step-eyebrow-sub, .step-eyebrow-sub.link { font-size: 11.5px; font-weight: 400; letter-spacing: 0; color: var(--ink-4); }
+#page-sub { font-size: 13.5px; color: var(--ink-3); }
+@media (min-width: 1024px) {
+  /* 26px 只在桌機套用：設計稿只畫 1440px，手機沿用既有 20px，避免窄螢幕標題換行破版 */
+  #page-h1 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
+}
+
+/* ── A1／A2／A3：卡片外觀、內距、卡間距 ───────────────────────── */
+#form-step1 .card, #form-side .card {
+  border: 1px solid var(--line-2); border-radius: 12px; box-shadow: none;
+}
+#form-step1 .card { padding: 20px 22px; margin-bottom: 22px; }
+#form-step1 .review-card  { padding: 18px 22px; }
+#form-step1 #sec-special  { padding: 16px 22px; }
+
+/* ── A7：卡片標題 ───────────────────────────────────────────── */
+#form-step1 .fold-title { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+#form-step1 .review-card .fold-title,
+#form-step1 #sec-special .fold-title { font-size: 15px; }
+
+/* ── A8／A9：欄位標籤與提示字 ──────────────────────────────────
+   .hint 當獨立 <div> 用時全站沒有任何規則（＝繼承內文 16px）。
+   這裡補上範圍內的定義，不動全域。 */
+#form-step1 label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+#form-step1 label .hint { font-size: 12.5px; font-weight: 400; color: var(--ink-4); }
+#form-step1 .hint { font-size: 12.5px; color: var(--ink-4); line-height: 1.5; margin: 2px 0 8px; }
+/* 卡片層級的說明（衡量卡「0–10…」、焦點卡「一次只盯一件…」）維持 12.5px，不跟著降 */
+#form-step1 .fold-body > .hint:first-child { margin: 0 0 16px; }
+/* A9 三種文字層級，照設計稿的實際層級分開，不是整批同一個字級：
+   ① 欄位標籤旁的短提示（議題、馬上掉出來的問題）＝標籤層，12.5px／400，見上面 label .hint
+   ② 四條滑桿：名稱 14px／600，提示另起一行 11.5px（設計稿 scoreRows 第 216–221 行）
+   ③ 送審欄下方的說明 11.5px（設計稿第 148 行）
+   :has() 選到「後面緊接著 .score-wrap 的那個 label」＝四條滑桿的名稱，
+   同一張卡裡的「因為」不會被選到，也不必動 DOM。 */
+#form-step1 #sec-score label:has(+ .score-wrap) { font-size: 14px; }
+#form-step1 #sec-score label:has(+ .score-wrap) .hint {
+  display: block; font-size: 11.5px; font-weight: 400; color: var(--ink-4); line-height: 1.4;
+}
+#form-step1 .submit-cand + .hint { font-size: 11.5px; }
+
+/* ── A10：輸入框（font-size 維持 16px，見規格 §4-2 註記）─────────── */
+#form-step1 input[type=text], #form-step1 input[type=date],
+#form-step1 textarea, #form-step1 select { padding: 10px 12px; border-radius: 8px; }
+#form-step1 #sec-basic .row input { padding: 9px 11px; }
+
+/* ── A11：卡內分隔線 ────────────────────────────────────────── */
+#form-step1 .fld-div { border-top-color: var(--line-3); margin: 16px 0 0; }
+#form-step1 .fld-div + label { margin-top: 16px; }
+
+/* ── A12／A13／B8：兩處兩欄格線（桌機才分欄，手機維持單欄）───────── */
+#form-step1 .f2col { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
+#form-step1 .f2col-cell { min-width: 0; display: flex; flex-direction: column; }
+#form-step1 .f2col-cell > label:first-child { margin-top: 0; }
+@media (min-width: 1024px) {
+  #form-step1 .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 14px; }
+  #form-step1 .f2col { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* ── B8：送審勾選框包進有邊框的 label，點擊區更大 ─────────────────── */
+#form-step1 .submit-cand {
+  align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; margin-top: 0;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  font-size: 13.5px; font-weight: 400; color: var(--ink);
+}
+#form-step1 .submit-cand input { width: 17px; height: 17px; margin-top: 0; }
+
+/* ── A14／A15／A16：滑桿 ────────────────────────────────────────
+   數值方塊改暖色（設計稿 scoreRows.valStyle）。「未評估」仍是灰底灰字，
+   和有數值的狀態一眼分得出來（規格 B4）。 */
+#form-step1 .score-wrap { gap: 14px; }
+#form-step1 .score-wrap input[type=range] { height: 5px; }
+#form-step1 .score-val {
+  min-width: 54px; font-size: 19px; letter-spacing: -.01em;
+  color: #8E4F3B; background: var(--warm-bg);
+}
+#form-step1 .score-val.unset { font-size: 12.5px; color: var(--ink-2); background: var(--line-3); }
+
+/* ── A17／A18／A19：上一場留下的 ───────────────────────────────── */
+#form-step1 .review-card { border: 1px solid var(--warm-line); }
+#form-step1 .fr-date {
+  font-size: 11.5px; color: var(--warm); background: #F6EBE5;
+  border-radius: 20px; padding: 2px 9px; line-height: 1.5;
+}
+#form-step1 .fr-row {
+  display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 12px;
+  align-items: start; margin: 0;
+}
+#form-step1 .fr-row + .fr-row {
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--warm-line);
+}
+#form-step1 .fr-lbl { font-size: 12.5px; font-weight: 600; color: var(--warm-ink); }
+#form-step1 .fr-txt { font-size: 14px; line-height: 1.7; }
+
+/* ── A20：焦點卡 ───────────────────────────────────────────── */
+#form-step1 .focus-card { border: 1px solid var(--warm-line); }
+#form-step1 .focus-card input[type=text] { padding: 11px 13px; }
+
+/* ── A21～A25：右欄段落導覽 ────────────────────────────────────── */
+@media (min-width: 1024px) {
+  #form-side { top: 34px; max-height: calc(100vh - 68px); }
+}
+#form-side .navcard { padding: 16px; margin-bottom: 0; }
+#form-side .navcard-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  color: var(--ink-4); margin-bottom: 11px;
+}
+#form-side .navrow { padding: 7px 9px; border-radius: 7px; }
+#form-side .navname { font-size: 13px; }
+#form-side .navrow.on { background: var(--surface-2); color: var(--ink); font-weight: 650; }
+#form-side .navrow:hover { background: var(--surface-2); }
+/* 圓點只表示「填了沒」，不跟著選中狀態變色（設計稿 segs.dotStyle） */
+#form-side .navdot { width: 6px; height: 6px; background: var(--line); }
+#form-side .navrow.done .navdot, #form-side .navrow.on.done .navdot { background: var(--ok); }
+#form-side .navrow.na .navdot,   #form-side .navrow.on.na .navdot   { background: var(--line-dash); }
+#form-side .navrow.on .navdot { background: var(--line); }
+#form-side .navrow.on.done .navdot { background: var(--ok); }
+#form-side .navrow.on.na .navdot { background: var(--line-dash); }
+#form-side .navstate { font-size: 11px; color: var(--ink-4); }
+#form-side .navrow.done .navstate { color: var(--ink-4); font-weight: 400; }
+#form-side .navcard-tip { margin-top: 13px; padding-top: 13px; font-size: 12.5px; color: var(--ink-2); }
+
+/* ── A26：下一步卡 ─────────────────────────────────────────── */
+#form-side .nextcard {
+  background: var(--cool); padding: 20px 18px; margin-top: 14px;
+  box-shadow: 0 6px 20px -6px rgba(15,90,109,.45);
+}
+#form-side .next-eyebrow { letter-spacing: .08em; color: #A9D3DF; opacity: 1; }
+#form-side .next-title { letter-spacing: -.01em; opacity: 1; }
+#form-side .next-sub { color: #C7E1E9; opacity: 1; margin-top: 7px; }
+#form-side .next-btn { padding: 13px; border-radius: 9px; font-size: 15px; font-weight: 700; margin-top: 15px; }
+#form-side .next-btn:hover { background: var(--cool-bg); }
+#form-side .savelater-btn {
+  margin-top: 14px; padding: 12px; border: 1px solid var(--line);
+  border-radius: 9px; font-size: 13.5px; font-weight: 600; color: var(--ink-2);
+}
+#form-side .savelater-btn:hover { background: var(--surface-2); }
+
+/* ── 回顧卡的四顆結果按鈕（做到／部分／沒做到／忘了）──────────────
+   設計稿 focusOpts（桌機版設計稿.dc.html 第 2764 行）是靠左排列的小籤，
+   產品原本是等寬撐滿整列。桌機改成小籤；手機保留等寬與 44px 操作高度。
+   只動 .fr-btns / .fr-btn / .fr-btn.on，且一律鎖在 #form-step1 之內：
+   全域 button 與 .fr-btn 的原規則一行未改，回顧卡的其他文字、間距、
+   日期籤與邊框也都沒動。 */
+@media (min-width: 1024px) {
+  #form-step1 .fr-btns { flex-wrap: wrap; }
+  #form-step1 .fr-btn {
+    flex: 0 0 auto; min-height: 0; padding: 5px 13px; border-radius: 7px;
+    font-size: 12.5px; font-weight: 500; color: var(--warm-ink);
+    /* 只讓顏色過渡。不指定屬性的 transition 等於 all，會把 flex／font-size／padding
+       也動畫化——任何一次樣式重算都會看到 120ms 的寬度抽動。 */
+    transition: background-color .12s, border-color .12s, color .12s;
+  }
+  /* 上一行的 #form-step1 .fr-btn（特異性 1-1-0）會壓過全域 .fr-btn.on（0-2-0），
+     選中態的白字會被暖色字蓋掉；這裡把選中態的前景補回來。 */
+  #form-step1 .fr-btn.on { color: var(--st0-fg); font-weight: 650; }
+}
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
   <header class="page-head">
     <!-- §13-A 眉標：「步驟 N / 2」後面接一句灰字說明現在在哪一步。
-         總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。 -->
-    <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"><span id="step-eyebrow-n"></span><span class="step-eyebrow-sub" id="step-eyebrow-sub"></span></span>
-    <h1 id="page-h1">這一場發生了什麼</h1>
-    <div class="sub" id="page-sub">趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。</div>
+         總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。
+         步驟 2 的第二格是「← 回會談記錄」，所以它是連結不是純文字。 -->
+    <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"><span id="step-eyebrow-n"></span><a class="step-eyebrow-sub" id="step-eyebrow-sub"></a></span>
+    <!-- §14-1 每一頁自己的標題、副標與右上角一顆主要動作，全部由 VIEW_HEAD 決定 -->
+    <div class="head-row">
+      <div class="head-main">
+        <a class="head-back hidden" id="page-back"></a>
+        <h1 id="page-h1">這一場發生了什麼</h1>
+        <div class="sub" id="page-sub">趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。</div>
+      </div>
+      <div class="head-actions" id="page-actions"></div>
+    </div>
   </header>
-  <div class="stats-line" id="stats-line"></div>
 
   <nav class="tabs">
     <!-- §13-E 側欄標題區：站名搬到這裡，內容區的 h1 讓給當頁標題 -->
@@ -852,24 +1309,24 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <button type="button" class="cc-body" onclick="showView('cred')">
         <div class="cc-hours"><b id="cc-h"></b><span id="cc-goal"></span></div>
         <div class="cc-track"><div class="cc-fill" id="cc-fill"></div></div>
-        <div class="cc-foot"><span id="cc-pace"></span><span class="cc-pct" id="cc-pct"></span></div>
+        <div class="cc-foot"><span class="cc-tier" id="cc-pace"></span><span class="cc-pct" id="cc-pct"></span></div>
         <div class="cc-miss" id="cc-miss"></div>
       </button>
     </div>
     <span class="nav-group">記錄</span>
-    <button class="tab active" id="tabNew" onclick="showView('new')"><span class="t-full">新增紀錄</span><span class="t-short">新增</span></button>
+    <button class="tab active" id="tabNew" onclick="goStep(1)"><span class="t-full">新增紀錄</span><span class="t-short">新增</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
     <button class="tab" id="tabMark" onclick="goStep(2)"><span class="t-full">職能標記</span><span class="t-short">職能</span> <span class="nav-badge" id="markCnt"></span></button>
     <span class="nav-group">回顧</span>
     <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
     <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span class="nav-badge" id="cnt"></span></button>
-    <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span></button>
+    <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span> <span class="nav-badge" id="credCnt"></span></button>
     <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span class="nav-badge" id="askCnt"></span></button>
     <span class="nav-group">手邊</span>
     <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span class="nav-badge" id="jCnt"></span></button>
     <!-- §13-E 側欄底部：版本、同步狀態、兩個連結 -->
     <div class="nav-foot" id="nav-foot">
       <div class="nav-foot-ver"><span id="side-ver"></span><span class="nav-foot-dot"> · </span><span id="side-sync">本機模式</span></div>
-      <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"> / <a onclick="doLogout()">登出</a></span></div>
+      <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"><a onclick="doLogout()">登出</a></span></div>
     </div>
   </nav>
 
@@ -903,20 +1360,26 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
           <input type="text" id="f-mins" inputmode="numeric" placeholder="60">
         </div>
       </div>
-      <label>客戶</label>
-      <select id="f-client-sel" onchange="onClientSelChange()"></select>
-      <div id="f-client-newbox" class="hidden">
-        <input type="text" id="f-client-new" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
-        <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
-        <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
+      <!-- §15-B8 客戶與送審改成並排兩欄（設計稿 137–150 行）；手機仍是單欄。
+           §13-C1 送審是獨立欄位，有自己的標籤，不是掛在客戶欄下面的裸勾選框。 -->
+      <div class="f2col">
+        <div class="f2col-cell">
+          <label>客戶</label>
+          <select id="f-client-sel" onchange="onClientSelChange()"></select>
+          <div id="f-client-newbox" class="hidden">
+            <input type="text" id="f-client-new" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
+            <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
+            <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
+          </div>
+          <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
+        </div>
+        <div class="f2col-cell">
+          <label>送審錄音</label>
+          <label class="submit-cand"><input type="checkbox" id="f-submitcand">
+            這場可以當送審錄音</label>
+          <div class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</div>
+        </div>
       </div>
-      <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
-      <!-- §13-C1 送審是獨立欄位，有自己的標籤，不是掛在客戶欄下面的裸勾選框 -->
-      <div class="fld-div"></div>
-      <label>送審錄音</label>
-      <div class="hint">當場才知道哪場談得好，三個月後翻紀錄挑不出來</div>
-      <label class="submit-cand"><input type="checkbox" id="f-submitcand">
-        這場可以當送審錄音</label>
       <div class="fld-div"></div>
       <label>這一場的議題</label>
       <div class="hint">他帶來想談的事</div>
@@ -940,10 +1403,18 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
       <div class="fld-div"></div>
       <div class="sub-note">下面兩欄只記他說的那個詞或畫面，不記事件細節與人名。</div>
-      <label>他自己說的一句話</label>
-      <input type="text" id="f-clientquote" placeholder="例：32:10「我好像一直在幫別人活」">
-      <label>我注意到但沒接的</label>
-      <textarea id="f-notcaught" rows="2" placeholder="例：他講到媽媽時停了一下，我沒有停下來問"></textarea>
+      <!-- §15-B9（Q4）兩欄並排、都是三行 textarea（設計稿 199–207 行）。
+           id 與 clientQuote／notCaught 的讀寫語意不變：fv() 讀 .value，textarea 一樣成立。 -->
+      <div class="f2col">
+        <div class="f2col-cell">
+          <label>他自己說的一句話</label>
+          <textarea id="f-clientquote" rows="3" placeholder="例：32:10「我好像一直在幫別人活」"></textarea>
+        </div>
+        <div class="f2col-cell">
+          <label>我注意到但沒接的</label>
+          <textarea id="f-notcaught" rows="3" placeholder="例：他講到媽媽時停了一下，我沒有停下來問"></textarea>
+        </div>
+      </div>
       <div id="f-insight-legacy" class="hidden"></div>
       <div class="fld-div"></div>
       <label>我做得好的（1–3 個）</label>
@@ -964,13 +1435,13 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </button>
       <div class="fold-body">
       <div class="hint">0–10，可以拉半格。這不是評分，只是給自己一個衡量——第一個直覺通常最準。</div>
-      <label>我的專注程度 <span class="hint">全程有在他身上嗎</span></label>
+      <label>我的專注程度 <span class="hint">從頭到尾在他身上嗎</span></label>
       <div class="score-wrap">
         <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="perfVal">7</span>
       </div>
-      <label>客戶的投入程度 <span class="hint">他真的想、還是在撐？</span></label>
+      <label>客戶的投入程度 <span class="hint">他真的在想，還是在應付</span></label>
       <div class="score-wrap">
         <input type="range" id="f-feel" min="0" max="10" step="0.5" value="7"
                oninput="document.getElementById('feelVal').textContent=this.value;markTouched('score')">
@@ -979,13 +1450,17 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <label>這一場的推進感 <span class="hint">他離目標更近了嗎</span></label>
       <div class="score-wrap">
         <input type="range" id="f-progress" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('progressVal').textContent=this.value;markTouched('score')">
+               oninput="document.getElementById('progressVal').textContent=this.value;markTouched('score');clearScoreUnset('progress')"
+               onpointerup="clearScoreUnset('progress')"
+               onkeyup="clearScoreUnset('progress')">
         <span class="score-val" id="progressVal">7</span>
       </div>
-      <label>我猜客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
+      <label>我覺得客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
       <div class="score-wrap">
         <input type="range" id="f-clientfeel" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('clientfeelVal').textContent=this.value;markTouched('score')">
+               oninput="document.getElementById('clientfeelVal').textContent=this.value;markTouched('score');clearScoreUnset('clientfeel')"
+               onpointerup="clearScoreUnset('clientfeel')"
+               onkeyup="clearScoreUnset('clientfeel')">
         <span class="score-val" id="clientfeelVal">7</span>
       </div>
       <label>因為 <span class="hint">為什麼覺得客戶是這個感受</span></label>
@@ -1046,34 +1521,58 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
     <!-- ── 步驟 2：ICF 八大職能 ── -->
     <div id="form-step2" data-step-only="2" class="hidden">
-    <section class="card fold" data-fold="acc" id="sec-acc">
-      <button type="button" class="fold-head" onclick="toggleFold('acc')">
-        <span class="fold-title">ICF 八大核心職能</span>
-        <span class="fold-state" data-state="acc"></span>
-        <span class="fold-act">收起 ▴</span>
-      </button>
-      <div class="fold-body">
-      <div class="hint">四態自評：尚未評估／未到位／部分到位／到位。預設是「尚未評估」——沒填不等於沒做到。證據與「需要改善」隨時可寫；展開可逐條標記 ICF PCC Markers（39 條，ACC 必備者加註 ACC）</div>
-      <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
-      <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
-        先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
-      <div class="acc-progress" id="acc-progress"></div>
-      <div id="acc-list"></div>
-      </div>
-    </section>
+    <!-- §14-A 主從版面：左欄八項清單（sticky）＋ AI 卡，右欄一次只看一項。
+         八項一律全部渲染進 DOM，非當前項只是 display:none——getAcc() 是逐項從 DOM
+         讀值的，少一項 DOM 就少一項資料。這是這一批最重要的一條約束。 -->
+    <div class="acc-split" id="sec-acc">
+      <aside class="acc-side">
+        <nav class="card acc-nav" id="acc-nav"></nav>
+        <section class="ai-card">
+          <div class="ai-eyebrow">選用</div>
+          <h2 class="ai-title">想看得更客觀？用 AI 分析逐字稿</h2>
+          <p class="ai-sub">自己評容易全給到位。提示詞依 ICF ACC 績效評估標準寫，會要 AI 逐項引原文當證據，看不出來就標「無法從逐字稿判斷」，不猜。</p>
+          <div class="ai-btns">
+            <button type="button" class="btn ai-primary" onclick="copyAccPrompt()">複製分析提示詞</button>
+            <button type="button" class="btn ai-ghost" id="ai-steps-btn" onclick="toggleAiSteps()">三步驟怎麼做 ▾</button>
+          </div>
+          <div class="ai-steps hidden" id="ai-steps"></div>
+          <div class="ai-warn">錄音先取得同意；貼給 AI 前先去辨識；<b>逐字稿不要存進本工具</b>。</div>
+        </section>
+      </aside>
 
-    <!-- AI 逐字稿（§5.4）：產出就是職能判斷，跟著職能放在步驟 2 -->
-    <section class="card fold" data-fold="ai" id="sec-ai">
-      <button type="button" class="fold-head" onclick="toggleFold('ai')">
-        <span class="fold-title">用 AI 分析逐字稿</span>
-        <span class="fold-state" data-state="ai"></span>
-        <span class="fold-act">收起 ▴</span>
-      </button>
-      <div class="fold-body">
-      <div class="sub-note">選用。工具本身不接任何 AI，這裡只是幫你把提示詞複製出去。</div>
-      <button class="btn btn-ghost" style="width:100%" onclick="openAccAnalyze()">🎯 用 AI 分析逐字稿，自動判斷職能到位</button>
+      <div class="acc-main">
+        <section class="card acc-panel">
+          <div class="acc-cur-head">
+            <span class="acc-cur-num" id="acc-cur-num"></span>
+            <h2 class="acc-cur-name" id="acc-cur-name"></h2>
+            <span class="acc-cur-alt" id="acc-cur-alt"></span>
+          </div>
+          <p class="acc-cur-desc" id="acc-cur-desc"></p>
+          <div class="acc-meters">
+            <div class="acc-meter" data-lv="acc">
+              <div class="am-top"><span class="am-lbl">ACC</span><span class="am-n" id="am-acc-n"></span></div>
+              <div class="am-track"><div class="am-fill" id="am-acc-fill"></div></div>
+            </div>
+            <div class="acc-meter" data-lv="pcc">
+              <div class="am-top"><span class="am-lbl">PCC</span><span class="am-n" id="am-pcc-n"></span></div>
+              <div class="am-track"><div class="am-fill" id="am-pcc-fill"></div></div>
+            </div>
+          </div>
+          <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
+          <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
+            先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
+          <div class="acc-progress" id="acc-progress"></div>
+          <div id="acc-list"></div>
+          <!-- 中性的「還缺什麼」卡：只列這一項裡勾了做到、但還沒有時間戳的 ACC 必評條目。
+               不講「不會過」——工具不評分、不指認失敗。 -->
+          <div class="acc-gap hidden" id="acc-gap"></div>
+        </section>
+        <div class="acc-steps">
+          <button type="button" class="btn acc-step-btn" id="acc-prev" onclick="accStep(-1)">← 上一項</button>
+          <button type="button" class="btn acc-step-btn" id="acc-next" onclick="accStep(1)">下一項 →</button>
+        </div>
       </div>
-    </section>
+    </div>
 
     <div class="actions">
       <button class="btn btn-ghost" onclick="goStep(1)">← 回會談記錄</button>
@@ -1085,6 +1584,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
   <!-- ===== HISTORY ===== -->
   <div id="view-hist" class="hidden">
+    <!-- §14-1 匯出的二段式清單跟著頁首的按鈕走，不要留在下面的卡片裡 -->
+    <div id="expbox-hist"></div>
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
@@ -1123,13 +1624,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
     </div>
 
     <div class="card">
-      <label style="margin-top:0">匯出與分享 <span class="hint">上方選了客戶，就只會匯出那一位的完整紀錄</span></label>
+      <label style="margin-top:0">給導師的督導包</label>
+      <div class="sub-note">去識別化打包待問問題、浮現的問題與待改進，貼給導師。匯出 PDF／文字在頁首右上角。</div>
       <div class="actions" style="margin-top:10px">
-        <button class="btn btn-primary" id="btn-exp-hist" onclick="exportTwoStep('hist')">匯出 PDF</button>
-        <button class="btn btn-ghost" id="btn-exp-txt" onclick="exportTwoStep('txt')">匯出文字</button>
-      </div>
-      <div id="expbox-hist"></div>
-      <div class="actions" style="margin-top:8px">
         <button class="btn btn-primary" onclick="openMentorPack()">📦 生成導師督導包（去識別化）</button>
       </div>
     </div>
@@ -1141,7 +1638,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <div class="phrase-body collapsed" id="insight-body"></div>
     </div>
     <div class="card" id="chart-card">
-      <label style="margin-top:0">自評趨勢 <span class="hint">表現 vs 感受 <span id="chart-hint"></span></span></label>
+      <label style="margin-top:0">自評趨勢 <span class="hint">專注・投入・推進感・客戶感受 <span id="chart-hint"></span></span></label>
       <div class="chart-box" id="trendChart"></div>
     </div>
     <div class="card" id="reflect-card" style="display:none">
@@ -1165,9 +1662,19 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
   <!-- ===== CLIENTS ===== -->
   <div id="view-clients" class="hidden">
+    <!-- §14-1 新增客戶由頁首右上那顆開合，卡片本身移到最上面 -->
+    <div class="card hidden" id="new-client-box">
+      <label style="margin-top:0">＋ 新增客戶 <span class="hint">一律使用代號</span></label>
+      <div class="phrase-add" style="margin-top:0">
+        <input type="text" id="new-client-code" placeholder="客戶代號，例：Tom、A 小姐">
+        <button onclick="addClient()">新增</button>
+      </div>
+      <div class="privacy-tip">🔒 真實姓名不要進工具。代號會出現在匯出的 PDF 與時數表裡，是給你自己對照用的。</div>
+    </div>
     <!-- ① 客戶列表在最上面 -->
     <div class="card">
-      <label style="margin-top:0">客戶 <span class="hint" id="client-count"></span></label>
+      <label style="margin-top:0">點一位客戶進去 <span class="hint" id="client-count"></span></label>
+      <div class="sub-note">裡面有他的儀表板跟每一場紀錄。</div>
       <div id="client-list"></div>
     </div>
     <!-- ② 洞察卡在列表下面 -->
@@ -1176,20 +1683,12 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <div class="sub-note">同一個焦點連續出現兩場以上就會列在這裡。通常不是你忘了——而是這件事對你重要，而且它真的不容易。</div>
       <div id="client-insight"></div>
     </div>
-    <!-- ③ 新增客戶 -->
-    <div class="card">
-      <label style="margin-top:0">＋ 新增客戶 <span class="hint">一律使用代號</span></label>
-      <div class="phrase-add" style="margin-top:0">
-        <input type="text" id="new-client-code" placeholder="客戶代號，例：Tom、A 小姐">
-        <button onclick="addClient()">新增</button>
-      </div>
-      <div class="privacy-tip">🔒 真實姓名不要進工具。代號會出現在匯出的 PDF 與時數表裡，是給你自己對照用的。</div>
-    </div>
     <div style="height:24px"></div>
   </div>
 
   <!-- ===== 認證進度（§4C） ===== -->
   <div id="view-cred" class="hidden">
+    <div id="expbox-csv"></div>
     <div class="card">
       <label style="margin-top:0">認證進度 <span class="hint">ACC 與 PCC 同時看得到</span></label>
       <div class="sub-note">兩個都是同一份時數，不用分開記。ACC 的時數會一起算進 PCC。</div>
@@ -1206,8 +1705,6 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       <label style="margin-top:0">匯出 ICF 時數表</label>
       <div class="sub-note">工具裡只有客戶代號、日期、會談次數、時長。ICF 的時數表另外要求客戶<b>真實姓名、聯絡方式、關係起訖日</b>——
         這三欄是刻意不放進工具的（去識別化），匯出的 CSV 會留三個空白欄位讓你自己填。</div>
-      <button class="btn btn-ghost" id="btn-exp-csv" style="width:100%;margin-top:10px" onclick="exportTwoStep('csv')">匯出時數表（CSV）</button>
-      <div id="expbox-csv"></div>
     </div>
     <div style="height:24px"></div>
   </div>
@@ -1241,6 +1738,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
   <!-- ===== 覺察手帳（§9） ===== -->
   <div id="view-journal" class="hidden">
+    <div id="expbox-journal"></div>
     <div class="card">
       <div class="hist-head">
         <label style="margin:0">覺察手帳 <span class="hint" id="j-count"></span></label>
@@ -1248,9 +1746,6 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
       </div>
       <div class="sub-note">一條一條的提醒。導師講過的話，寫成下一場真的用得上的句子。</div>
       <div class="jtagbar" id="j-tagbar"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="jNew()">寫一條提醒</button>
-      <button class="btn btn-ghost" id="btn-exp-journal" style="width:100%;margin-top:8px" onclick="exportTwoStep('journal')">匯出手帳（PDF）</button>
-      <div id="expbox-journal"></div>
     </div>
     <div id="j-list"></div>
     <div style="height:24px"></div>
@@ -1258,7 +1753,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 
   <!-- ===== MENTOR QUESTIONS ===== -->
   <div id="view-ask" class="hidden">
-    <div class="card">
+    <!-- §14-1 新增問題由頁首右上那顆開合 -->
+    <div class="card hidden" id="ask-compose-box">
       <label style="margin-top:0">＋ 新增問題</label>
       <textarea id="ask-q" placeholder="這次會談後想問導師的問題…" oninput="onAskInput()"></textarea>
       <div id="ask-dup"></div>
@@ -1283,7 +1779,6 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
   <div id="view-detail" class="hidden">
     <div class="card" id="detail-body"></div>
     <div class="actions">
-      <button class="btn btn-ghost" id="btn-detail-back" onclick="backFromDetail()">返回</button>
       <button class="btn btn-ghost" onclick="copyDetail()">複製文字</button>
       <button class="btn btn-primary" onclick="editCurrent()">編輯</button>
     </div>
@@ -1485,7 +1980,7 @@ function mkRows(v){
 function rowsToEv(rows){ return (rows||[]).map(r=>String(r.t||'').trim()).filter(Boolean).join(', '); }
 /* 標記顯示範圍：true = 只顯示 ACC 必備標記 */
 let mkAccOnly = false;
-const APP_VER = "v5.0";   // 頁尾顯示；使用者回報問題時用來確認版本
+const APP_VER = "v5.1";   // 頁尾顯示；使用者回報問題時用來確認版本
 /* 管理者 uid：只有這個帳號看得到「備份所有人」。安全性規則那邊 admin 只有 read、沒有 write，
    所以這裡刻意不做「還原所有人」——還原是高風險操作，要做請手動在 Console 做。 */
 const ADMIN_UID = 'cNeCrcUHbWXzLrQ9UVv9AVQhvN03';
@@ -1559,6 +2054,31 @@ function loadC() { try { return JSON.parse(localStorage.getItem(CKEY)) || []; } 
 function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(stampChanged(CKEY, a))); schedulePush(); }
 const DKEY = "coachingDeleted_v1";   // 刪除墓碑：避免另一台裝置把已刪的資料「復活」
 const SKEY = "coachingSyncedAt_v1";  // 上次看到的雲端 updated_at
+
+/* ═══ 帳號型資料的中央清單 ═══
+   「這台裝置上屬於某一個帳號的資料」只在這裡列一次。三個地方共用同一份：
+     1. doLogout()      登出成功後清理
+     2. runMigrations() 遷移前逐位元組快照
+     3. runMigrations() 失敗後逐位元組回捲
+   不要在那三處另外手寫陣列——手寫白名單漏掉一個 key，就是一個資料保護的洞。
+   已經踩過兩次：JKEY 漏在回捲清單外（手帳不回捲）、PREV3KEY 漏在回捲清單外
+   （migrateAcc3 先建立了更新前快照，之後的遷移失敗時它會殘留一份來自失敗遷移的快照）。
+
+   **OKEY 不在這裡**：那是「這台裝置有沒有看過新手引導」，屬於裝置設定，不屬於帳號。
+   同理，未來的裝置層設定也不要加進來。localStorage 是同網域共用，
+   整批掃描 coaching* 會連 migration 範圍外的東西一起動到。 */
+const ACCOUNT_KEYS = [
+  KEY,        // 會談紀錄
+  QKEY,       // 導師提問
+  CKEY,       // 客戶
+  JKEY,       // 覺察手帳卡片
+  JTKEY,      // 手帳標籤
+  DKEY,       // 刪除墓碑
+  SKEY,       // 上次看到的雲端 updated_at
+  RKEY,       // acc 影子副本
+  PREV3KEY    // 四態遷移前的原樣快照
+];
+
 function loadDel(){
   try {
     const d = JSON.parse(localStorage.getItem(DKEY));
@@ -1750,6 +2270,9 @@ const FIREBASE_CONFIG = {
 };
 let fb = { app:null, auth:null, db:null, authMod:null, fsMod:null };
 let currentUser = null, pushTimer = null;
+const FIRESTORE_REST_ORIGIN = 'https://firestore.googleapis.com';
+const KEEPALIVE_BODY_LIMIT_BYTES = 64 * 1024;
+let keepaliveIdToken = '', keepaliveTokenExp = 0, keepaliveInFlight = false, cloudDirty = false;
 
 async function initSync(){
   if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId){ startLocal(); return; }
@@ -1764,6 +2287,12 @@ async function initSync(){
     fb.db = fsMod.getFirestore(fb.app);
     fb.authMod = authMod; fb.fsMod = fsMod;
     authMod.getRedirectResult(fb.auth).catch(()=>{});   // 完成手機的轉址登入
+    /* 關分頁時來不及現場等 getIdToken()，所以只在記憶體預存 Auth SDK
+       已發給這位使用者的 token。不進 localStorage，也不進備份。 */
+    authMod.onIdTokenChanged(fb.auth, (user)=>{
+      if (user) refreshKeepaliveToken(user);
+      else { keepaliveIdToken = ''; keepaliveTokenExp = 0; }
+    });
     authMod.onAuthStateChanged(fb.auth, (user)=>{ if (user) onLogin(user); else showAuth(); });
   } catch(e){ startLocal(); }
 }
@@ -1820,6 +2349,7 @@ async function doGoogleLogin(){
 async function onLogin(user){
   if (currentUser && currentUser.uid === user.uid) return;
   currentUser = user;
+  await refreshKeepaliveToken(user);
   authMsg('');
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
@@ -1835,16 +2365,21 @@ async function onLogin(user){
 }
 async function doLogout(){
   await flushPush();           /* ② 登出會清掉本機資料，等待中的推送要先送出去 */
-  if (fb.auth){ try { await fb.authMod.signOut(fb.auth); } catch(e){} }
+  /* signOut 失敗就整個中止：不清資料、也不顯示登入頁。
+     「看起來登出了、其實沒登出」比登出失敗危險——使用者會以為這台裝置已經乾淨了。 */
+  if (fb.auth){
+    try { await fb.authMod.signOut(fb.auth); }
+    catch(e){ toast('⚠️ 登出沒有成功，資料沒有被清除。請檢查網路後再試一次'); return; }
+  }
   currentUser = null;
-  localStorage.removeItem(KEY); localStorage.removeItem(QKEY); localStorage.removeItem(CKEY);
-  localStorage.removeItem(DKEY); localStorage.removeItem(SKEY);
-  updateCount(); updateAskCount();
-  document.getElementById('acct-email').textContent = '';
-  document.getElementById('nav-foot-sep').classList.add('hidden');
-  updateSideFoot();
-  renderAdminBackup();
-  showAuth();
+  keepaliveIdToken = ''; keepaliveTokenExp = 0; cloudDirty = false; keepaliveInFlight = false;
+  /* 帳號型資料一個都不能留給下一個帳號。清單在 ACCOUNT_KEYS，與 runMigrations() 共用，
+     這裡不另外手寫。OKEY（是否看過新手引導）屬於這台裝置、不屬於帳號，不在清單裡，保留。 */
+  ACCOUNT_KEYS.forEach(k => localStorage.removeItem(k));
+  /* 重新載入，而不是 showAuth()：未儲存的表單文字、currentId／editId、
+     migrationFailed／cloudSnapReady 等記憶體狀態，以及上一個帳號留在 DOM 裡的內容，
+     都不能帶進下一個帳號。 */
+  location.reload();
 }
 async function syncPull(){
   if (!fb.db || !currentUser) return;
@@ -1868,20 +2403,95 @@ async function syncPull(){
      補推一次，不然那些改動會一直只留在這台裝置上。 */
   if (pulled) schedulePush();
 }
-/* ② debounce 還在等的時候，使用者存檔／離開頁面／登出，那筆改動會跟著消失。
-   flushPush() 把等待中的推送立刻送出；下面四個時機點都會叫它。 */
-function flushPush(){
-  if (!pushTimer) return Promise.resolve();
-  clearTimeout(pushTimer); pushTimer = null;
-  return pushCloud();
+/* ② debounce 還在等的時候，使用者存檔／離開頁面／登出，必須立刻補送。
+   一般路徑仍用 SDK；真正離頁時改走 keepalive REST。 */
+function flushPush(useKeepalive){
+  if (pushTimer){ clearTimeout(pushTimer); pushTimer = null; }
+  if (!cloudDirty) return Promise.resolve(false);
+  return useKeepalive ? pushCloudKeepalive() : pushCloud();
 }
+/* 存檔後多久把資料推上雲端。改這個值前先讀 schedulePush() 裡的說明——它同時是資料遺失窗口。 */
+const PUSH_DEBOUNCE_MS = 150;
 function schedulePush(){
   if (!fb.db || !currentUser) return;
   /* §0B 機制一＋二：遷移失敗、或雲端快照還沒確認，一律不推。
      壞資料或未備份狀態下的 setDoc 會直接蓋掉使用者雲端那份。 */
   if (migrationFailed || !cloudSnapReady) return;
+  cloudDirty = true;
+  refreshKeepaliveToken(currentUser);   // 不等它；關頁用的是記憶體裡已存好的 token
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(()=>{ pushTimer = null; pushCloud(); }, 800);
+  /* PUSH_DEBOUNCE_MS：debounce 是為了把「存一筆紀錄會連續寫好幾個 key」合併成一次雲端寫入。
+     D1 實測（真的關分頁，非合成事件）證明 SDK 的非同步 setDoc 會被分頁拆除中斷；
+     因此一般停留路徑保留 150ms debounce，離頁事件則由 pushCloudKeepalive() 根治小 payload 的秒關補送。 */
+  pushTimer = setTimeout(()=>{ pushTimer = null; pushCloud(); }, PUSH_DEBOUNCE_MS);
+}
+function tokenExpiryMs(token){
+  try {
+    const part = String(token||'').split('.')[1];
+    if (!part) return 0;
+    const b64 = part.replace(/-/g,'+').replace(/_/g,'/');
+    const data = JSON.parse(atob(b64.padEnd(Math.ceil(b64.length/4)*4, '=')));
+    return Number(data.exp || 0) * 1000;
+  } catch(e){ return 0; }
+}
+async function refreshKeepaliveToken(user){
+  const u = user || currentUser;
+  if (!u || typeof u.getIdToken !== 'function') return false;
+  try {
+    const token = await u.getIdToken();
+    if (!token) return false;
+    keepaliveIdToken = token;
+    keepaliveTokenExp = tokenExpiryMs(token);
+    return true;
+  } catch(e){ return false; }
+}
+function cloudPayloadJSON(){
+  return JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(),
+    journal: loadJ(), journalTags: loadJT(), deleted: loadDel() });
+}
+function firestoreRestUrl(uid){
+  const projectId = String((fb.app && fb.app.options && fb.app.options.projectId) || FIREBASE_CONFIG.projectId || '');
+  return FIRESTORE_REST_ORIGIN + '/v1/projects/' + encodeURIComponent(projectId)
+    + '/databases/(default)/documents/user_data/' + encodeURIComponent(uid)
+    + '?updateMask.fieldPaths=payload&updateMask.fieldPaths=updated_at';
+}
+function keepaliveBody(payload, now){
+  return JSON.stringify({ fields: {
+    payload: { stringValue: payload },
+    updated_at: { integerValue: String(now) }
+  }});
+}
+function pushCloudKeepalive(){
+  if (!fb.db || !currentUser || migrationFailed || !cloudSnapReady || !cloudDirty) return Promise.resolve(false);
+  if (keepaliveInFlight) return Promise.resolve(true);
+
+  const token = keepaliveIdToken;
+  /* token 在關頁當下不能再等非同步取回。沒有可用 token 時不繞過 Auth，
+     回到原本 SDK 路徑；資料仍在 localStorage，下次開啟會補推。 */
+  if (!token || (keepaliveTokenExp && keepaliveTokenExp <= Date.now())) return pushCloud();
+
+  const now = Date.now(), payload = cloudPayloadJSON(), body = keepaliveBody(payload, now);
+  const bytes = new TextEncoder().encode(body).byteLength;
+  /* keepalive 請求的 body 總量有 64 KiB 上限。超限不切片（那會改 schema），
+     而是保留原 SDK merge 寫入與下次開啟補推。 */
+  if (bytes >= KEEPALIVE_BODY_LIMIT_BYTES) return pushCloud();
+
+  keepaliveInFlight = true;
+  let req;
+  try {
+    req = fetch(firestoreRestUrl(currentUser.uid), {
+      method: 'PATCH', keepalive: true,
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body
+    });
+  } catch(e){ keepaliveInFlight = false; return pushCloud(); }
+  return req.then(res=>{
+    if (!res.ok) throw new Error('Firestore REST ' + res.status);
+    localStorage.setItem(SKEY, String(now));
+    if (cloudPayloadJSON() === payload) cloudDirty = false;
+    pushFailed = false;
+    return true;
+  }).catch(()=>false).finally(()=>{ keepaliveInFlight = false; });
 }
 async function pushCloud(){
   if (!fb.db || !currentUser) return;
@@ -1897,9 +2507,14 @@ async function pushCloud(){
       }
     } catch(e){}
     const now = Date.now();
-    await fb.fsMod.setDoc(ref, { payload: JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(),
-      journal: loadJ(), journalTags: loadJT(), deleted: loadDel() }), updated_at: now });
+    /* merge:true 是必要的，不是保險。不帶 merge 的 setDoc 是整份文件覆寫，會把同一份
+       文件裡的 payload_pre_v{N} 快照一起刪掉——ensureCloudSnapshot() 剛寫好的備份，
+       會在 syncPull() 結尾那次 schedulePush（PUSH_DEBOUNCE_MS 後）被抹掉，機制一等於不存在。
+       merge 只覆蓋這裡列出的兩個欄位，文件不存在時一樣會建立（不可改用 updateDoc）。 */
+    const payload = cloudPayloadJSON();
+    await fb.fsMod.setDoc(ref, { payload, updated_at: now }, { merge: true });
     localStorage.setItem(SKEY, String(now));
+    if (cloudPayloadJSON() === payload) cloudDirty = false;
     pushFailed = false;
   } catch(e){
     if (!pushFailed) { pushFailed = true; toast('⚠️ 雲端同步失敗，資料仍保存在本機'); }
@@ -1908,17 +2523,23 @@ async function pushCloud(){
 let pushFailed = false;
 
 /* ===== §0B 資料保護 =====
-   雲端那份是「鏡像」不是「備份」：schedulePush 用 setDoc 整份覆蓋，沒有版本歷史。
+   雲端那份是「鏡像」不是「備份」：schedulePush 用 setDoc 覆蓋 payload，沒有版本歷史。
+   （pushCloud 的 setDoc 帶 merge，只覆蓋 payload／updated_at 兩個欄位，
+     不會動到下面機制一留下的 payload_pre_v{N} 快照。）
    遷移一跑完就 push，若遷移有 bug，使用者什麼都還沒做，雲端原本那份就已經沒了。
-   下面三件事補這個洞：
+   下面兩件事補這個洞：
      機制一 ensureCloudSnapshot()：每個 schema 版號在雲端留一份「遷移前的原樣」，只寫一次
      機制二 runMigrations()      ：遷移全程 try/catch，失敗回捲本機、封鎖 push
-     機制三 openCloudRestore()   ：使用說明裡的還原入口，讓使用者自己救
+   本版只有上面這兩個機制。頁面內的雲端快照還原（原機制三）因為多裝置的墓碑語意
+   還沒完成，2026-08-26 起暫不提供——這是把不可安全操作的入口撤掉，
+   **不是**已經修好多裝置還原。快照本身照常保存。
+   使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 8;   /* v8：§9 覺察手帳（journal / journalTags 兩個新集合進 payload）。
-                              前一版 v7 是 §6 標記多列。升版號是為了在資料形狀改變之前，
-                              先在雲端留一份 payload_pre_v8。 */
+const SCHEMA_VER = 9;   /* v9：新增可選 progress。舊紀錄缺少 progress 就是尚未評估，
+                              是 identity／no-write 的資料轉換：不 backfill、不補 7／''／null，
+                              只靠 ensureCloudSnapshot(9) 先留 payload_pre_v9，不重寫舊 payload。
+                              v8 是 §9 覺察手帳（journal / journalTags 兩個新集合進 payload）。 */
 const SNAP_KEEP  = 3;                 // 只留最近 3 個版號，避免 Firestore 單一文件 1MB 上限爆掉
 const SNAP_BUDGET = 900 * 1024;       // 快照總量上限（保守值，留給 payload 本身）
 function snapField(v){ return 'payload_pre_v' + v; }
@@ -1930,14 +2551,17 @@ let cloudSnapReady  = false;   // 機制一：雲端快照確認完成前，不�
 /* 機制二：遷移閘門。任何一步丟例外就把本機回捲到遷移前，並封鎖 push。
    寧可讓使用者看到錯誤，也不要把壞資料推上雲端。 */
 function runMigrations(){
-  const KEYS = [KEY, QKEY, CKEY, DKEY, RKEY];
+  /* 快照與回捲都用 ACCOUNT_KEYS，不另外維護清單。
+     原本這裡只有 [KEY, QKEY, CKEY, DKEY, RKEY]，JKEY 與 PREV3KEY 不在裡面：
+     遷移在 migrateJournal() 寫完 JKEY 之後失敗，手帳不會回捲；
+     migrateAcc3() 先建立 PREV3KEY、之後的遷移才失敗，會殘留一份來自失敗遷移的快照。 */
   const before = {};
-  KEYS.forEach(k => { before[k] = localStorage.getItem(k); });
+  ACCOUNT_KEYS.forEach(k => { before[k] = localStorage.getItem(k); });
   try {
     migrateQ(); migrateClients(); migrateAcc(); migrateAcc3(); migrateTopic(); migrateJournal();
     return true;
   } catch(e){
-    KEYS.forEach(k => {
+    ACCOUNT_KEYS.forEach(k => {
       if (before[k] == null) localStorage.removeItem(k); else localStorage.setItem(k, before[k]);
     });
     migrationFailed = true;
@@ -2000,55 +2624,13 @@ async function ensureCloudSnapshot(ver){
   }
 }
 
-/* 機制三：列出雲端現有的快照，讓使用者自己選一份還原 */
-async function openCloudRestore(){
-  if (!fb.db || !currentUser){ toast('要先登入才看得到雲端備份'); return; }
-  openModal('<h3 style="margin-top:0">還原到改版前</h3><p>正在讀取雲端備份…</p>');
-  let list = [];
-  try {
-    const snap = await fb.fsMod.getDoc(fb.fsMod.doc(fb.db, 'user_data', currentUser.uid));
-    const d = snap.exists() ? snap.data() : {};
-    list = Object.keys(d).map(k => ({ k: k, v: snapVerOf(k), o: d[k] }))
-             .filter(x => x.v != null && x.o && x.o.payload)
-             .sort((a,b)=>b.v-a.v);
-  } catch(e){
-    openModal('<h3 style="margin-top:0">還原到改版前</h3><p>讀取雲端備份失敗，請稍後再試。</p>');
-    return;
-  }
-  if (!list.length){
-    openModal('<h3 style="margin-top:0">還原到改版前</h3>'
-      + '<p>雲端目前沒有改版前的備份。這代表你的資料從來沒有經過需要備份的改版，或這是新帳號。</p>');
-    return;
-  }
-  const rows = list.map(x => {
-    let n = 0; try { n = (JSON.parse(x.o.payload).records || []).length; } catch(e){}
-    return '<div class="acc-item"><div class="acc-title">' + esc('改版前（v' + x.v + '）') + '</div>'
-      + '<div class="acc-desc">' + esc((x.o.at || '').slice(0,19).replace('T',' ')) + '　' + n + ' 筆紀錄</div>'
-      + '<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="doCloudRestore(' + x.v + ')">還原這一份</button></div>';
-  }).join('');
-  openModal('<h3 style="margin-top:0">還原到改版前</h3>'
-    + '<p>選一份還原。還原會把這台裝置的紀錄換成該時間點的內容，並同步到雲端。'
-    + '改版後才填的內容會消失，請先確認。</p>' + rows);
-}
-async function doCloudRestore(ver){
-  if (!fb.db || !currentUser) return;
-  if (!confirm('確定要還原成 v' + ver + ' 改版前的資料嗎？\n改版後才填的內容會消失。')) return;
-  try {
-    const snap = await fb.fsMod.getDoc(fb.fsMod.doc(fb.db, 'user_data', currentUser.uid));
-    const o = snap.exists() && snap.data()[snapField(ver)];
-    if (!o || !o.payload){ toast('找不到那一份備份'); return; }
-    const p = JSON.parse(o.payload);
-    if (Array.isArray(p.records))   localStorage.setItem(KEY,  JSON.stringify(p.records));
-    if (Array.isArray(p.questions)) localStorage.setItem(QKEY, JSON.stringify(p.questions));
-    if (Array.isArray(p.clients))   localStorage.setItem(CKEY, JSON.stringify(p.clients));
-    if (p.deleted && p.deleted.r)   storeDel(p.deleted);
-    localStorage.removeItem(RKEY);            // 影子副本屬於改版後，不能拿來「補回」還原掉的內容
-    closeLegal();
-    toast('已還原，正在重新載入');
-    setTimeout(()=>location.reload(), 600);
-  } catch(e){ toast('還原失敗，資料沒有被更動'); }
-}
-
+/* 機制三（頁面內雲端快照還原）已於 2026-08-26 撤下。
+   D0 實測：還原寫進 localStorage 是對的，但它自帶的 reload 觸發 syncPull() → mergeCloud()，
+   而 mergeCloud 對墓碑只做聯集、從不移除，雲端的墓碑會把剛還原回來的紀錄再吃掉一次
+   （使用者看到資料短暫回來、重載後又消失，且沒有錯誤訊息）。
+   多裝置的墓碑語意還沒做完，所以先把不可安全操作的入口撤掉，而不是留著一個會騙人的按鈕。
+   快照本身（ensureCloudSnapshot／payload_pre_v{N}）繼續保存，沒有停用。
+   目前正式支援的使用者還原方式是「備份全部（下載檔）／還原備份」的手動 JSON。 */
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -2220,14 +2802,28 @@ function renderAsk() {
       <button class="mini-link" onclick="undigestQuestion(${x.id})">改回已回答</button>
       <button class="mini-link del-link" onclick="deleteQuestion(${x.id})">刪除</button>
     </div></div>`;
-  document.getElementById('ask-list').innerHTML =
-    `<div class="ask-sub">待回答（${pend.length}）</div>` +
-    (pend.length ? pend.map(pItem).join('') : '<div class="empty" style="padding:14px 0">目前沒有待問的問題</div>') +
-    `<div class="ask-sub" style="margin-top:18px">已回答（${done.length}）</div>` +
-    (done.length ? done.map(dItem).join('') : '<div class="empty" style="padding:14px 0">還沒有已回答的問題</div>') +
-    `<div class="ask-sub" style="margin-top:18px">已消化（${dig.length}）</div>` +
-    (dig.length ? dig.map(gItem).join('') : '<div class="empty" style="padding:14px 0">加進覺察手帳的問題會收到這裡</div>');
+  /* §14-B 四籤：全部／待問／已問／已消化。狀態名沿用既有的 Q_STATE_LABEL，
+     數量全部從資料推導。當前籤只存在記憶體，不進 localStorage。 */
+  const tabs = [['all','全部', pend.length + done.length + dig.length],
+                ['pending', Q_STATE_LABEL.pending, pend.length],
+                ['answered', Q_STATE_LABEL.answered, done.length],
+                ['digested', Q_STATE_LABEL.digested, dig.length]];
+  const chips = '<div class="ask-tabs">' + tabs.map(([v,label,n])=>
+    '<button type="button" class="ask-tab' + (_askTab === v ? ' on' : '') + '"'
+    + ' data-tab="' + v + '" onclick="setAskTab(\'' + v + '\')">' + label + ' ' + n + '</button>').join('')
+    + '</div>';
+  const sec = (v, title, arr, render, empty) =>
+    (_askTab !== 'all' && _askTab !== v) ? ''
+    : `<div class="ask-sub"${v==='pending'?'':' style="margin-top:18px"'}>${title}（${arr.length}）</div>`
+      + (arr.length ? arr.map(render).join('') : '<div class="empty" style="padding:14px 0">' + empty + '</div>');
+  document.getElementById('ask-list').innerHTML = chips
+    + sec('pending', '待回答', pend, pItem, '目前沒有待問的問題')
+    + sec('answered', '已回答', done, dItem, '還沒有已回答的問題')
+    + sec('digested', '已消化', dig, gItem, '加進覺察手帳的問題會收到這裡');
 }
+/* 當前籤只存記憶體（不新增 localStorage 鍵）；切頁回來重置成「全部」是可接受的 */
+let _askTab = 'all';
+function setAskTab(v){ _askTab = v; renderAsk(); }
 function reopenQuestion(id) {
   const arr = loadQ(); const it = arr.find(x=>x.id===id);
   if (it) { it.answered = false; it.digested = false; storeQ(arr); }
@@ -2327,9 +2923,8 @@ function recordMainHTML(r){
     ${r.session?`<div class="date">會談次數：${esc(r.session)}</div>`:''}
     <div class="topic">${topicText(r) ? esc(topicText(r)) : '（沒填議題）'}</div>
     <div class="scorebox">
-      <div class="score">自評表現：<b>${r.perf}</b></div>
-      <div class="score">自評感受：<b>${r.feel}</b></div>
-      ${r.clientfeel!=null?`<div class="score">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because"><b>因為</b>　${esc(r.because)}</div>`:''}`:''}
+      ${SCORES.map(([k,n])=>`<div class="score">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
+      ${r.because?`<div class="because"><b>因為</b>　${esc(r.because)}</div>`:''}
     </div>
     ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
     ${r.prevFocus?`<div class="lbl">上次說要盯</div><div>「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div>`:''}
@@ -2667,20 +3262,35 @@ function renderChart() {
   if (hintEl) hintEl.textContent = (!histFilter && arr.length > 20) ? '（最近 20 筆）' : '';
   if (!histFilter && arr.length > 20) arr = arr.slice(-20);
   const labels = arr.map(r => histFilter ? (r.session || (r.date||'').slice(5) || '') : (r.client || r.date || ''));
-  const series = [
-    { name:'自評表現', color:CHART.perf, vals: arr.map(r=>parseFloat(r.perf)) },
-    { name:'我的感受', color:CHART.feel, vals: arr.map(r=>parseFloat(r.feel)) },
-    { name:'客戶感受', color:CHART.client, vals: arr.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
-  ];
+  const series = SCORES.map(([k,n])=>({ name:n, color:CHART[k==='clientfeel'?'client':k],
+                                        vals: arr.map(r=>scoreNum(r,k)) }));
   document.getElementById('trendChart').innerHTML = svgLineChart(labels, series);
 }
+/* ═══ §14-2 四條滑桿的顯示名稱與取值：只有這一份 ═══
+   欄位名一律不動（perf / feel / clientfeel / progress），只改顯示的字。
+   progress 是 2026-08-24 才有的欄位，舊紀錄沒有 → 顯示端一律「—」。
+   編輯表單可以給預設 7（那是輸入的起點），但顯示、bar、平均絕對不可以套那個 7，
+   否則就是把「沒填」講成「7 分」——跟「不要把沒有填當成未到位」是同一條線。 */
+const SCORES = [
+  ['perf',       '我的專注程度'],
+  ['feel',       '客戶的投入程度'],
+  ['progress',   '推進感'],
+  ['clientfeel', '我覺得客戶的感受']
+];
+function scoreVal(r, k){
+  const v = r ? r[k] : null;
+  return (v === undefined || v === null || v === '') ? null : v;
+}
+function scoreText(r, k){ const v = scoreVal(r, k); return v === null ? '—' : String(v); }
+function scoreNum(r, k){ const v = scoreVal(r, k); const n = parseFloat(v); return v === null || isNaN(n) ? null : n; }
+
 /* §0-1 圖表用色：直接從 :root 的色票變數讀出來，不再有第二份色碼。
    SVG 的 presentation attribute 不吃 var()，所以這裡取實際值而不是字串 var(...)。
    冷色＝事實與成績，暖色＝人與關係。 */
 const CHART = (() => {
   const cs = getComputedStyle(document.documentElement);
   const v = n => cs.getPropertyValue(n).trim();
-  return { perf: v('--cool'), feel: v('--cool-2'), client: v('--warm-2'),
+  return { perf: v('--cool'), feel: v('--cool-2'), progress: v('--ok'), client: v('--warm-2'),
            grid: v('--line-2'), ink: v('--ink-3'), ink4: v('--ink-4'), ink2: v('--ink-2'),
            surface: v('--surface') };
 })();
@@ -2755,8 +3365,11 @@ async function backupAllUsers(){
   toast('已下載全體備份（' + users.length + ' 位使用者）');
 }
 function backupJSON() {
+  /* 六個集合缺一不可。deleted 是刪除墓碑 {r,q,c,j}——漏掉它，還原之後
+     另一台裝置會把已經刪掉的資料再同步回來。 */
   const data = { records: load(), questions: loadQ(), clients: loadC(),
-                 journal: loadJ(), journalTags: loadJT(), exportedAt: new Date().toISOString() };
+                 journal: loadJ(), journalTags: loadJT(), deleted: loadDel(),
+                 exportedAt: new Date().toISOString() };
   /* 走跟其他匯出同一個下載函式，行為一致也驗得到 */
   downloadBlob(JSON.stringify(data, null, 2),
     '會談紀錄備份_' + new Date().toISOString().slice(0,10) + '.json', 'application/json');
@@ -2770,23 +3383,66 @@ function restoreJSON(e) {
       const d = JSON.parse(reader.result);
       const incoming = Array.isArray(d) ? d : (d.records||[]);
       if (!Array.isArray(incoming)) throw 0;
-      const cur = load();
-      const ids = new Set(cur.map(r=>r.id));
-      let added = 0;
-      incoming.forEach(r=>{ if(!ids.has(r.id)){ cur.push(r); added++; } });
-      store(cur);
-      if (d.questions && Array.isArray(d.questions)) {
-        const qcur = loadQ(); const qids = new Set(qcur.map(x=>x.id));
-        d.questions.forEach(x=>{ if(!qids.has(x.id)) qcur.push(x); });
-        storeQ(qcur); updateAskCount();
+      /* 六個集合都要還原。語意維持「匯入並合併」：同 ID 保留現有那一筆，不覆蓋。
+         備份缺哪一欄就完全不動那一欄的現有資料——舊備份沒有 journal/journalTags/deleted，
+         不可以因此把手帳、標籤或墓碑清空。 */
+      const keepUpd = [];        /* [key, [{id, updated}]] —— 見下方「還原不是使用者改動」 */
+      const mergeById = (key, cur, inc, write) => {
+        const ids = new Set(cur.map(x=>x && x.id));
+        const kept = [];
+        let n = 0;
+        (inc || []).forEach(x=>{
+          if (!x || x.id == null || ids.has(x.id)) return;
+          cur.push(x); ids.add(x.id); n++;
+          /* 記下「原本有沒有 updated、值是多少」。原本沒有的，還原後也不能憑空多一個。 */
+          kept.push({ id: x.id, had: ('updated' in x), updated: x.updated });
+        });
+        write(cur);
+        if (kept.length) keepUpd.push([key, kept]);
+        return n;
+      };
+      const added = mergeById(KEY, load(), incoming, store);
+      if (Array.isArray(d.questions)) { mergeById(QKEY, loadQ(), d.questions, storeQ); updateAskCount(); }
+      if (Array.isArray(d.clients))   { mergeById(CKEY, loadC(), d.clients, storeC); }
+      if (Array.isArray(d.journal))   { mergeById(JKEY, loadJ(), d.journal, storeJ); }
+      /* 標籤是純字串陣列：聯集去重，現有的排前面 */
+      if (Array.isArray(d.journalTags)) {
+        const t = loadJT().slice();
+        d.journalTags.forEach(x=>{ if (typeof x === 'string' && t.indexOf(x) < 0) t.push(x); });
+        storeJT(t);
       }
-      if (d.clients && Array.isArray(d.clients)) {
-        const ccur = loadC(); const cids = new Set(ccur.map(x=>x.id));
-        d.clients.forEach(x=>{ if(!cids.has(x.id)) ccur.push(x); });
-        storeC(ccur);
+      /* 墓碑四桶各自聯集去重 */
+      if (d.deleted && typeof d.deleted === 'object' && !Array.isArray(d.deleted)) {
+        const dl = loadDel();
+        ['r','q','c','j'].forEach(k=>{
+          const a = Array.isArray(dl[k]) ? dl[k] : [];
+          const seen = new Set(a.map(String));
+          (Array.isArray(d.deleted[k]) ? d.deleted[k] : []).forEach(v=>{
+            if (!seen.has(String(v))) { a.push(v); seen.add(String(v)); }
+          });
+          dl[k] = a;
+        });
+        storeDel(dl);
       }
-      migrateClients(); migrateAcc(); migrateAcc3(); buildClientSel(''); buildHistFilter();
-      updateCount(); renderHistPage();   /* 紀錄數變了，_histEmpty 要重算 */
+      /* 還原不是「使用者改動」：stampChanged 會把沒見過的 id 蓋成現在時間，
+         那會讓匯入的資料在雙改衝突裡假裝自己最新。這裡把備份原本的 updated 寫回去。
+         必須在 store 之後做，否則會被 stampChanged 再蓋一次。 */
+      keepUpd.forEach(pair=>{
+        const key = pair[0], m = {};
+        pair[1].forEach(x=>{ m[x.id] = x; });
+        try {
+          const arr = JSON.parse(localStorage.getItem(key)) || [];
+          arr.forEach(x=>{
+            const k = x && m[x.id];
+            if (!k) return;
+            if (k.had) x.updated = k.updated; else delete x.updated;
+          });
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch(err){}
+      });
+      migrateClients(); migrateAcc(); migrateAcc3(); migrateJournal();
+      buildClientSel(''); buildHistFilter();
+      updateCount(); updateJCount(); renderHistPage();   /* 紀錄數變了，_histEmpty 要重算 */
       toast('已還原，新增 '+added+' 筆');
     } catch(err){ toast('這個檔案讀不出來，請確認是本工具下載的備份檔'); }
     e.target.value = '';
@@ -2813,9 +3469,7 @@ function recordToText(r) {
   lines.push('這一場的議題：'+(topicText(r) || '（沒填議題）'));
   if(r.mins) lines.push('時長：'+r.mins+' 分鐘');
   if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
-  lines.push('自評表現：'+r.perf);
-  lines.push('自評感受：'+r.feel);
-  if(r.clientfeel!=null) lines.push('我覺得客戶的感受：'+r.clientfeel);
+  SCORES.forEach(([k,n])=>lines.push(n+'：'+scoreText(r,k)));
   if(r.because) lines.push('　因為：'+r.because);
   if(r.prevFocus) lines.push('上次說要盯：'+r.prevFocus+(r.prevFocusResult?'　→　'+focusResultLabel(r.prevFocusResult):''));
   if(r.focus) lines.push('下一場只盯這一件事：'+r.focus);
@@ -2934,6 +3588,7 @@ function buildAcc() {
   const sh = document.getElementById('mk-scope-hint');
   if (sh) sh.textContent = '（' + ACC_MK_N + ' 條；不勾則顯示全部 ' + MK.reduce((s,g)=>s+g.length,0) + ' 條 PCC Markers）';
   applyMkScope();
+  showAccItem(0);              /* §14-A 重建之後回到第一項 */
 }
 /* 切換「只看 ACC 必備標記 / 全部 PCC Markers」——只影響顯示，已填的資料都留著 */
 function toggleMkScope(){
@@ -3049,6 +3704,114 @@ function refreshMk(i, code){
   hint.textContent = txt;
   hint.className = 'mk-hint' + (warn ? ' warn' : '');
 }
+/* ═══ §14-A 步驟 2 主從版面 ═══
+   當前項只存在記憶體，不進 localStorage（不新增任何鍵）。切頁回來重置成第一項。
+   八項的 DOM 一律都在，這裡只切 display——getAcc() 是逐項從 DOM 讀值的。 */
+let _curAcc = 0;
+const AI_STEPS = [
+  '把錄音轉成逐字稿（手機備忘錄、Whisper、或任何你慣用的工具都可以）。',
+  '在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。',
+  '對照 AI 的判斷回來標——它說的不算數，你才是那個在場的人。'
+];
+function toggleAiSteps(){
+  const box = document.getElementById('ai-steps'), btn = document.getElementById('ai-steps-btn');
+  if (!box) return;
+  const open = box.classList.toggle('hidden') === false;
+  if (open && !box.innerHTML) box.innerHTML = AI_STEPS.map((t,i)=>
+    '<div class="ai-step"><span class="ai-step-n">' + (i+1) + '</span>'
+    + '<span class="ai-step-t">' + esc(t) + '</span></div>').join('');
+  if (btn) btn.textContent = open ? '三步驟怎麼做 ▴' : '三步驟怎麼做 ▾';
+}
+/* 這一場勾起來的標記數。全部從 DOM 現況推導，不寫死。 */
+function accItemCounts(i){
+  let accOn = 0, accTotal = 0, pccOn = 0, pccTotal = 0;
+  (MK[i]||[]).forEach(m=>{
+    const chk = document.getElementById('mk-chk-' + mkId(i, m.c));
+    const on = !!(chk && chk.checked);
+    pccTotal++; if (on) pccOn++;
+    if (m.acc){ accTotal++; if (on) accOn++; }
+  });
+  return { accOn, accTotal, pccOn, pccTotal };
+}
+function accMkCounts(){
+  const t = { accOn:0, accTotal:0, pccOn:0, pccTotal:0 };
+  ACC.forEach((a,i)=>{ const c = accItemCounts(i);
+    t.accOn += c.accOn; t.accTotal += c.accTotal; t.pccOn += c.pccOn; t.pccTotal += c.pccTotal; });
+  return t;
+}
+/* 中性的「還缺什麼」：這一項裡勾了做到、但一個時間戳都沒有的 ACC 必評條目。
+   來源跟 getAcc() 同一條（mk-chk 與 mkRowValues），不另算一份。 */
+function accGaps(i){
+  return (MK[i]||[]).filter(m=>{
+    if (!m.acc) return false;
+    const chk = document.getElementById('mk-chk-' + mkId(i, m.c));
+    if (!chk || !chk.checked) return false;
+    return mkRowValues(i, m.c).filter(r=>r.t).length === 0;
+  });
+}
+function renderAccNav(){
+  const nav = document.getElementById('acc-nav');
+  if (!nav) return;
+  nav.innerHTML = ACC.map((a,i)=>{
+    const st = parseInt((document.getElementById('acc-'+i)||{dataset:{}}).dataset.st || String(ST_NE), 10);
+    const c = accItemCounts(i);
+    return '<button type="button" class="acc-navrow' + (i === _curAcc ? ' on' : '') + '"'
+      + ' data-i="' + i + '" onclick="showAccItem(' + i + ')">'
+      + '<span class="an-dot" data-st="' + st + '" title="' + esc(stLabel(st)) + '"></span>'
+      + '<span class="an-body"><span class="an-name">' + esc(a[0]) + '</span>'
+      + '<span class="an-meta">ACC ' + c.accOn + '/' + c.accTotal
+      + ' · PCC ' + c.pccOn + '/' + c.pccTotal + '</span></span></button>';
+  }).join('');
+}
+/* 面板頭、兩張進度卡、還缺什麼卡、上下一項的啟用狀態 */
+function refreshAccPanel(){
+  const list = document.getElementById('acc-list');
+  if (!list || !document.getElementById('acc-nav')) return;
+  const i = _curAcc, a = ACC[i] || ACC[0];
+  const setT = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  setT('acc-cur-num', '核心職能 ' + (i + 1));
+  setT('acc-cur-name', String(a[0]).replace(/^\d+ · /, ''));
+  setT('acc-cur-alt', (a[2] && a[2] !== String(a[0]).replace(/^\d+ · /,'')) ? a[2] : '');
+  setT('acc-cur-desc', a[1]);
+  const c = accItemCounts(i);
+  setT('am-acc-n', c.accOn + ' / ' + c.accTotal);
+  setT('am-pcc-n', c.pccOn + ' / ' + c.pccTotal);
+  const fill = (id, on, total) => { const el = document.getElementById(id);
+    if (el) el.style.width = (total ? Math.round(on / total * 100) : 0) + '%'; };
+  fill('am-acc-fill', c.accOn, c.accTotal);
+  fill('am-pcc-fill', c.pccOn, c.pccTotal);
+  /* 還缺什麼 */
+  const gapBox = document.getElementById('acc-gap');
+  if (gapBox){
+    const gaps = accGaps(i);
+    gapBox.classList.toggle('hidden', gaps.length === 0);
+    if (gaps.length) gapBox.innerHTML =
+      '<div class="acc-gap-head">送審前這幾條要補時間戳</div>'
+      + '<div class="acc-gap-sub">你勾了「做到」，但還沒留下發生的時刻。現在補最快，之後翻紀錄很難想起來。</div>'
+      + gaps.map(m=>'<div class="acc-gap-row"><span class="acc-gap-code">' + esc(m.c) + '</span>'
+        + '<span>' + esc(MK_SHORT[m.c] || m.t) + '</span></div>').join('');
+  }
+  const prev = document.getElementById('acc-prev'), next = document.getElementById('acc-next');
+  if (prev) prev.disabled = (i === 0);
+  if (next) next.disabled = (i === ACC.length - 1);
+  renderAccNav();
+  /* 頁首那兩張計數卡 */
+  const t = accMkCounts();
+  const ha = document.getElementById('hd-acc'), hp = document.getElementById('hd-pcc');
+  if (ha) ha.textContent = t.accOn + ' / ' + t.accTotal;
+  if (hp) hp.textContent = t.pccOn + ' / ' + t.pccTotal;
+}
+/* 切項目：八項的 DOM 都留著，只切 display */
+function showAccItem(i){
+  _curAcc = Math.max(0, Math.min(ACC.length - 1, i));
+  ACC.forEach((a, k) => {
+    const el = document.getElementById('acc-' + k);
+    if (el) el.style.display = (k === _curAcc) ? '' : 'none';
+  });
+  refreshAccPanel();
+}
+function accStep(d){ showAccItem(_curAcc + d); }
+
 function getAcc() {
   return ACC.map((a,i)=>{
     const st = parseInt(document.getElementById('acc-'+i).dataset.st||String(ST_NE), 10);
@@ -3121,23 +3884,140 @@ function goStep(n){
 }
 /* §13-A 每一頁自己的標題。新增紀錄頁兩步各有標題，其餘頁沿用站名。
    標題文字集中在這裡，頁面上不再寫死。 */
+/* ===== §14-1 頁首系統 =====
+   每一頁自己的 h1、副標與右上角一顆主要動作，全部集中在這張表。
+   title／sub／back 可以是字串或函式——副標裡的數字一律從資料推導，一個都不手寫。
+   actions 是 [文字, onclick, 樣式, id] 陣列；匯出類按鈕的 id 必須跟 EXPORTS 的
+   設定對得上，否則二段式匯出會找不到自己的按鈕。 */
+function headCounts(){
+  const recs = load();
+  const last = recs.map(r=>r.date||'').filter(Boolean).sort().slice(-1)[0] || '';
+  return { n: recs.length, clients: clientCount(), last };
+}
+function histHeadSub(){
+  const c = headCounts();
+  if (!c.n) return '還沒有紀錄。記完第一場就會出現在這裡。';
+  return c.n + ' 場紀錄 · ' + c.clients + ' 位客戶'
+       + (c.last ? ' · 最近一場 ' + c.last : '');
+}
+function detailHead(){
+  const r = load().find(x=>x.id === currentId);
+  if (!r) return '這一場';
+  return [r.date || '', esc(r.client) || '（未填客戶）', esc(r.session) || '']
+         .filter(Boolean).join(' · ');
+}
+function detailHeadSub(){
+  const r = load().find(x=>x.id === currentId);
+  if (!r) return '';
+  const c = sessionMkCounts(r);
+  return [ r.mins ? r.mins + ' 分鐘' : '', '到位 ' + c.done + ' 項',
+           r.submitCandidate ? '已勾為送審錄音候選' : '' ].filter(Boolean).join(' · ');
+}
 const VIEW_HEAD = {
-  new1: ['這一場發生了什麼', '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。'],
-  new2: ['標 ICF 八大職能', '對得上的標一標，沒把握的留著「尚未評估」就好——沒填不等於沒做到。'],
-  other: ['會談後快速記錄', '會談結束了嗎？花 15 分鐘，陪自己回顧這一場。']
+  new1: { title: '這一場發生了什麼',
+          sub: '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。' },
+  /* 副標暫時不寫設計稿的「一次只看一項」——那是第 3 批 master–detail 才會成立的行為，
+     現在八項仍是全部攤開，先寫真話。 */
+  /* §14-A 一次只看一項成立之後，副標改回設計稿 302 行的原句 */
+  new2: { title: 'ICF 八大核心職能',
+          sub: '一次只看一項。預設是「尚未評估」——沒填不等於沒做到。',
+          actions: [
+            () => { const c = accMkCounts();
+              return ['<span class="hd-count" data-lv="acc"><b>ACC</b><span id="hd-acc">'
+                + c.accOn + ' / ' + c.accTotal + '</span></span>'
+                + '<span class="hd-count" data-lv="pcc"><b>PCC</b><span id="hd-pcc">'
+                + c.pccOn + ' / ' + c.pccTotal + '</span></span>', '', 'raw', ''];
+            },
+            ['✓ 儲存這一場', 'saveRecord()', 'btn-save-top', 'saveBtnTop']
+          ] },
+  hist: { title: '我進步了嗎', sub: histHeadSub,
+          actions: [['匯出 PDF', "exportTwoStep('hist')", 'btn-primary', 'btn-exp-hist'],
+                    ['匯出文字', "exportTwoStep('txt')", 'btn-ghost', 'btn-exp-txt']] },
+  detail: { title: detailHead, sub: detailHeadSub,
+            back: () => detailBackLabel(load().find(x=>x.id === currentId)),
+            backAction: 'backFromDetail()' },
+  clients: { title: '客戶',
+             sub: () => clientCount() + ' 位 · 一律使用代號，不存真實姓名',
+             actions: [['＋ 新增客戶', 'toggleNewClient()', 'btn-primary', 'btn-new-client']] },
+  clientdetail: { title: () => { const c = clientById(currentClientId); return c ? c.code : '客戶'; },
+                  sub: () => { const c = clientById(currentClientId);
+                               if (!c) return '';
+                               const rs = clientRecs(c.id);
+                               const mins = rs.reduce((a,r)=>a+(parseInt(r.mins,10)||0),0);
+                               const last = rs.map(r=>r.date||'').filter(Boolean).sort().slice(-1)[0];
+                               return [rs.length + ' 場',
+                                       mins ? (Math.round(mins/60*10)/10) + ' 小時' : '',
+                                       last ? '最近一場 ' + last : ''].filter(Boolean).join(' · '); },
+                  back: '← 回客戶列表', backAction: "showView('clients')" },
+  cred: { title: '認證進度',
+          sub: 'ACC 與 PCC 是同一條路上的兩個門檻，不是兩個產品。',
+          actions: [['匯出時數表（CSV）', "exportTwoStep('csv')", 'btn-ghost', 'btn-exp-csv']] },
+  ask: { title: '想問導師',
+         sub: '會談當下冒出來的疑問，記下來，下次 1on1 一次問完。',
+         actions: [['＋ 新增問題', 'toggleCompose()', 'btn-primary', 'btn-new-ask']] },
+  journal: { title: '覺察手帳',
+             sub: '導師說的是原料。你自己重寫過的那一句，才放進手帳。',
+             actions: [['＋ 寫一條提醒', 'jNew()', 'btn-primary', 'btn-new-journal'],
+                       ['匯出手帳（PDF）', "exportTwoStep('journal')", 'btn-ghost', 'btn-exp-journal']] }
 };
+function headVal(x){ return typeof x === 'function' ? x() : (x || ''); }
 function applyPageHead(v){
-  const key = v !== 'new' ? 'other' : (formStep === 2 ? 'new2' : 'new1');
-  const [t, sub] = VIEW_HEAD[key];
+  const key = v === 'new' ? (formStep === 2 ? 'new2' : 'new1') : v;
+  const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
   const h1 = document.getElementById('page-h1');
   const sb = document.getElementById('page-sub');
-  if (h1) h1.textContent = t;
-  if (sb) sb.textContent = sub;
+  if (h1) h1.textContent = headVal(cfg.title);
+  if (sb) sb.textContent = headVal(cfg.sub);
+  /* 返回連結：只有從別頁鑽進來的兩頁有 */
+  const bk = document.getElementById('page-back');
+  if (bk){
+    const label = headVal(cfg.back);
+    bk.textContent = label;
+    bk.classList.toggle('hidden', !label);
+    bk.onclick = cfg.backAction ? new Function(cfg.backAction) : null;
+  }
+  /* 右上動作 */
+  const act = document.getElementById('page-actions');
+  if (act){
+    act.innerHTML = (cfg.actions || []).map(a => {
+      const [label, on, cls, id] = (typeof a === 'function') ? a() : a;
+      /* cls === 'raw' 時 label 直接當 HTML 輸出——計數卡不是按鈕 */
+      if (cls === 'raw') return label;
+      return '<button class="btn ' + cls + '"' + (id ? ' id="' + id + '"' : '')
+        + ' onclick="' + on + '">' + label + '</button>';
+    }).join('');
+  }
   const n = document.getElementById('step-eyebrow-n');
   const es = document.getElementById('step-eyebrow-sub');
   if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL) : '';
-  if (es) es.textContent = (v === 'new') ? (formStep === 2 ? '　職能標記' : '　會談記錄') : '';
+  if (es){
+    /* 步驟 2 的第二格是可以點的返回連結（設計稿 304–316） */
+    const step2 = (v === 'new' && formStep === 2);
+    es.textContent = (v === 'new') ? (step2 ? '　← 回會談記錄' : '　會談記錄') : '';
+    es.className = 'step-eyebrow-sub' + (step2 ? ' link' : '');
+    es.onclick = step2 ? (() => goStep(1)) : null;
+  }
 }
+/* §14-1 頁首右上的「＋」開合對應的輸入卡。展開就把游標放進去，
+   收起不清空——打到一半切走再切回來，字還在。 */
+function toggleHeadBox(boxId, focusId, btnId, openLabel, closeLabel){
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  const open = box.classList.toggle('hidden') === false;
+  const btn = document.getElementById(btnId);
+  if (btn) btn.textContent = open ? closeLabel : openLabel;
+  if (open){
+    const f = document.getElementById(focusId);
+    if (f) f.focus();
+  }
+}
+function toggleNewClient(){
+  toggleHeadBox('new-client-box', 'new-client-code', 'btn-new-client', '＋ 新增客戶', '收起');
+}
+function toggleCompose(){
+  toggleHeadBox('ask-compose-box', 'ask-q', 'btn-new-ask', '＋ 新增問題', '收起');
+}
+
 function showView(v) {
   exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
   applyPageHead(v);
@@ -3289,6 +4169,19 @@ function navTipText(){
   if (open.length === 1) return '還有「' + open[0] + '」沒動過。其他都填了。';
   return '還有' + open.map(n => '「' + n + '」').join('') + '沒動過。';
 }
+/* §14-B 側欄「進行中」籤：指的是有未存檔的草稿，不是「這個功能存在」。
+   從既有的 segFilled()／accFilledCount() 推導——存完檔 resetForm() 會把它們清乾淨，
+   籤就自己消失。不寫任何常數。 */
+function hasDraft(){
+  return SEGS.some(([k]) => segFilled(k) === true) || accFilledCount() > 0;
+}
+function updateWipBadge(){
+  const el = document.getElementById('navWip');
+  if (!el) return;
+  el.classList.toggle('hidden', !hasDraft());
+  el.classList.toggle('on', document.getElementById('tabNew').classList.contains('active'));
+}
+
 function updateSegbar(){
   const nav = document.getElementById('form-nav');
   if (nav) {
@@ -3308,7 +4201,8 @@ function updateSegbar(){
   const mc = document.getElementById('markCnt');
   if (mc) mc.textContent = accFilledCount() + '/' + ACC.length;
   STATE_SEGS.forEach(updateFoldHead);
-  ['ai'].forEach(updateFoldHead);
+  refreshAccPanel();           /* §14-A 標記一改，左欄 meta 與兩張計數卡跟著動 */
+  updateWipBadge();            /* §14-B 有草稿才亮「進行中」 */
 }
 /* 收合標題同時顯示狀態與動作，不只有箭頭 */
 function updateFoldHead(k){
@@ -3381,6 +4275,8 @@ function saveRecord(later) {
   };
   /* 表單不再並列「受到啟發／頓悟的時刻」，但舊欄位的資料不刪 */
   if (_legacyInsight) rec.insight = _legacyInsight;
+  /* A2：沒被碰過的衡量欄位不落地，維持「這一場沒評過」的原狀 */
+  _scoreUnset.forEach(k => { delete rec[k]; });
   if (!rec.client && !rec.instant) { toast('請至少填客戶或問題'); return; }
   const arr = load();
   if (editId) {
@@ -3419,6 +4315,8 @@ function resetForm() {
   document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
   document.getElementById('f-progress').value = 7; document.getElementById('progressVal').textContent = '7';
   document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
+  _scoreUnset = new Set();
+  ['progressVal','clientfeelVal'].forEach(id => document.getElementById(id).classList.remove('unset'));
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
   document.getElementById('f-topic').value = '';
@@ -3455,20 +4353,8 @@ function updateCount() {
   const cEl = document.getElementById('clientCnt');
   if (cEl) cEl.textContent = cc ? String(cc) : '';
   renderCredCard();
-  updateStats();
 }
 /* 累積統計（首頁小字） */
-function updateStats(){
-  const el = document.getElementById('stats-line');
-  if (!el) return;
-  const recs = load();
-  if (!recs.length) { el.textContent = ''; return; }
-  const goods = recs.reduce((s,r)=>s+((r.good||[]).length),0);
-  const mins = recs.reduce((s,r)=>s+(parseInt(r.mins,10)||0),0);
-  el.textContent = '🌱 已累積 '+recs.length+' 次會談'
-    + (mins ? ' · '+(Math.round(mins/60*10)/10)+' 小時' : '')
-    + (goods ? ' · '+goods+' 條強項' : '');
-}
 /* 教練時數破關儀表板（客戶頁）：原生 CSS 進度條 */
 /* ===== §4C ACC 與 PCC 同時看得到 =====
    不做模式切換：ACC 與 PCC 不是兩個產品，是同一條路上的兩個門檻。
@@ -3775,8 +4661,15 @@ function renderCredCard(){
   fill.style.width = p.pct + '%';
   fill.dataset.seg = String(p.seg);
   card.querySelector('.cc-track').dataset.seg = String(p.seg);
-  document.getElementById('cc-pace').textContent = pace.text;
+  /* §14-B tier：pct 是四項需求裡最落後那一項（不是平均，也不是只看時數）。
+     達標由 pct 判定；其餘兩個分支沿用 credPace()，不另寫第二份計算。 */
+  document.getElementById('cc-pace').textContent = (p.pct >= 100) ? '達標' : pace.text;
   document.getElementById('cc-pct').textContent = p.pct + '%';
+  /* tone 四段：門檻與色票都是既有的 credSeg / --segN-*，沒有新增色票 */
+  card.dataset.seg = String(p.seg);
+  /* 側欄「認證進度」的徽章跟卡上的百分比同一個值 */
+  const cb = document.getElementById('credCnt');
+  if (cb) cb.textContent = p.pct + '%';
   document.getElementById('cc-miss').textContent = p.missing.length
     ? p.missing.filter(x=>x.key !== 'hours')
         .map(x=>x.name + '還差 ' + x.gap + ' ' + x.unit).join(' · ')
@@ -4053,27 +4946,32 @@ function renderHist() {
       : '<div class="empty">這些條件下沒有紀錄。<br>換個關鍵字，或按「全部」看所有場次。</div>';
     return;
   }
-  /* 兩層列：上層 日期｜客戶｜議題（可伸縮）｜時長・標記數；
+  /* 兩層列：上層 日期｜客戶｜議題（可伸縮）｜時長・到位｜›
      下層 八個職能格子跨到議題欄下方，空一格後接認可／同理。
-     這張表曾經四次把議題欄壓到讀不到——五欄擠同一列時，句子欄永遠輸。不要改回單層。 */
-  list.innerHTML = arr.map(r=>{
+     這張表曾經四次把議題欄壓到讀不到——五欄擠同一列時，句子欄永遠輸。不要改回單層。
+     欄寬由 .sess-cols 一份 grid-template 決定，標題列與資料列共用，所以永遠對得齊。 */
+  list.innerHTML =
+    '<div class="sess-cols sess-head">'
+      + '<span>日期</span><span>客戶</span>'
+      + '<span class="sh-topic">這一場的議題・八大職能・認可與同理</span>'
+      + '<span class="sh-meta">時長・到位</span><span></span>'
+    + '</div>'
+    + arr.map(r=>{
     const c = sessionMkCounts(r);
     const cells = c.st.map((v,i)=>'<span class="cell" data-lv="' + cellLevel(v)
       + '" title="核心職能 ' + ACC[i][0] + '：' + stLabel(v) + '">' + (i+1) + '</span>').join('');
-    return '<div class="sess" onclick="openDetail(' + r.id + ')">'
-      + '<div class="sess-top">'
-        + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
-        + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
-        + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
-          + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
-        + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 ' + c.done + ' 項</span>'
-        + '<span class="sess-arrow">›</span>'
-      + '</div>'
+    return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
+      + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
+      + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
+      + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
+        + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
+      + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 <b>' + c.done + '</b> 項</span>'
+      + '<span class="sess-arrow">›</span>'
       + '<div class="sess-bot">'
         + '<span class="sess-cells">' + cells + '</span>'
         + '<span class="sess-gap"></span>'
-        + '<span class="sess-tag">認可 ' + c.ack + '/2</span>'
-        + '<span class="sess-tag">同理 ' + c.emp + '/2</span>'
+        + '<span class="sess-tag" data-n="' + c.ack + '">認可 ' + c.ack + '/2</span>'
+        + '<span class="sess-tag" data-n="' + c.emp + '">同理 ' + c.emp + '/2</span>'
       + '</div>'
     + '</div>';
   }).join('');
@@ -4144,8 +5042,6 @@ function openDetail(id, from) {
   currentId = id;
   const r = load().find(x=>x.id===id);
   if (!r) return;
-  const backBtn = document.getElementById('btn-detail-back');
-  if (backBtn) backBtn.textContent = detailBackLabel(r);
   const listBlock = (title, items) => items && items.length
     ? `<div class="detail-field"><div class="detail-label">${title}</div><div class="detail-val"><ul>${items.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul></div></div>` : '';
   const groups = {};   // 依四態分組
@@ -4166,9 +5062,8 @@ function openDetail(id, from) {
     ${r.session||r.mins?`<div class="rec-meta" style="margin-bottom:6px">${r.session?'會談次數：'+esc(r.session):''}${r.mins?'　·　'+esc(r.mins)+' 分鐘':''}</div>`:''}
     ${topicHTML(r)}
     <div class="score-lines">
-      <div class="score-line">自評表現：<b>${r.perf}</b></div>
-      <div class="score-line">自評感受：<b>${r.feel}</b></div>
-      ${r.clientfeel!=null?`<div class="score-line">我覺得客戶的感受：<b>${r.clientfeel}</b></div>${r.because?`<div class="because-note"><span class="bl">因為</span>　${esc(r.because)}</div>`:''}`:''}
+      ${SCORES.map(([k,n])=>`<div class="score-line">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
+      ${r.because?`<div class="because-note"><span class="bl">因為</span>　${esc(r.because)}</div>`:''}
     </div>
     ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
     ${r.prevFocus?`<div class="detail-field"><div class="detail-label">上次說要盯</div><div class="detail-val">「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div></div>`:''}
@@ -4189,6 +5084,26 @@ function openDetail(id, from) {
   showView('detail');
 }
 
+/* A2 未評估狀態（2026-08-24）：
+   編輯舊紀錄時，原本磁碟上不存在的衡量欄位放進這個集合。
+   使用者一碰滑桿就移除；存檔時集合裡還在的欄位一律不寫入磁碟。
+   目的：不讓預設值 7 冒充成真實評估。 */
+let _scoreUnset = new Set();
+function clearScoreUnset(k){
+  if (_scoreUnset.has(k)) {
+    _scoreUnset.delete(k);
+    const el = document.getElementById(k + 'Val');
+    if (el) { el.classList.remove('unset'); el.textContent = document.getElementById('f-' + k).value; }
+  }
+}
+function markScoreUnset(k){
+  _scoreUnset.add(k);
+  const s = document.getElementById('f-' + k), el = document.getElementById(k + 'Val');
+  s.value = 7;                       /* 滑桿把手停在中間，但不代表 7 */
+  el.textContent = '未評估';
+  el.classList.add('unset');
+}
+
 function editCurrent() {
   const r = load().find(x=>x.id===currentId);
   if (!r) return;
@@ -4201,10 +5116,13 @@ function editCurrent() {
   document.getElementById('f-instant').value = r.instant || '';
   document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
   document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
-  const pg = (r.progress!=null ? r.progress : 7);
-  document.getElementById('f-progress').value = pg; document.getElementById('progressVal').textContent = pg;
-  const cf = (r.clientfeel!=null?r.clientfeel:7);
-  document.getElementById('f-clientfeel').value = cf; document.getElementById('clientfeelVal').textContent = cf;
+  _scoreUnset = new Set();
+  ['progress','clientfeel'].forEach(k => {
+    const v = r[k];
+    if (v === undefined || v === null || v === '') { markScoreUnset(k); }
+    else { document.getElementById('f-'+k).value = v; document.getElementById(k+'Val').textContent = v;
+           document.getElementById(k+'Val').classList.remove('unset'); }
+  });
   document.getElementById('f-because').value = r.because || '';
   document.getElementById('f-focus').value = r.focus || '';
   document.getElementById('f-topic').value = r.topic || '';
@@ -4416,6 +5334,27 @@ function clientStats(id){
     focusDone, focusAns
   };
 }
+/* ═══ §14-2 客戶卡的三條 bar ═══
+   專注＝perf、投入＝feel、推進感＝progress（欄位名不動，只改顯示的字）。
+   值＝最近一場；變化量＝最近一場 vs 前一場。
+   沒有前一場、或任一邊沒有值（progress 是 8/24 才有的欄位，舊紀錄沒有）
+   → 一律「—」。不顯示 0，也不套用編輯表單那個預設 7。 */
+const CLIENT_BARS = [['perf','專注'], ['feel','投入'], ['progress','推進感']];
+function clientTrend(clientId){
+  const rs = clientRecs(clientId).slice()
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  const last = rs.length ? rs[rs.length-1] : null;
+  const prev = rs.length >= 2 ? rs[rs.length-2] : null;
+  return CLIENT_BARS.map(([k,name])=>{
+    const v = scoreNum(last, k);
+    const pv = scoreNum(prev, k);
+    const d = (v === null || pv === null) ? null : Math.round((v - pv) * 10) / 10;
+    return { name, v, d,
+             valText: v === null ? '—' : v.toFixed(1),
+             dText:   d === null ? '—' : (d > 0 ? '＋' + d : (d < 0 ? String(d) : '±0')),
+             lv:      d === null ? 'na' : (d > 0 ? 'up' : (d < 0 ? 'down' : 'flat')) };
+  });
+}
 function renderClients(){
   const list = document.getElementById('client-list');
   const cs = loadC();
@@ -4425,17 +5364,25 @@ function renderClients(){
   const info = cs.map(c=>({ c, st: clientStats(c.id) })).sort((a,b)=>
     ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0)
     || (b.st.last||'').localeCompare(a.st.last||''));
-  list.innerHTML = info.map(x=>{
+  list.innerHTML = '<div class="client-grid">' + info.map(x=>{
     /* 裸日期讀者不知道是什麼日期，一律帶「最近一場」 */
     const meta = [x.st.n + ' 場', x.st.hours + ' 小時',
                   x.st.last ? '最近一場 ' + x.st.last.slice(5) : '還沒有紀錄'].join(' · ');
-    return `<div class="rec" onclick="openClient('${x.c.id}')">
-    <div class="rec-top">
-      <span class="rec-client">${esc(x.c.code)}${x.c.status==='closed'?'<span class="badge">已結案</span>':''}</span>
-      <span class="sess-arrow">›</span>
+    const bars = clientTrend(x.c.id).map(t=>
+      '<div class="ctrow">'
+        + '<span class="ct-name">' + t.name + '</span>'
+        + '<div class="ct-track"><div class="ct-fill" data-lv="' + t.lv
+          + '" style="width:' + (t.v === null ? 0 : t.v * 10) + '%"></div></div>'
+        + '<span class="ct-val" data-lv="' + t.lv + '">' + t.valText + ' ' + t.dText + '</span>'
+      + '</div>').join('');
+    return `<div class="ccard" onclick="openClient('${x.c.id}')">
+    <div class="ccard-top">
+      <span class="ccard-id"><span class="ccard-code">${esc(x.c.code)}</span><span class="ccard-st" data-s="${x.c.status==='closed'?'closed':'active'}">${x.c.status==='closed'?'已結案':'進行中'}</span></span>
+      <span class="ccard-meta">${meta}</span>
     </div>
-    <div class="rec-meta">${meta}${x.c.goal?' · 目標：'+esc(x.c.goal):''}</div>
-  </div>`;}).join('');
+    ${x.c.goal?`<div class="ccard-goal">目標：${esc(x.c.goal)}</div>`:''}
+    <div class="ctrend">${bars}</div>
+  </div>`;}).join('') + '</div>';
   renderClientInsight();
 }
 /* 洞察卡：同一個焦點連續出現兩場以上。沿用 §2-4 的 practiceItems()，不另外算一次 */
@@ -4540,9 +5487,8 @@ function openClient(id){
     cc.classList.remove('hidden');
     const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
     const series = [
-      { name:'自評表現', color:CHART.perf, vals: rs.map(r=>parseFloat(r.perf)) },
-      { name:'我的感受', color:CHART.feel, vals: rs.map(r=>parseFloat(r.feel)) },
-      { name:'客戶感受', color:CHART.client, vals: rs.map(r=>r.clientfeel!=null?parseFloat(r.clientfeel):null) }
+      ...SCORES.map(([k,n])=>({ name:n, color:CHART[k==='clientfeel'?'client':k],
+                                vals: rs.map(r=>scoreNum(r,k)) }))
     ];
     document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
   } else {
@@ -4800,7 +5746,7 @@ const HELP_HTML = `
 <p><b>ACC 標記：</b>每項職能下方按「展開 ACC 標記」，裡面是 ICF PCC Markers（2021 官方版）完整 39 條，每條可填證據時間戳，編號跟導師回饋表對得起來。標了 <b>ACC</b> 徽章的 20 條是 ACC 評量會直接看的最低標準技能；其餘是 PCC 才要求的，先填著當練功地圖。上方勾「只顯示 ACC 必備標記」可以把畫面收成 20 條——只是隱藏，已填的資料不會不見。</p>
 <p><b>兩個證據的規則：</b>培養信任(4)、保持臨在(5)、喚起覺察(7) 這三項的 ACC 必備標記，ICF 規定每條要有 2 個以上證據才能勾選，工具會自動數——證據不足時勾選鍵鎖住，但文字欄位一直都能打字。沒有證據就照導師的寫法填 No（No 不計入證據數）。</p>
 <p><b>紅字綠字：</b>展開後每項職能上方會列出「直接扣分」的行為和導師提醒，錄音送評前掃一遍。</p>
-<p><b>想評得更客觀？</b>自己評容易全給到位。在 ACC 區塊按「🎯 用 AI 分析逐字稿」，照彈窗三步驟做。<b>注意：</b>錄音請先取得客戶同意；逐字稿貼給 AI 前先把名字等可辨識資訊改掉；逐字稿不要存進本工具。</p>
+<p><b>想評得更客觀？</b>在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。<b>注意：</b>錄音請先取得客戶同意；逐字稿不要存進本工具。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
@@ -4819,12 +5765,12 @@ const ACC_AI_HTML = `
 
 <h3>怎麼用（3 步驟）</h3>
 <p><b>1. 準備逐字稿：</b>轉成文字，客戶名字與公司改成代號。</p>
-<p><b>2. 複製提示詞：</b>按下方按鈕，貼到你慣用的 AI，後面接上逐字稿。</p>
+<p><b>2. 開始分析：</b>在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。</p>
 <p><b>3. 回來標記：</b>照 AI 的判定選狀態，佐證抄進「證據」，要練的寫進「要改的」。</p>
 
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
 <p class="lp-sub">提示詞是一份依 ICF ACC 績效評估標準寫的長指令，按下面這顆按鈕直接複製，不用在這裡讀完。</p>
-<button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製提示詞</button>`;
+<button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製分析提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
 /* 教練反思統計報告（歷史頁）：平均分數、能量對齊指數、最常展現的職能 */
 let reflectDays = 30;
@@ -4989,21 +5935,17 @@ function openHelp(){
 還原的是「資料內容」，不是舊版程式：畫面仍然是新版，原本打過勾的顯示為「到位」，其餘顯示為「尚未評估」。</p>
 <button class="btn btn-ghost" style="width:100%" onclick="restorePreV3()">還原到更新前的資料</button>`;
   }
-  /* §0B 機制三：雲端快照的還原入口。與上面的本機還原並存，兩者都保留 */
-  if (currentUser && fb.db){
-    extra += `<h3>還原到改版前（雲端備份）</h3>
-<p>每次改版前，系統會自動在你的雲端帳號留一份改版前的原樣，最多保留最近三個版本。這不需要你做任何事。</p>
-<button class="btn btn-ghost" style="width:100%" onclick="openCloudRestore()">看看有哪些雲端備份</button>`;
-  }
+  /* §0B 機制三的雲端還原入口已於 2026-08-26 撤下（原因見 §0B 註解）。
+     快照仍在雲端保存；使用者要自己還原，請用「備份全部（下載檔）／還原備份」。 */
   openModal(HELP_HTML + extra);
 }
 function closeLegal(){ document.getElementById('legal-modal').classList.remove('show'); }
 
 /* ② 離開頁面或切到背景時把等待中的推送送出去。
    手機上分頁被收走不一定會觸發 beforeunload，所以 pagehide 與 visibilitychange 都掛。 */
-window.addEventListener('pagehide', () => { flushPush(); });
-window.addEventListener('beforeunload', () => { flushPush(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPush(); });
+window.addEventListener('pagehide', () => { flushPush(true); });
+window.addEventListener('beforeunload', () => { flushPush(true); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushPush(true); });
 
 /* 表單任何輸入都重算進度列（§6 黏著進度列） */
 (function(){
