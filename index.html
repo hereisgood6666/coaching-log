@@ -658,12 +658,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-head { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink-3); margin-bottom: 6px; }
 .hm-note { font-size: 11.5px; line-height: 1.7; color: var(--ink-3); background: var(--surface-2);
            border-radius: 7px; padding: 8px 10px; margin-bottom: 9px; }
-.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr) 84px;
-          gap: 10px; align-items: center; padding: 5px 0; }
+/* 2026-08-29：分母那行從「12／28 場」變成「4–7／7 場有逐條勾（這項共評估 27 場）樣本少…」，
+   84px 的欄位加上 nowrap 會把整列撐爆，桌機出現橫向捲動。改成自己佔一整行。 */
+.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr);
+          gap: 4px 10px; align-items: center; padding: 5px 0; }
 .hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0; }
 .hm-name b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .hm-cells { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
-.hm-den { font-size: 11px; color: var(--ink-4); text-align: right; white-space: nowrap;
+.hm-den { grid-column: 1 / -1; font-size: 11px; color: var(--ink-4);
+          text-align: left; white-space: normal; line-height: 1.5;
           font-variant-numeric: tabular-nums; }
 .hm-cell {
   flex: 0 0 auto; min-width: 34px; height: 22px; border-radius: 5px;
@@ -684,7 +687,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-legend .hm-cell { min-width: 22px; }
 @media (max-width: 700px) {
   .hm-row { grid-template-columns: minmax(0,1fr); gap: 4px; padding: 8px 0; }
-  .hm-den { text-align: left; }
 }
 .cum-todo { margin-top: 18px; border-top: 1px solid var(--line-2); padding-top: 12px; }
 .todo-row { border-left: 3px solid var(--st1-line); padding: 8px 0 8px 11px; margin-top: 10px; }
@@ -2169,10 +2171,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <label>相關情境 <span class="hint">選填，客戶／會談</span></label>
       <input type="text" id="ask-ctx" placeholder="例：Tom 第一次">
       <button class="btn btn-primary" style="margin-top:12px" onclick="addQuestion()">加入清單</button>
-    </div>
-    <div class="actions" style="margin-bottom:16px">
-      <button class="btn btn-ghost" onclick="exportPending()">複製待問清單</button>
-      <button class="btn btn-primary" onclick="exportQuestionsXLSX()">匯出 Excel</button>
     </div>
     <div id="ask-list"></div>
     <div style="height:24px"></div>
@@ -4640,10 +4638,9 @@ const ACTION_BAR_EXTRA = {
   /* 單場詳情：匯出 PDF／複製提示詞／刪除，本來寫在畫面中間，移到底部列 */
   detail: () => '<button class="btn btn-primary" id="ab-btn-exp-one" onclick="exportTwoStep(\'one\')">匯出 PDF</button>'
                 + '<button class="btn btn-ghost" onclick="exportReflectionDocx(currentId)">反思表</button>'
-                + '<button class="btn btn-ghost" onclick="editCurrent()">編輯</button>',
-  /* 想問導師：複製待問清單與匯出 Excel 本來在畫面上方 */
-  ask: () => '<button class="btn btn-ghost" onclick="exportPending()">複製待問</button>'
-             + '<button class="btn btn-ghost" onclick="exportQuestionsXLSX()">匯出 Excel</button>'
+                + '<button class="btn btn-ghost" onclick="editCurrent()">編輯</button>'
+  /* 想問導師那兩顆已經移進 VIEW_HEAD.ask.actions——同一份設定渲染到頁首與底部列，
+     不要在這裡再定義一次，否則同一頁會出現兩份（2026-08-29 Yi-En 實機回報）。 */
 };
 /* 客戶頁的搜尋與分頁。CLIENT_PAGE 是「預設先看幾位」——她的原話是
    「預設最新的幾場就好了，然後可以有一個按鈕是顯示全部」。 */
@@ -4704,7 +4701,11 @@ const VIEW_HEAD = {
                       ['匯出時數表（CSV）', "exportTwoStep('csv')", 'btn-ghost', 'btn-exp-csv']] },
   ask: { title: '想問導師',
          sub: '會談當下冒出來的疑問，記下來，下次 1on1 一次問完。',
-         actions: [['＋ 新增問題', 'toggleCompose()', 'btn-primary', 'btn-new-ask']] },
+         /* 2026-08-29：這兩顆本來寫死在內容區裡，變成頁首、底部列、內容三份重複。
+            改成只在這裡定義一次——頁首右上（桌機）與底部固定列（手機）都從這裡渲染。 */
+         actions: [['＋ 新增問題', 'toggleCompose()', 'btn-primary', 'btn-new-ask'],
+                   ['複製待問', 'exportPending()', 'btn-ghost', 'btn-copy-ask'],
+                   ['匯出 Excel', 'exportQuestionsXLSX()', 'btn-ghost', 'btn-xlsx-ask']] },
   journal: { title: '覺察手帳',
              sub: '一起茁壯的成長夥伴',
              actions: [['＋ 寫一條提醒', 'jNew()', 'btn-primary', 'btn-new-journal'],
@@ -5627,37 +5628,46 @@ function accCumStats(recs){
    熱度＝這條 marker 被勾「到位」的場次 ÷ 該職能「有評估過」的場次。
    分母排除 st === -1（尚未評估）——把沒評估當成沒做到，違反 §七第 1 條。
    熱度來源用 mkOn 不用時間戳：這是十五分鐘快速紀錄工具，先求有。 */
+/* 逐條勾過幾場以下算「樣本少」——低於這個數就在列尾註明顏色僅供參考。
+   3 是刻意保守的門檻：1–2 場就能把整列染成最深，那是巧合不是趨勢。 */
+const MK_MIN_BASIS = 3;
 function markerHitStats(recs){
   const rs = recs || [];
   return MK.map((g, i) => {
-    let assessed = 0;
+    let assessed = 0, basis = 0;
     const hits = {};
     g.forEach(m => { hits[m.c] = 0; });
-    /* 2026-08-28（Yi-En 兩次實機回報後定案）：
-       她標「到位」的意思就是「這一項底下每一條我都做到了」，只是不會再一條一條去勾。
-       實測 32 場：每項標到位 21–27 場，其中 23–24 場一條 marker 都沒勾；
-       「勾了部分但不是全部」全部職能加起來只有 9 次。
+    /* 2026-08-29（Yi-En 看了實機截圖後推翻 08-28 的做法）：
+       ── 舊規則錯在哪 ──
+       08-28 定的是「標到位、而且一條都沒勾 → 底下每一條都算到」。
+       用她自己 34 場實算：職能3 有 25／28 場是這樣推導出來的、職能5 是 24／29、
+       職能7 是 23／28……**整張圖 96% 的顏色來自「到位」按鈕，不是 marker**。
+       證據是同一項底下的格子永遠全等（3.1–3.4 一模一樣、7.1–7.8 一模一樣）——
+       那張圖假裝有 39 格的解析度，實際只有 8 格的資訊。
 
-       所以規則是：**該職能標到位、而且那一場一條都沒勾** → 底下每一條都算到。
-       只要她勾過任何一條，就完全照她勾的算——那 9 次是她刻意只選部分，不可以被覆蓋。
-       這條同時取代了先前「只有一條 marker 的職能才推導」的特例。 */
+       ── 現在的規則 ──
+       只算**真的逐條表態過**的場次。分母 basis ＝ 那一項底下至少有一條被勾或被標
+       No／反 的場次數；分子＝那一條被勾起來的場次數。沒有任何推導。
+       basis 為 0 ＝ 這一項從來沒有逐條勾過，整列顯示「還沒點到」，不是「沒做到」。
+
+       assessed（評估過幾場）仍然回傳，但**不再拿來當分母**——它只用來說明
+       「這一項你評估過 N 場，其中 M 場有逐條勾」。
+       注意：單場詳情的八格（sessCellLevel）**刻意**仍然把「到位」算進去，
+       因為那一格回答的是「這一場這項做得怎樣」，到位就是她自己的結論；
+       這裡回答的是「39 條裡哪幾條我最少做到」，那需要真的逐條資料。
+       兩處問的問題不同，不是同一份資料兩套算法。 */
     rs.forEach(r => {
       const x = (r.acc || [])[i];
-      const st = accSt(x);
-      if (st === ST_NE) return;                /* 沒評估的那一場，這一項整個不計入分母 */
+      if (accSt(x) === ST_NE) return;          /* 沒評估的那一場整個不算 */
       assessed++;
       const mk = (x && x.mk) || {};
-      /* A3（2026-08-29）：加了 No／反 之後，「有沒有逐條表態」不能只看勾選。
-         使用者把某幾條標成 No／反 就是**明確說了那幾條沒做到**——
-         這種場次不可以再套「到位＝底下每條都算到」的推導，
-         否則被標成反例的那條會被算成命中，剛好相反。
-         規則：整項一條訊號都沒有（沒勾、也沒 No／反）才推導；
-         只要有任何一條表態過，就完全照使用者標的算。 */
       const anySignal = g.some(m => mkOn(mk[m.c]) || mkNeg(mk[m.c]));
-      g.forEach(m => { if (mkOn(mk[m.c]) || (st === 2 && !anySignal)) hits[m.c]++; });
+      if (!anySignal) return;                  /* 沒有逐條表態的場次不進分母，也不算命中 */
+      basis++;
+      g.forEach(m => { if (mkOn(mk[m.c])) hits[m.c]++; });
     });
-    return { i, assessed, markers: g.map(m => ({
-      c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
+    return { i, assessed, basis, markers: g.map(m => ({
+      c: m.c, hits: hits[m.c], rate: basis ? hits[m.c] / basis : 0
     })) };
   });
 }
@@ -5734,17 +5744,23 @@ function renderAccCum(){
     const cells = x.markers.map(m =>
       '<span class="hm-cell" data-lv="' + hitLevel(m.hits, m.rate) + '"'
       + ' title="' + esc(m.c + ' ' + (MK_SHORT[m.c] || '')) + '：'
-      + (x.assessed ? '標過 ' + m.hits + ' 次（這項共評估 ' + x.assessed + ' 場，'
-                       + Math.round(m.rate * 100) + '%）'
-                    : '這項還沒評估過') + '">'
+      + (x.basis ? '勾過 ' + m.hits + ' 次（你逐條勾過這一項的場次共 ' + x.basis + ' 場，'
+                     + Math.round(m.rate * 100) + '%）'
+                 : '這一項還沒有逐條勾過任何一條') + '">'
       + m.c + '</span>').join('');
     /* 2026-08-28：數字直接寫在列尾，不用滑過去才看得到。
        同一列裡各條 marker 的命中數可能不同（例：職能4 是 21、22、24），
        所以有差距時寫成區間「21–24／25 場」，全部一樣時就寫「25／26 場」。 */
     const hs2 = x.markers.map(m => m.hits);
     const lo = Math.min.apply(null, hs2), hi = Math.max.apply(null, hs2);
+    /* 2026-08-29：分母改成「你逐條勾過這一項的場次」。
+       同時把「評估過幾場」一起寫出來，不然 3／28 場會被誤讀成「28 場只做到 3 場」。 */
     const den = !x.assessed ? '尚未評估'
-              : (lo === hi ? lo : lo + '–' + hi) + '／' + x.assessed + ' 場';
+              : !x.basis   ? '評估過 ' + x.assessed + ' 場，還沒逐條勾過'
+              : (lo === hi ? lo : lo + '–' + hi) + '／' + x.basis + ' 場有逐條勾'
+                + '（這項共評估 ' + x.assessed + ' 場）'
+                /* 1–2 場就能把整列染成「幾乎每場」，那不是趨勢是巧合。明講出來。 */
+                + (x.basis < MK_MIN_BASIS ? '　樣本少，顏色先當參考' : '');
     return '<div class="hm-row">'
       + '<div class="hm-name"><b>' + (x.i + 1) + '</b> ' + name + '</div>'
       + '<div class="hm-cells">' + cells + '</div>'
@@ -5763,7 +5779,8 @@ function renderAccCum(){
       + '<span class="hm-cell" data-lv="3"></span>常常'
       + '<span class="hm-cell" data-lv="4"></span>幾乎每場'
     + '</div>'
-    + '<div class="hm-caveat">顏色是分布，不是分數；不同職能之間不直接比較。</div>'
+    + '<div class="hm-caveat">只算你<b>逐條勾過</b>的場次——只按「到位」沒有逐條勾的場次不進這張圖。'
+      + '顏色是分布，不是分數；不同職能之間不直接比較。</div>'
     + '<div class="hm-sect">'
       + '<div class="hm-head">基礎｜核心職能 1–2</div>'
       + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
@@ -5784,10 +5801,10 @@ function renderAccCum(){
      同分時 ACC 必評優先，再照編號。最多五條——超過就不是待辦而是壓力。 */
   const todo = [];
   hs.forEach(x=>{
-    if (!x.assessed) return;
+    if (!x.basis) return;      /* 2026-08-29：沒有逐條勾過的職能不列——那是沒資料，不是做不好 */
     x.markers.forEach(m=>{
       const def = (MK[x.i]||[]).find(y=>y.c === m.c) || {};
-      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i, hits: m.hits, assessed: x.assessed });
+      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i, hits: m.hits, assessed: x.basis });
     });
   });
   todo.sort((a,b)=> a.hits - b.hits
