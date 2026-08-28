@@ -738,7 +738,24 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-n { flex: 0 0 auto; font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 .hmonth[data-open="0"] .hmonth-body { display: none; }
 
-.sess-cols { display: grid; grid-template-columns: 64px 70px minmax(0,1fr) 104px 20px; gap: 7px 10px; }
+/* 2026-08-28：多一欄放八個小方格（原本那塊是空的）。
+   這一欄的寬度必須寫死，不能用 auto——標題列只有「八大職能」四個字（44px），
+   資料列是八個格子（8×20 ＋ 7×3 = 181px），auto 會讓兩列各自算，欄位就對不齊了。
+   欄寬由 .sess-cols 一份 grid-template 決定，標題列與資料列共用，這是那條規則的重點。 */
+.sess-cols { display: grid; grid-template-columns: 64px 70px minmax(0,1fr) 181px 104px 20px; gap: 7px 10px; }
+.sess-scells { display: flex; gap: 3px; align-items: center; justify-content: flex-start; }
+/* 正方小格，標 1–8。色階與熱力圖共用同一組 data-lv，只有一份定義。 */
+.scell {
+  width: 20px; height: 20px; flex: 0 0 20px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+}
+.scell[data-lv="none"] { background: transparent; border-style: dashed; border-color: var(--line); color: var(--ink-4); }
+.scell[data-lv="1"] { background: var(--st1-bg); color: var(--st1-fg); border-color: var(--st1-line); }
+.scell[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
+.scell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
+.scell[data-lv="4"] { background: var(--st4-bg); color: var(--st4-fg); border-color: var(--st4-line); }
 .sess-head {
   padding: 0 12px 9px; border-bottom: 1px solid var(--line-2); margin-bottom: 9px;
   align-items: baseline;
@@ -746,6 +763,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .sess-head span { font-size: 11px; font-weight: 700; color: var(--ink-4); }
 .sess-head .sh-topic { color: var(--warm-ink); }
 .sess-head .sh-meta { text-align: right; }
+.sess-head .sh-cells { text-align: center; white-space: nowrap; }
 .sess {
   background: var(--surface); border: 1px solid #E8E2D8; border-radius: 9px;
   padding: 13px 12px; margin-bottom: 7px; cursor: pointer; align-items: center;
@@ -784,6 +802,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 兩條都到位才變綠——半滿不上色，才看得出「還差一條」 */
 .sess-tag[data-n="1"] { background: var(--line-2); color: var(--ink-2); }
 .sess-tag[data-n="2"] { background: var(--ok-bg); color: var(--ok); }
+/* 2026-08-28：561–1099px 這一段放得下五欄，但塞不下第六欄——實測 768px 時
+   議題只剩 181px，被八格擠掉。這個區間讓八格移到議題下面自己一列，議題拿回整條寬度。
+   1100px 以上才六欄並排。 */
+@media (min-width: 561px) and (max-width: 1099.98px) {
+  .sess-cols { grid-template-columns: 64px 70px minmax(0,1fr) 104px 20px; }
+  .sess-head .sh-cells { display: none; }
+  .sess-scells { grid-column: 3 / -1; grid-row: 2; margin-top: 4px; }
+}
 @media (max-width: 560px) {
   /* 窄版放不下五欄：議題與第二層各自佔滿一整列，欄位標題列收起來。
      每一格的列號要寫死——只寫 grid-column 的話，箭頭會被擠到自己一行。 */
@@ -793,8 +819,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .sess-client { grid-column: 2; grid-row: 1; text-align: right; }
   .sess-arrow  { grid-column: 3; grid-row: 1; }
   .sess-topic  { grid-column: 1 / -1; grid-row: 2; }
-  .sess-meta   { grid-column: 1 / -1; grid-row: 3; text-align: left; }
-  .sess-bot    { grid-column: 1 / -1; grid-row: 4; }
+  /* 2026-08-28：八格在窄版自己佔一整列（第 3 列），時長往下移到第 4 列。
+     181px 的固定欄寬在窄版要解除，否則會把三欄擠爆。 */
+  .sess-scells { grid-column: 1 / -1; grid-row: 3; }
+  .sess-meta   { grid-column: 1 / -1; grid-row: 4; text-align: left; }
+  .sess-bot    { grid-column: 1 / -1; grid-row: 5; }
 }
 
 /* ═══ §14-2 客戶卡片（兩欄） ═══ */
@@ -813,6 +842,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .ccard-st[data-s="closed"] { color: var(--ink-3); background: var(--line-3); }
 .ccard-meta { font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ccard-goal { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+/* 2026-08-28：客戶卡上直接看得到付費別，不用點進去。
+   「還沒選」用琥珀色提醒——ICF 時數表要分開列，漏一位就是漏一位。 */
+.ccard-paid { display: inline-block; margin-top: 7px; font-size: 11px; font-weight: 700;
+              border-radius: 5px; padding: 2px 8px;
+              background: var(--line-3); color: var(--ink-3); }
+.ccard-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-d); }
+.ccard-paid[data-p="probono"] { background: var(--ok-bg);    color: var(--ok); }
+.ccard-paid[data-p=""]        { background: var(--amber-bg); color: var(--amber-ink); }
 .ctrend { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
 .ctrow { display: grid; grid-template-columns: 52px minmax(0,1fr) 64px; gap: 10px; align-items: center; }
 .ct-name { font-size: 11.5px; color: var(--ink-3); }
@@ -1644,6 +1681,16 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <div class="f2col-cell">
           <label>客戶</label>
           <select id="f-client-sel" onchange="onClientSelChange()"></select>
+          <!-- 2026-08-28（Yi-En：「在新增紀錄、新增客戶的時候，就要可以記錄這個客戶有沒有付費」）
+               這一組寫的是**客戶**的欄位，不是這一場的——ICF 時數表是一列一位客戶。 -->
+          <div id="f-paid-box" class="hidden">
+            <label style="margin-top:10px">這位客戶是 <span class="hint" id="f-paid-hint">ICF 時數表要分開列</span></label>
+            <div class="quickfilters" id="f-paid">
+              <button type="button" class="pchip" data-paid=""        onclick="setFormPaid('')">還沒選</button>
+              <button type="button" class="pchip" data-paid="paid"    onclick="setFormPaid('paid')">付費</button>
+              <button type="button" class="pchip" data-paid="probono" onclick="setFormPaid('probono')">公益（Pro Bono）</button>
+            </div>
+          </div>
           <div id="f-client-newbox" class="hidden">
             <input type="text" id="f-client-new" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
             <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
@@ -1865,7 +1912,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
-      <div class="sub-note">一格是一條標記，顏色深淺＝標過幾次。虛線空格是還沒點到的——那是還沒走到，不是做不到。滑過格子可以看次數與比例。</div>
+      <div class="sub-note">一格是一條標記，顏色深淺＝在評估過的場次裡標到的比例。虛線空格是還沒點到的——那是還沒走到，不是做不到。滑過格子可以看確切次數。</div>
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
@@ -2803,7 +2850,11 @@ let pushFailed = false;
    使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 9;   /* v9：新增可選 progress。舊紀錄缺少 progress 就是尚未評估，
+const SCHEMA_VER = 10;  /* v10（2026-08-28）：客戶多一個可選欄位 paid（''｜'paid'｜'probono'），
+                              對應 ICF 時數表的 Paid／Pro Bono 兩欄。舊客戶沒有這個欄位＝還沒選，
+                              匯出時那兩欄留空讓她自己填，不猜。
+                              不需要遷移：讀取端一律 c.paid || ''，沒有任何既有資料被改寫。
+                              v9：新增可選 progress。舊紀錄缺少 progress 就是尚未評估，
                               是 identity／no-write 的資料轉換：不 backfill、不補 7／''／null，
                               只靠 ensureCloudSnapshot(9) 先留 payload_pre_v9，不重寫舊 payload。
                               v8 是 §9 覺察手帳（journal / journalTags 兩個新集合進 payload）。 */
@@ -4727,7 +4778,8 @@ function saveRecord(later) {
       let c = cs.find(x=>(x.code||'').trim().toLowerCase()===clientCode.toLowerCase());
       if (!c) {
         const pre = parseInt(document.getElementById('f-client-pre').value,10)||0;
-        c = { id:'c'+Date.now(), code:clientCode, status:'active', preSessions:pre, goal:'', note:'', created:todayStr() };
+        c = { id:'c'+Date.now(), code:clientCode, status:'active', preSessions:pre, goal:'', note:'',
+              paid:_newClientPaid, created:todayStr() };
         cs.push(c); storeC(cs);
       }
       clientId = c.id; clientCode = c.code;
@@ -4867,6 +4919,14 @@ function credStats(recs){
   const cutStr = monthsAgoStr(CRED.acc.months);
   return {
     totalH:  h(withMins.reduce((s,r)=>s+parseInt(r.mins,10), 0)),
+    /* 2026-08-28（Yi-En：「付費應該要跟客戶綁定…那個付費時數就可以不用另外記了」）：
+       客戶有了 paid 欄位之後，付費時數就是真的算得出來，不再拿總時數估算。
+       只算 paid==='paid' 的客戶；'probono' 與「還沒選」都不計入——
+       還沒選不等於付費，寧可少算也不要讓她拿一個灌水的數字去送審。 */
+    paidH:   h(withMins.filter(r=>{ const c = clientById(r.clientId); return c && c.paid === 'paid'; })
+                       .reduce((s,r)=>s+parseInt(r.mins,10), 0)),
+    unsetPaid: new Set(withMins.filter(r=>{ const c = clientById(r.clientId);
+                       return !c || !(c.paid); }).map(r=>r.clientId).filter(Boolean)).size,
     recentH: h(withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10), 0)),
     clients: new Set((recs||[]).map(r=>r.clientId).filter(Boolean)).size,
     noMins:  (recs||[]).length - withMins.length,
@@ -5224,12 +5284,16 @@ function renderCred(){
     const c = CRED[k];
     return '<div class="card"><label style="margin-top:0">' + c.name + ' 門檻</label>'
       + credBar('總時數', st.totalH, c.hours, '小時')
-      + credBar('付費時數', st.totalH, c.paid, '小時')
+      + credBar('付費時數', st.paidH, c.paid, '小時')
       + credBar('不重複客戶', st.clients, c.clients, '位')
       + credBar('近 ' + c.months + ' 個月', st.recentH, c.recent, '小時')
       /* M3（2026-08-28）：移除「送審錄音」進度與「導師教練」小字。
          兩者都由教練學院處理，本工具不追蹤。保留本工具算得出來的四項。 */
-      + '<div class="cred-note">「付費時數」用總時數估算——工具沒有記錄每場是否付費，這條要自己核對。</div></div>';
+      + (st.unsetPaid
+          ? '<div class="cred-note">還有 <b>' + st.unsetPaid + '</b> 位客戶沒有選付費別，'
+            + '他們的時數沒有算進「付費時數」。到客戶頁把付費／公益選好，這個數字才會準。</div>'
+          : '<div class="cred-note">「付費時數」只算標為「付費」的客戶，公益（Pro Bono）不計入。</div>')
+      + '</div>';
   }).join('');
 
   /* M3（2026-08-28）：送審錄音候選清單整段撤下。
@@ -5327,9 +5391,17 @@ function markerHitStats(recs){
    原因是這個工具鼓勵在職能層快速記錄，marker 是零星補的——統計口徑要對齊使用者
    真的會填的東西，不是理想中最完整的填法。
    門檻按實測分布定：0／1／2／3–4／5 次以上。比例仍然算，放在 tooltip 當參考。 */
+/* 2026-08-28（Yi-En：「熱力圖是 有點到的次數／會談總次數 = % 去看的吧」）：
+   改用比例，不用絕對次數。
+
+   為什麼原本用次數：2026-08-27 那時 marker 是零星補的，39 條的命中率全部落在
+   4%–20%，用比例分不出深淺。**現在條件變了**——「到位＝底下每一條都做到」上線後，
+   命中數跟著場次一起長到 20–30，次數級距（0/1/2/3–4/5+）整片飽和成最深色，
+   等於沒有資訊。比例才會跟著實際狀況動。 */
 function hitLevel(hits, rate){
   if (!hits) return 'none';
-  return hits === 1 ? '1' : hits === 2 ? '2' : hits <= 4 ? '3' : '4';
+  const p = rate * 100;
+  return p <= 25 ? '1' : p <= 50 ? '2' : p <= 75 ? '3' : '4';
 }
 /* 基礎狀態（1、2）與當場動作（3–8）分兩區，不互相比較 */
 const MK_BASE_COUNT = 2;
@@ -5388,10 +5460,17 @@ function renderAccCum(){
                        + Math.round(m.rate * 100) + '%）'
                     : '這項還沒評估過') + '">'
       + m.c + '</span>').join('');
+    /* 2026-08-28：數字直接寫在列尾，不用滑過去才看得到。
+       同一列裡各條 marker 的命中數可能不同（例：職能4 是 21、22、24），
+       所以有差距時寫成區間「21–24／25 場」，全部一樣時就寫「25／26 場」。 */
+    const hs2 = x.markers.map(m => m.hits);
+    const lo = Math.min.apply(null, hs2), hi = Math.max.apply(null, hs2);
+    const den = !x.assessed ? '尚未評估'
+              : (lo === hi ? lo : lo + '–' + hi) + '／' + x.assessed + ' 場';
     return '<div class="hm-row">'
       + '<div class="hm-name"><b>' + (x.i + 1) + '</b> ' + name + '</div>'
       + '<div class="hm-cells">' + cells + '</div>'
-      + '<div class="hm-den">' + (x.assessed ? x.assessed + ' 場評估過' : '尚未評估') + '</div>'
+      + '<div class="hm-den">' + den + '</div>'
     + '</div>';
   };
   /* 2026-08-28（Yi-En 實機回報）：
@@ -5400,10 +5479,10 @@ function renderAccCum(){
   grid.innerHTML =
     '<div class="hm-legend">'
       + '<span class="hm-cell" data-lv="none"></span>還沒點到'
-      + '<span class="hm-cell" data-lv="1"></span>1 次'
-      + '<span class="hm-cell" data-lv="2"></span>2 次'
-      + '<span class="hm-cell" data-lv="3"></span>3–4 次'
-      + '<span class="hm-cell" data-lv="4"></span>5 次以上'
+      + '<span class="hm-cell" data-lv="1"></span>四分之一以下'
+      + '<span class="hm-cell" data-lv="2"></span>一半以下'
+      + '<span class="hm-cell" data-lv="3"></span>四分之三以下'
+      + '<span class="hm-cell" data-lv="4"></span>幾乎每一場'
     + '</div>'
     + '<div class="hm-caveat">顏色表示這段期間記錄到的證據分布，不是職能分數；'
       + '不同職能之間不直接比較。marker 沒有證據不代表這項職能未到位。</div>'
@@ -5487,6 +5566,19 @@ function histFiltered(){
    由淡到深：未評 → 未到位 → 部分到位 → 到位（暖 → 冷）。 */
 const CELL_LV = { '-1': 0, '0': 1, '1': 2, '2': 3 };
 function cellLevel(st){ return CELL_LV[String(st)] != null ? CELL_LV[String(st)] : 0; }
+/* 2026-08-28（Yi-En）：單場那八格改成「這一場這項職能達到的小項數／該職能的小項總數」的比例。
+   舊版看的是職能四態（未評／未到位／部分／到位），那是四段的狀態，不是完成度。
+   尚未評估（st === -1）維持空心——沒評估不等於沒做到。
+   回傳字串是為了跟熱力圖的 hitLevel 共用同一組 data-lv 樣式，只有一份色階定義。 */
+function sessCellLevel(r, i){
+  const x = (r.acc || [])[i];
+  if (accSt(x) === ST_NE) return { lv: 'none', on: 0, total: (MK[i]||[]).length };
+  const g = MK[i] || [];
+  const mk = (x && x.mk) || {};
+  const on = g.filter(m => mkOn(mk[m.c])).length;
+  const total = g.length || 1;
+  return { lv: hitLevel(on, on / total), on, total };
+}
 const ACK_MK = ['4.1','4.3','8.5'];   // 認可
 const EMP_MK = ['4.2','6.4'];         // 同理
 function sessionMkCounts(r){
@@ -5554,6 +5646,7 @@ function renderHist() {
     '<div class="sess-cols sess-head">'
       + '<span>日期</span><span>客戶</span>'
       + '<span class="sh-topic">這一場的議題</span>'
+      + '<span class="sh-cells">八大職能</span>'
       + '<span class="sh-meta">時長・到位</span><span></span>'
     + '</div>'
     + groups.map(g=>{
@@ -5567,11 +5660,22 @@ function renderHist() {
       + '</button>'
       + '<div class="hmonth-body">' + g.arr.map(r=>{
         const c = sessionMkCounts(r);
-        return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
+        /* 2026-08-28（Yi-En）：八個小方格加回來。M4 當初撤掉是為了讓議題有完整寬度，
+         但那塊空間空著也沒給議題用。現在放在議題與時長之間，
+         顏色＝這一場這項職能達到的小項數／該職能小項總數。 */
+      const cellsHTML = ACC.map((a,i)=>{
+        const s2 = sessCellLevel(r, i);
+        return '<span class="scell" data-lv="' + s2.lv + '" title="核心職能 ' + a[0]
+          + '：' + (s2.lv === 'none' ? '尚未評估'
+                   : s2.on + '／' + s2.total + ' 條（' + Math.round(s2.on / s2.total * 100) + '%）')
+          + '">' + (i+1) + '</span>';
+      }).join('');
+      return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
           + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
           + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
           + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
             + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
+          + '<span class="sess-scells">' + cellsHTML + '</span>'
           + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 <b>' + c.done + '</b> 項</span>'
           + '<span class="sess-arrow">›</span>'
         + '</div>';
@@ -5885,10 +5989,40 @@ function onClientSelChange(){
   const box = document.getElementById('f-client-newbox');
   if (!sel || !box) return;
   box.classList.toggle('hidden', sel.value !== '__new__');
+  syncFormPaid();
   showLastImprove(sel.value === '__new__' ? '' : sel.value);
   refreshFocusReview();
   if (sel.value === '__new__') { document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
+}
+/* 新增紀錄頁的付費別：改的是**客戶**的欄位，所以按下去就立刻寫進客戶資料，
+   不等這一場存檔——這一場可能根本沒存，但「這位客戶是付費的」這件事已經成立。
+   新客戶（還沒建立）先記在 _newClientPaid，等存檔建立客戶時一起帶進去。 */
+function syncFormPaid(){
+  const sel = document.getElementById('f-client-sel');
+  const box = document.getElementById('f-paid-box');
+  if (!sel || !box) return;
+  const v = sel.value;
+  box.classList.toggle('hidden', !v);
+  if (!v) return;
+  const c = v === '__new__' ? null : clientById(v);
+  const cur = c ? (c.paid || '') : _newClientPaid;
+  document.querySelectorAll('#f-paid .pchip').forEach(b=>
+    b.classList.toggle('on', (b.dataset.paid || '') === cur));
+  const hint = document.getElementById('f-paid-hint');
+  if (hint) hint.textContent = c ? 'ICF 時數表要分開列（改這裡會直接更新這位客戶）'
+                                 : 'ICF 時數表要分開列';
+}
+function setFormPaid(v){
+  const sel = document.getElementById('f-client-sel');
+  const cur = sel ? sel.value : '';
+  if (cur && cur !== '__new__'){
+    const cs = loadC(); const c = cs.find(x=>x.id === cur);
+    if (c){ c.paid = v; storeC(cs); toast('已更新這位客戶的付費別'); }
+  } else {
+    _newClientPaid = v;            /* 新客戶：存檔建立時才寫進去 */
+  }
+  syncFormPaid();
 }
 /* 閉環提醒：選了客戶就帶出上次的「可改進」，讓這次會談前先看見 */
 /* 只負責算出「上次要改」那一行的文字，實際呈現在回顧卡裡（合成一張卡） */
@@ -5953,9 +6087,14 @@ function addClient(){
   renderClients(); toast('已新增客戶');
 }
 /* 付費／公益：ICF 時數表的 Paid 與 Pro Bono 是兩個獨立欄位，這裡存成三態。
-   '' 代表「還沒選」——匯出時那兩欄都留空，不替她猜。 */
+   '' 代表「還沒選」——匯出時那兩欄都留空，不替她猜。
+   「還沒選」在畫面上要看得見，不是靜靜地不顯示：ICF 送審時漏掉一位就是漏掉一位。 */
+function paidChip(v){
+  const p = v || '';
+  const t = p === 'paid' ? '付費' : p === 'probono' ? '公益' : '還沒選付費別';
+  return '<div class="ccard-paid" data-p="' + p + '">' + t + '</div>';
+}
 let _newClientPaid = '';
-const PAID_LABEL = { '': '還沒選', paid: '付費', probono: '公益（Pro Bono）' };
 function setNewClientPaid(v){
   _newClientPaid = v;
   document.querySelectorAll('#new-client-paid .pchip').forEach(b=>
@@ -6022,6 +6161,7 @@ function renderClients(){
       <span class="ccard-id"><span class="ccard-code">${esc(x.c.code)}</span><span class="ccard-st" data-s="${x.c.status==='closed'?'closed':'active'}">${x.c.status==='closed'?'已結案':'進行中'}</span></span>
       <span class="ccard-meta">${meta}</span>
     </div>
+    ${paidChip(x.c.paid)}
     ${x.c.goal?`<div class="ccard-goal">目標：${esc(x.c.goal)}</div>`:''}
     <div class="ctrend">${bars}</div>
   </div>`;}).join('') + '</div>';
