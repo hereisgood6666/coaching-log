@@ -1235,12 +1235,18 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* C2 的收合規則已移到基礎層（2026-08-28 起桌機也收合），這裡不再重複。 */
 }
 /* 右欄面板 */
-.acc-cur-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
-.acc-cur-num { font-size: 11.5px; font-weight: 700; color: var(--ink-4); letter-spacing: .06em; }
+/* C3＋C4（Yi-En 2026-08-29 決定「收成兩層」）：原本編號 11.5／名稱 20／徽章 12.5／說明 13.5
+   四種字級並排，看起來像沒對齊。改成只用兩種字級——13px 與 20px——
+   層級改由「顏色與字重」分，不再由字級分。編號同時從 11.5 放大到 13px（她說太小）。
+   第一層：編號 ＋ 名稱 ＋ 別名徽章（同一行、同一條基線）
+   第二層：說明
+   注意：這四條的字級是一組，要改就四條一起看，不要只動其中一條。 */
+.acc-cur-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.acc-cur-num { font-size: 13px; font-weight: 700; color: var(--ink-3); letter-spacing: .04em; }
 .acc-cur-name { font-size: 20px; font-weight: 650; margin: 0; letter-spacing: -.01em; }
-.acc-cur-alt { font-size: 12.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 2px 9px; }
+.acc-cur-alt { font-size: 13px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 2px 9px; }
 .acc-cur-alt:empty { display: none; }
-.acc-cur-desc { font-size: 13.5px; color: var(--ink-3); margin: 0 0 16px; line-height: 1.7; }
+.acc-cur-desc { font-size: 13px; color: var(--ink-3); margin: 0 0 16px; line-height: 1.75; }
 .acc-meters { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
 .acc-meter { border-radius: 10px; padding: 12px 14px; }
 .acc-meter[data-lv="acc"] { background: var(--warm-bg-2); border: 1px solid var(--warm-line); }
@@ -1563,7 +1569,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .action-bar { display: none; }
 @media (max-width: 1023.98px) {
   .action-bar {
-    display: flex; align-items: center; gap: 8px;
+    /* 2026-08-29：職能標記頁那條有四個東西（ACC 籤／PCC 籤／儲存／回會談記錄），
+       在 375px 內容寬 386px，最後一顆被切掉 11px。按鈕是 white-space: nowrap，
+       所以 flex 收不下去，只會溢出。改成可換行——寧可變兩行，不要有按鈕被裁掉。
+       換行後高度會變，所以下面的 #app 讓位改用實測值 --ab-h，不再寫死 76px。 */
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 8px;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 55;
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
     background: var(--surface); border-top: 1px solid var(--line);
@@ -1576,9 +1586,19 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .action-bar .btn { flex: 1 1 0; min-height: 44px; white-space: nowrap; padding-left: 10px; padding-right: 10px; }
   .action-bar .ab-search { flex: 2 1 0; min-width: 0; min-height: 44px; margin: 0; }
   .action-bar .ab-icon { flex: 0 0 auto; }
-  .action-bar .hd-count { flex: 0 0 auto; }
-  /* 內容要讓出固定列的高度，否則最後一張卡永遠被蓋住 */
-  #app { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .action-bar .hd-count { flex: 0 1 auto; min-width: 0; }
+  /* 375px（iPhone SE／mini）差 11px 就能一行放下四個東西。
+     收緊間距與內距把那 11px 擠出來，比讓整條變成 125px 高的兩行好。
+     再窄（320px）還是會換行——那是上面 flex-wrap 的保險，不是壞掉。 */
+  @media (max-width: 400px) {
+    .action-bar { gap: 6px; padding-left: 10px; padding-right: 10px; }
+    .action-bar .btn { padding-left: 8px; padding-right: 8px; }
+    .action-bar .hd-count { padding-left: 8px; padding-right: 8px; }
+  }
+  /* 內容要讓出固定列的高度，否則最後一張卡永遠被蓋住。
+     --ab-h 由 syncActionBarH() 實測寫入；沒有底部列的頁面是 0px，
+     JS 還沒跑到之前退回 76px（＝單行時的高度）。 */
+  #app { padding-bottom: calc(var(--ab-h, 76px) + 12px + env(safe-area-inset-bottom, 0px)); }
   /* 抽屜蓋過固定列 */
   .tabs { z-index: 60; }
   .nav-scrim { z-index: 56; }
@@ -1613,6 +1633,26 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .acc-nav  { order: 0; }
   .acc-main { order: 1; }
   .ai-card  { order: 2; }
+}
+
+/* ═══ A3：每條標記的「這一場：No／反」（2026-08-29） ═══
+   放在樣式表最後面——今天已經有四次是把覆寫規則寫在前面、被後面同特異性的規則蓋掉。
+   選中狀態用邊框與底色表示，不用只靠顏色（色弱也要分得出來）。 */
+.mk-neg { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mk-neg-lb { font-size: 12px; color: var(--ink-4); }
+.mk-negbtn {
+  font: inherit; font-size: 12px; line-height: 1;
+  min-height: 32px; padding: 0 12px;
+  border: 1px solid var(--line-2); border-radius: 999px;
+  background: var(--surface); color: var(--ink-3); cursor: pointer;
+}
+.mk-negbtn:hover { border-color: var(--ink-4); }
+.mk-negbtn.on { border-color: var(--warm-line); background: var(--warm-bg-2); color: var(--warm-ink); font-weight: 600; }
+.mk-neg-legend { font-size: 12px; color: var(--ink-4); line-height: 1.6; margin: 6px 0 2px; }
+.mk-neg-legend b { color: var(--warm-ink); }
+@media (max-width: 1023.98px) {
+  /* 手機觸控目標 44px（跟 2026-08-28 那批觸控修正同一個標準） */
+  .mk-negbtn { min-height: 44px; padding: 0 16px; }
 }
 </style>
 </head>
@@ -2336,6 +2376,20 @@ function mkId(i, code){ return i + '_' + code.replace('.', '_'); }
 function mkOn(v){ return typeof v === 'string' ? false : !!(v && v.on); }
 function mkEv(v){ return typeof v === 'string' ? v : String((v && v.ev) || ''); }
 function mkImp(v){ return typeof v === 'string' ? '' : String((v && v.imp) || ''); }
+/* A3（Yi-En 2026-08-29 決定補做）：每條標記的「這一場」快速鍵。
+   NEG_NO = 這一場沒出現；NEG_CT = 出現了反例（比沒做到更嚴重）。
+   ── 為什麼是新增一個鍵而不是改結構 ──
+   mk[code] 原本是 {on, ev, imp, rows}，這裡只多一個可有可無的 neg。
+   舊資料沒有這個鍵 → mkNeg() 回空字串 ＝「沒選」，舊版頁面讀不到它也不會壞，
+   所以不需要動 accv、不需要遷移（跟當初加 rows 是同一個做法）。
+   合法值只有 '' / 'no' / 'ct'，其他一律當成沒選——避免將來有人塞奇怪的值進來。 */
+const NEG_NO = 'no', NEG_CT = 'ct';
+const NEG_TXT = { no: 'No（這一場沒出現）', ct: '反（出現反例）' };
+function mkNeg(v){
+  if (typeof v === 'string' || !v) return '';
+  const n = String(v.neg || '');
+  return (n === NEG_NO || n === NEG_CT) ? n : '';
+}
 /* §6：每條標記可以有多列「時間戳＋實例」。
    舊資料只有一行逗號分隔的 ev，讀取端在這裡攤成 rows，不改寫磁碟上的舊資料。
    ev 仍然是證據計數（evCount / MK_TWO）的唯一來源，由 rows 的時間戳推導。 */
@@ -4109,6 +4163,13 @@ function buildAcc() {
             ${m.p?`<div class="mk-plain">${m.p}</div>`:''}</div>
         </div>
         <div class="mk-rows" id="mk-rows-${mkId(i,m.c)}"></div>
+        <div class="mk-neg" id="mk-neg-${mkId(i,m.c)}" data-neg="">
+          <span class="mk-neg-lb">這一場：</span>
+          <button type="button" class="mk-negbtn" data-v="no" title="這一場沒有出現這條標記"
+            onclick="setMkNeg(${i},'${m.c}','no')">No</button>
+          <button type="button" class="mk-negbtn" data-v="ct" title="出現了反例，比沒做到更嚴重"
+            onclick="setMkNeg(${i},'${m.c}','ct')">反</button>
+        </div>
         <div class="mk-btns">
           <button type="button" class="mk-addbtn" onclick="mkAddRow(${i},'${m.c}')">＋ 再加一個時間戳</button>
           <button type="button" class="mk-addbtn" id="mk-impbtn-${mkId(i,m.c)}"
@@ -4145,10 +4206,11 @@ function buildAcc() {
         <textarea id="acc-imp-${i}" rows="1" placeholder="這項要往哪裡練——不必勾選也可以寫（選填）"></textarea>
       </div>
       <button type="button" class="mk-toggle" id="mk-tog-${i}" onclick="toggleMk(${i})">
-        展開 ACC 標記（${(MK[i]||[]).length} 條）▾</button>
-      <div class="mk-box hidden" id="mk-box-${i}">
+        收合 ACC 標記 ▴</button>
+      <div class="mk-box" id="mk-box-${i}">
         ${noteHTML}
         ${MK_TWO[i] ? '<div class="mk-rule">這項職能的 ACC 必備標記，每條需要 2 個以上證據才能勾選</div>' : ''}
+        <div class="mk-neg-legend">每條標記下面的「這一場」：<b>No</b>＝這一場沒出現・<b>反</b>＝出現了反例，比沒做到更嚴重。按同一顆第二次可以取消。</div>
         ${mkRows}
       </div>`;
     box.appendChild(item);
@@ -4158,7 +4220,8 @@ function buildAcc() {
     (MK[i]||[]).forEach(m=>{
       mkAddRow(i, m.c);                 /* 預設一列「時間戳＋實例」 */
       const chk = document.getElementById('mk-chk-'+mkId(i,m.c));
-      if (chk) chk.onchange = () => refreshMk(i, m.c);
+      /* 勾「做到」就把 No／反 清掉（互斥的另一半，另一半在 setMkNeg） */
+      if (chk) chk.onchange = () => { if (chk.checked) clearMkNeg(i, m.c); refreshMk(i, m.c); };
       refreshMk(i, m.c);
     });
     setAccSt(i, ST_NE);
@@ -4209,6 +4272,9 @@ function accStClick(i, v){
   setAccSt(i, v);
   if (v !== 2 || was === 2) return;
   (MK[i] || []).forEach(m => {
+    /* A3：使用者已經明確標成 No／反 的那幾條，按「到位」不可以把它蓋掉——
+       那是他自己說的「這條沒出現／出現反例」，自動勾選會直接反轉他的意思。 */
+    if (mkNegValue(i, m.c)) return;
     const cb = document.getElementById('mk-chk-' + mkId(i, m.c));
     if (cb && !cb.checked) { cb.checked = true; refreshMk(i, m.c); }
   });
@@ -4276,6 +4342,47 @@ function toggleMkImp(i, code, force){
 /* §6：標記可以只勾「做到」，不填時間戳也能標——提醒但不擋。
    ICF 的兩證據規則（職能 4／5／7 的 ACC 必備項）降級成送審前的提醒，
    不再 disable 勾選框。使用者回饋：被擋住的時候，最需要記筆記的那幾條反而無處可寫。 */
+/* A3：設定／取消「這一場：No／反」。再按一次同一顆＝取消，回到「沒選」——
+   四態那條硬約束（§七-1）的同一個道理：一定要有辦法回到「沒填」。
+   No／反 與「做到」互斥：選了 No／反 就取消勾選，勾了做到就清掉 No／反。
+   不清空時間戳與備註——那是使用者打的字，只有他自己能刪。 */
+function setMkNeg(i, code, v){
+  const box = document.getElementById('mk-neg-' + mkId(i, code));
+  if (!box) return;
+  const next = (box.dataset.neg === v) ? '' : ((v === NEG_NO || v === NEG_CT) ? v : '');
+  box.dataset.neg = next;
+  box.querySelectorAll('.mk-negbtn').forEach(b =>
+    b.classList.toggle('on', !!next && b.dataset.v === next));
+  if (next){
+    const chk = document.getElementById('mk-chk-' + mkId(i, code));
+    if (chk && chk.checked) chk.checked = false;
+  }
+  refreshMk(i, code);
+}
+/* 把某條標記的 No／反 清成「沒選」。勾「做到」時會叫它。 */
+function clearMkNeg(i, code){
+  const box = document.getElementById('mk-neg-' + mkId(i, code));
+  if (!box) return;
+  box.dataset.neg = '';
+  box.querySelectorAll('.mk-negbtn').forEach(b => b.classList.remove('on'));
+}
+/* 讀目前這條標記在畫面上的 No／反 狀態（存檔與判斷都走這裡，不要各自去讀 dataset） */
+function mkNegValue(i, code){
+  const box = document.getElementById('mk-neg-' + mkId(i, code));
+  const n = box ? String(box.dataset.neg || '') : '';
+  return (n === NEG_NO || n === NEG_CT) ? n : '';
+}
+/* ACC／PCC 兩張計數卡：頁首右上與手機底部固定列各有一份，兩份都要更新。
+   刻意用 class 不用 id：renderActions() 會替底部那份的 id 加上 'ab-' 前綴
+   （見 applyPageHead 裡的 idPrefix），所以兩份的 id 根本不一樣——
+   原本 refreshAccPanel 只 getElementById('hd-acc')，更新得到的是頁首那份，
+   而頁首在手機上是 display:none，使用者看得到的底部那份永遠停在 0 / 20。
+   class 不會被前綴處理，一次 querySelectorAll 兩份都改到。 */
+function updateHdCounts(){
+  const t = accMkCounts();
+  document.querySelectorAll('.js-hd-acc').forEach(e => { e.textContent = t.accOn + ' / ' + t.accTotal; });
+  document.querySelectorAll('.js-hd-pcc').forEach(e => { e.textContent = t.pccOn + ' / ' + t.pccTotal; });
+}
 function refreshMk(i, code){
   const id = mkId(i, code);
   const chk = document.getElementById('mk-chk-'+id);
@@ -4300,6 +4407,7 @@ function refreshMk(i, code){
   }
   hint.textContent = txt;
   hint.className = 'mk-hint' + (warn ? ' warn' : '');
+  updateHdCounts();     /* 勾一條 marker 就要看到計數動，不能等到切職能才更新 */
 }
 /* ═══ §14-A 步驟 2 主從版面 ═══
    當前項只存在記憶體，不進 localStorage（不新增任何鍵）。切頁回來重置成第一項。
@@ -4393,10 +4501,7 @@ function refreshAccPanel(){
   if (next) next.disabled = (i === ACC.length - 1);
   renderAccNav();
   /* 頁首那兩張計數卡 */
-  const t = accMkCounts();
-  const ha = document.getElementById('hd-acc'), hp = document.getElementById('hd-pcc');
-  if (ha) ha.textContent = t.accOn + ' / ' + t.accTotal;
-  if (hp) hp.textContent = t.pccOn + ' / ' + t.pccTotal;
+  updateHdCounts();
 }
 /* 切項目：八項的 DOM 都留著，只切 display */
 function showAccItem(i){
@@ -4420,7 +4525,10 @@ function getAcc() {
       const evv = rowsToEv(rows);            /* ev 由 rows 推導，仍是證據計數的唯一來源 */
       const impEl = document.getElementById('mk-imp-'+id);
       const impv = impEl ? impEl.value.trim() : '';
-      if (on || evv || impv || rows.length) mk[m.c] = { on, ev: evv, imp: impv, rows };
+      const neg = mkNegValue(i, m.c);
+      /* neg 也算「有填」——只選了 No 而沒打任何字的那條也要存下來，
+         不然存檔後重新載入就變回「沒選」，使用者會以為按了沒作用。 */
+      if (on || evv || impv || rows.length || neg) mk[m.c] = { on, ev: evv, imp: impv, rows, neg };
     });
     return {
       st,
@@ -4445,13 +4553,16 @@ function mkLines(x, i){
   (MK[i]||[]).forEach(m=>{
     const v = mk[m.c];
     if (!v) return;
-    const on = mkOn(v), imp = mkImp(v);
+    const on = mkOn(v), imp = mkImp(v), neg = mkNeg(v);
     const rows = mkRows(v).filter(r=>String(r.t||'').trim() || String(r.x||'').trim());
-    if (!on && !rows.length && !imp) return;
+    if (!on && !rows.length && !imp && !neg) return;
     const short = MK_SHORT[m.c] ? '　' + MK_SHORT[m.c] : '';
     /* M3（2026-08-28）：移除「送審前要補時間戳」。教練學院已處理送審，本工具不追蹤。
        mkLines() 本身保留——詳情、PDF、文字匯出共用它，只是不再輸出送審語意。 */
-    out.push((on ? '✓' : '·') + ' ' + (m.d||m.c) + short);
+    /* A3：詳情／PDF／匯出文字／督導包共用這裡，標記符號一次改四處都會帶到。
+       ✓＝做到、No＝沒出現、反＝反例、·＝只有時間戳或備註。 */
+    const sym = on ? '✓' : (neg === NEG_NO ? 'No' : neg === NEG_CT ? '反' : '·');
+    out.push(sym + ' ' + (m.d||m.c) + short);
     rows.forEach(r=>{
       const t = String(r.t||'').trim(), ex = String(r.x||'').trim();
       out.push('　　' + (t || '（沒有時間戳）') + (ex ? '　' + ex : ''));
@@ -4557,9 +4668,13 @@ const VIEW_HEAD = {
           sub: '一次只看一項。預設是「尚未評估」——沒填不等於沒做到。',
           actions: [
             () => { const c = accMkCounts();
-              return ['<span class="hd-count" data-lv="acc"><b>ACC</b><span id="hd-acc">'
+              /* 2026-08-29：這段 raw HTML 會被渲染兩次（頁首右上＋手機底部固定列），
+                 而 renderActions 會把底部那份的 id 前綴成 ab-hd-acc。
+                 更新端只找 hd-acc，所以手機上看得到的那份永遠停在 0 / 20。
+                 改用 class（不會被前綴處理），更新時兩份一起改。 */
+              return ['<span class="hd-count" data-lv="acc"><b>ACC</b><span class="js-hd-acc">'
                 + c.accOn + ' / ' + c.accTotal + '</span></span>'
-                + '<span class="hd-count" data-lv="pcc"><b>PCC</b><span id="hd-pcc">'
+                + '<span class="hd-count" data-lv="pcc"><b>PCC</b><span class="js-hd-pcc">'
                 + c.pccOn + ' / ' + c.pccTotal + '</span></span>', '', 'raw', ''];
             },
             ['✓ 儲存這一場', 'saveRecord()', 'btn-save-top', 'saveBtnTop']
@@ -4596,6 +4711,14 @@ const VIEW_HEAD = {
                        ['匯出手帳（PDF）', "exportTwoStep('journal')", 'btn-ghost', 'btn-exp-journal']] }
 };
 function headVal(x){ return typeof x === 'function' ? x() : (x || ''); }
+/* 底部固定列會換行（375px 職能標記頁就是兩行），高度不是固定的。
+   量實際高度寫進 --ab-h，讓 #app 讓出正確的空間——寫死 76px 的話兩行時
+   最後一張卡還是會被蓋掉一截。沒有底部列的頁面回 0px。 */
+function syncActionBarH(){
+  const bar = document.getElementById('action-bar');
+  const h = (bar && !bar.hidden) ? bar.offsetHeight : 0;
+  document.documentElement.style.setProperty('--ab-h', h + 'px');
+}
 function applyPageHead(v){
   const key = v === 'new' ? (formStep === 2 ? 'new2' : 'new1') : v;
   const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
@@ -4631,6 +4754,7 @@ function applyPageHead(v){
     const extra = ACTION_BAR_EXTRA[key];
     if (extra) bar.insertAdjacentHTML('beforeend', extra());
     bar.hidden = !bar.innerHTML.trim();
+    syncActionBarH();
   }
   const n = document.getElementById('step-eyebrow-n');
   const es = document.getElementById('step-eyebrow-sub');
@@ -4701,6 +4825,9 @@ function navRestore(st){
   } finally { _navRestoring = false; }
 }
 window.addEventListener('popstate', e => navRestore(e.state));
+/* 轉向或改視窗寬度時底部列可能從一行變兩行（或反過來），高度要重量一次。 */
+window.addEventListener('resize', syncActionBarH);
+window.addEventListener('orientationchange', syncActionBarH);
 
 function showView(v) {
   exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
@@ -5520,8 +5647,14 @@ function markerHitStats(recs){
       if (st === ST_NE) return;                /* 沒評估的那一場，這一項整個不計入分母 */
       assessed++;
       const mk = (x && x.mk) || {};
-      const anyTicked = g.some(m => mkOn(mk[m.c]));
-      g.forEach(m => { if (mkOn(mk[m.c]) || (st === 2 && !anyTicked)) hits[m.c]++; });
+      /* A3（2026-08-29）：加了 No／反 之後，「有沒有逐條表態」不能只看勾選。
+         使用者把某幾條標成 No／反 就是**明確說了那幾條沒做到**——
+         這種場次不可以再套「到位＝底下每條都算到」的推導，
+         否則被標成反例的那條會被算成命中，剛好相反。
+         規則：整項一條訊號都沒有（沒勾、也沒 No／反）才推導；
+         只要有任何一條表態過，就完全照使用者標的算。 */
+      const anySignal = g.some(m => mkOn(mk[m.c]) || mkNeg(mk[m.c]));
+      g.forEach(m => { if (mkOn(mk[m.c]) || (st === 2 && !anySignal)) hits[m.c]++; });
     });
     return { i, assessed, markers: g.map(m => ({
       c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
@@ -5727,6 +5860,7 @@ function sessCellLevel(r, i){
   const g = MK[i] || [];
   const mk = (x && x.mk) || {};
   const ticked = g.filter(m => mkOn(mk[m.c])).length;
+  const negged = g.filter(m => mkNeg(mk[m.c])).length;   /* A3：明確標了 No／反 的也算表態過 */
   const total = g.length || 1;
   /* 2026-08-28 修正（Yi-En 實機回報「8/21 那場到位 7 項，八格卻全是虛線」）：
      這裡原本只數「有勾的 marker」，所以「標了到位但沒逐條勾」的場次一律變成 0 條 → 虛線空格。
@@ -5736,7 +5870,9 @@ function sessCellLevel(r, i){
      熱力圖（markerHitStats）早就有這條規則了，是單場這八格漏掉，同一份資料兩套算法。
      現在統一：標到位、而且一條都沒勾 → 底下每一條都算到。
      只要勾過任何一條，就完全照她勾的算——刻意只勾部分不可以被覆蓋。 */
-  const derived = (accSt(x) === 2 && ticked === 0);
+  /* A3：同 markerHitStats——標過 No／反 就是表態過，不再推導。
+     兩處必須用同一條規則，否則「單場八格」與「累積熱力圖」又會變成兩套算法。 */
+  const derived = (accSt(x) === 2 && ticked === 0 && negged === 0);
   const on = derived ? total : ticked;
   /* 「未到位」與「尚未評估」是兩件事，不可以長得一樣。
      舊版兩者都走 hitLevel(0,·) → 'none'（虛線空格＝還沒點到），
@@ -6070,10 +6206,17 @@ function editCurrent() {
         rbox.dataset.n = String(evCount(rowsToEv(rows)));   /* 不要觸發自動勾選 */
       }
       document.getElementById('mk-chk-'+id).checked = !!on;
+      const neg = mkNeg(d);
+      const nbox = document.getElementById('mk-neg-'+id);
+      if (nbox){
+        nbox.dataset.neg = neg;
+        nbox.querySelectorAll('.mk-negbtn').forEach(b=>
+          b.classList.toggle('on', !!neg && b.dataset.v === neg));
+      }
       refreshMk(i, m.c);
       const impEl = document.getElementById('mk-imp-'+id);
       if (impEl && imp){ impEl.value = imp; toggleMkImp(i, m.c, true); }   /* 已有內容直接顯示 */
-      if (on || ev || imp || rows.length) hasMk = true;
+      if (on || ev || imp || rows.length || neg) hasMk = true;
     });
     if (hasMk) toggleMk(i);   // 有填過就直接展開，不用再找一次
   });
