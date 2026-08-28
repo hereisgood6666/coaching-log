@@ -1869,7 +1869,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
-        <div class="sub-note">這幾條還沒有留下發生的時刻・例句可以直接用</div>
+        <div class="sub-note">這幾條是你做到次數最少的・例句可以直接用</div>
         <div id="cum-todo-list"></div>
       </div>
     </div>
@@ -1933,6 +1933,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="phrase-add" style="margin-top:0">
         <input type="text" id="new-client-code" placeholder="客戶代號，例：Tom、A 小姐">
         <button onclick="addClient()">新增</button>
+      </div>
+      <!-- 2026-08-28：ICF 時數表要求區分 Paid／Pro Bono，所以在建立客戶時就問。
+           預設「還沒選」——沒問過的事不要替她填。 -->
+      <label style="margin-top:12px">這位客戶是 <span class="hint">ICF 時數表要分開列</span></label>
+      <div class="quickfilters" id="new-client-paid">
+        <button type="button" class="pchip on" data-paid=""        onclick="setNewClientPaid('')">還沒選</button>
+        <button type="button" class="pchip"    data-paid="paid"    onclick="setNewClientPaid('paid')">付費</button>
+        <button type="button" class="pchip"    data-paid="probono" onclick="setNewClientPaid('probono')">公益（Pro Bono）</button>
       </div>
       <div class="privacy-tip">🔒 真實姓名不要進工具。代號會出現在匯出的 PDF 與時數表裡，是給你自己對照用的。</div>
     </div>
@@ -2042,6 +2050,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     </div>
     <div class="actions" style="margin-top:8px">
       <button class="btn btn-primary" id="btn-exp-one" onclick="exportTwoStep('one')">匯出 PDF</button>
+      <button class="btn btn-ghost" onclick="exportReflectionDocx(currentId)">匯出反思表</button>
       <button class="btn btn-ghost" onclick="copySessionPrompt()">複製分析提示詞</button>
       <button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteCurrent()">刪除這筆</button>
     </div>
@@ -3451,14 +3460,53 @@ function _crc32(bytes){
   for(let i=0;i<bytes.length;i++) crc=(crc>>>8)^t[(crc^bytes[i])&0xFF];
   return (crc^-1)>>>0;
 }
+/* 2026-08-28：加上「已預先壓縮」的項目。
+   反思表範本的十三個部件在原始 docx 裡就是 deflate 過的，直接原樣搬進來寫成
+   method 8，就不必為了嵌進 index.html 而把它們解開成原始大小（63KB → 9KB）。
+   傳 {name, deflated, size, crc} 時：deflated 是壓縮後的位元組，
+   size 與 crc 必須是**原始**資料的長度與 CRC32——zip 規格就是這樣定的。 */
+/* ═══ 馨晤 E1 反思表範本 ═════════════════════════════════
+   來源：`馨晤 ICF/00 資源/繁體版 2/馨晤3_E1_反思表_繁體版.docx`
+   做法：整份範本原樣搬進來，只在四個位置插值——客戶姓名、教練日期、三個答案區。
+   段落順序、表格、題目文字、編號樣式全部維持範本原樣。
+   教練姓名與導師姓名刻意留空（Yi-En 2026-08-28 決定，她自己填）。
+
+   兩個取捨，都是量過才決定的：
+   ① 拿掉範本內嵌的兩個 NotoSansSymbols 字型檔（367KB，佔範本的 85%），
+      連同 [Content_Types]／fontTable 的參照一起移除。Word 會改用系統字型，
+      檔案仍然合法（已用 textutil 實際開啟驗證過）。
+   ② document.xml 要在執行時插值，所以保持未壓縮；其餘十三個部件原樣沿用
+      範本裡已經 deflate 過的位元組。整包嵌進來約 37KB，不是 431KB。 */
+const REFL_DOC = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r<w:document xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:m=\"http://schemas.openxmlformats.org/officeDocument/2006/math\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:w10=\"urn:schemas-microsoft-com:office:word\" xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:wne=\"http://schemas.microsoft.com/office/word/2006/wordml\" xmlns:sl=\"http://schemas.openxmlformats.org/schemaLibrary/2006/main\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\" xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:lc=\"http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas\" xmlns:dgm=\"http://schemas.openxmlformats.org/drawingml/2006/diagram\" xmlns:wps=\"http://schemas.microsoft.com/office/word/2010/wordprocessingShape\" xmlns:wpg=\"http://schemas.microsoft.com/office/word/2010/wordprocessingGroup\" xmlns:w14=\"http://schemas.microsoft.com/office/word/2010/wordml\" xmlns:w15=\"http://schemas.microsoft.com/office/word/2012/wordml\" xmlns:w16=\"http://schemas.microsoft.com/office/word/2018/wordml\" xmlns:w16cex=\"http://schemas.microsoft.com/office/word/2018/wordml/cex\" xmlns:w16cid=\"http://schemas.microsoft.com/office/word/2016/wordml/cid\" xmlns=\"http://schemas.microsoft.com/office/tasks/2019/documenttasks\" xmlns:cr=\"http://schemas.microsoft.com/office/comments/2020/reactions\"><w:body><w:p w14:paraId=\"00000001\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:jc w:val=\"center\"/><w:rPr><w:b w:val=\"1\"/><w:bCs w:val=\"1\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:u w:val=\"single\"/></w:rPr></w:pPr><w:sdt><w:sdtPr><w:id w:val=\"1684129216\"/><w:tag w:val=\"goog_rdk_0\"/></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rFonts w:ascii=\"Arial Unicode MS\" w:cs=\"Arial Unicode MS\" w:eastAsia=\"Arial Unicode MS\" w:hAnsi=\"Arial Unicode MS\"/><w:b w:val=\"1\"/><w:bCs w:val=\"1\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:u w:val=\"single\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">教練會談反思表</w:t></w:r></w:sdtContent></w:sdt></w:p><w:p w14:paraId=\"00000002\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:jc w:val=\"center\"/><w:rPr><w:b w:val=\"1\"/><w:bCs w:val=\"1\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:u w:val=\"single\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:tbl><w:tblPr><w:tblStyle w:val=\"Table1\"/><w:tblW w:w=\"8937.0\" w:type=\"dxa\"/><w:jc w:val=\"left\"/><w:tblInd w:w=\"-10.0\" w:type=\"dxa\"/><w:tblBorders><w:top w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/><w:left w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/><w:bottom w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/><w:right w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/><w:insideH w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/><w:insideV w:color=\"000000\" w:space=\"0\" w:sz=\"8\" w:val=\"single\"/></w:tblBorders><w:tblLayout w:type=\"fixed\"/><w:tblLook w:val=\"0600\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"4468\"/><w:gridCol w:w=\"4469\"/><w:tblGridChange w:id=\"0\"><w:tblGrid><w:gridCol w:w=\"4468\"/><w:gridCol w:w=\"4469\"/></w:tblGrid></w:tblGridChange></w:tblGrid><w:tr><w:trPr><w:cantSplit w:val=\"0\"/><w:trHeight w:val=\"313\" w:hRule=\"atLeast\"/><w:tblHeader w:val=\"0\"/></w:trPr><w:tc><w:tcPr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:tcMar><w:top w:w=\"100.0\" w:type=\"dxa\"/><w:left w:w=\"100.0\" w:type=\"dxa\"/><w:bottom w:w=\"100.0\" w:type=\"dxa\"/><w:right w:w=\"100.0\" w:type=\"dxa\"/></w:tcMar></w:tcPr><w:p w14:paraId=\"00000003\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/></w:rPr></w:pPr><w:sdt><w:sdtPr><w:id w:val=\"-169602807\"/><w:tag w:val=\"goog_rdk_1\"/></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rFonts w:ascii=\"Arial Unicode MS\" w:cs=\"Arial Unicode MS\" w:eastAsia=\"Arial Unicode MS\" w:hAnsi=\"Arial Unicode MS\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">教練姓名： </w:t></w:r></w:sdtContent></w:sdt></w:p></w:tc><w:tc><w:tcPr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:tcMar><w:top w:w=\"100.0\" w:type=\"dxa\"/><w:left w:w=\"100.0\" w:type=\"dxa\"/><w:bottom w:w=\"100.0\" w:type=\"dxa\"/><w:right w:w=\"100.0\" w:type=\"dxa\"/></w:tcMar></w:tcPr><w:p w14:paraId=\"00000004\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/></w:rPr></w:pPr><w:sdt><w:sdtPr><w:id w:val=\"-1788636463\"/><w:tag w:val=\"goog_rdk_2\"/></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rFonts w:ascii=\"Arial Unicode MS\" w:cs=\"Arial Unicode MS\" w:eastAsia=\"Arial Unicode MS\" w:hAnsi=\"Arial Unicode MS\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">客戶姓名：{{CLIENT}}</w:t></w:r></w:sdtContent></w:sdt></w:p></w:tc></w:tr><w:tr><w:trPr><w:cantSplit w:val=\"0\"/><w:trHeight w:val=\"319\" w:hRule=\"atLeast\"/><w:tblHeader w:val=\"0\"/></w:trPr><w:tc><w:tcPr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:tcMar><w:top w:w=\"100.0\" w:type=\"dxa\"/><w:left w:w=\"100.0\" w:type=\"dxa\"/><w:bottom w:w=\"100.0\" w:type=\"dxa\"/><w:right w:w=\"100.0\" w:type=\"dxa\"/></w:tcMar></w:tcPr><w:p w14:paraId=\"00000005\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/></w:rPr></w:pPr><w:sdt><w:sdtPr><w:id w:val=\"-178040548\"/><w:tag w:val=\"goog_rdk_3\"/></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rFonts w:ascii=\"Arial Unicode MS\" w:cs=\"Arial Unicode MS\" w:eastAsia=\"Arial Unicode MS\" w:hAnsi=\"Arial Unicode MS\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">教練日期： {{DATE}}</w:t></w:r></w:sdtContent></w:sdt></w:p></w:tc><w:tc><w:tcPr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:tcMar><w:top w:w=\"100.0\" w:type=\"dxa\"/><w:left w:w=\"100.0\" w:type=\"dxa\"/><w:bottom w:w=\"100.0\" w:type=\"dxa\"/><w:right w:w=\"100.0\" w:type=\"dxa\"/></w:tcMar></w:tcPr><w:p w14:paraId=\"00000006\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"240\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/></w:rPr></w:pPr><w:sdt><w:sdtPr><w:id w:val=\"2107384643\"/><w:tag w:val=\"goog_rdk_4\"/></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rFonts w:ascii=\"Arial Unicode MS\" w:cs=\"Arial Unicode MS\" w:eastAsia=\"Arial Unicode MS\" w:hAnsi=\"Arial Unicode MS\"/><w:color w:val=\"000000\"/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">導師姓名： </w:t></w:r></w:sdtContent></w:sdt></w:p></w:tc></w:tr></w:tbl><w:p w14:paraId=\"00000007\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"300\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:color w:val=\"000000\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:color w:val=\"000000\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">附註：請將此份檔案命名為：E</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">1</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:color w:val=\"000000\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">反思表_你的名字_作業次數_導師姓名，如：E</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">1</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:color w:val=\"000000\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">反思表_John_01_Connie</w:t></w:r></w:p><w:p w14:paraId=\"00000008\"><w:pPr><w:widowControl w:val=\"0\"/><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:spacing w:line=\"300\" w:lineRule=\"auto\"/><w:ind w:right=\"81\"/><w:rPr><w:rFonts w:ascii=\"Cambria\" w:cs=\"Cambria\" w:eastAsia=\"Cambria\" w:hAnsi=\"Cambria\"/><w:color w:val=\"000000\"/><w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000009\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"1\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"480\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">在這場會談中，你在哪些方面做得好？ （至少列出3點） </w:t></w:r></w:p><w:p w14:paraId=\"0000000A\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"1\"/><w:numId w:val=\"2\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"960\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">根據ICF核心職能和作為教練的角色，你認為在哪些方面做得好？ </w:t></w:r></w:p><w:p w14:paraId=\"0000000B\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"1\"/><w:numId w:val=\"2\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"960\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">你注意到客戶在哪個時刻受到啟發或頓悟？</w:t></w:r></w:p>{{A1}}<w:p w14:paraId=\"0000000D\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"0000000E\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"0000000F\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000010\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000011\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"1\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"480\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">下次會談你會採取什麼不同的做法？  </w:t></w:r></w:p><w:p w14:paraId=\"00000012\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"1\"/><w:numId w:val=\"3\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"960\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">是否有一些你現在知道/注意到而在會談前所不知道的事情？ </w:t></w:r></w:p><w:p w14:paraId=\"00000013\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"1\"/><w:numId w:val=\"3\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"960\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">作為教練，你對自己有新發現嗎？ 例如：自己有某種模式、習慣、、、</w:t></w:r></w:p>{{A2}}<w:p w14:paraId=\"00000015\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000016\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000017\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000018\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"00000019\"><w:pPr><w:keepNext w:val=\"0\"/><w:keepLines w:val=\"0\"/><w:pageBreakBefore w:val=\"0\"/><w:widowControl w:val=\"1\"/><w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"1\"/></w:numPr><w:pBdr><w:top w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:left w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:bottom w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:right w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/><w:between w:space=\"0\" w:sz=\"0\" w:val=\"nil\"/></w:pBdr><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:spacing w:after=\"0\" w:before=\"0\" w:line=\"360\" w:lineRule=\"auto\"/><w:ind w:left=\"480\" w:right=\"0\" w:hanging=\"480\"/><w:jc w:val=\"left\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/><w:b w:val=\"0\"/><w:bCs w:val=\"0\"/><w:i w:val=\"0\"/><w:iCs w:val=\"0\"/><w:smallCaps w:val=\"0\"/><w:strike w:val=\"0\"/><w:color w:val=\"000000\"/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:u w:val=\"none\"/><w:shd w:fill=\"auto\" w:val=\"clear\"/><w:vertAlign w:val=\"baseline\"/><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">你想與導師在教練會談中探討哪些你遇到的挑戰？列出 1-2 個你想要聚焦討論的挑戰。 </w:t></w:r></w:p>{{A3}}<w:p w14:paraId=\"0000001B\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"0000001C\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:p w14:paraId=\"0000001D\"><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr/></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr></w:r></w:p><w:sectPr><w:headerReference r:id=\"rId7\" w:type=\"default\"/><w:pgSz w:h=\"16838\" w:w=\"11906\" w:orient=\"portrait\"/><w:pgMar w:bottom=\"1440\" w:top=\"1440\" w:left=\"1418\" w:right=\"1418\" w:header=\"851\" w:footer=\"850\"/><w:pgNumType w:start=\"1\"/></w:sectPr></w:body></w:document>";
+const REFL_PARA = "<w:p><w:pPr><w:spacing w:line=\"360\" w:lineRule=\"auto\"/><w:rPr><w:rFonts w:ascii=\"Microsoft JhengHei\" w:cs=\"Microsoft JhengHei\" w:eastAsia=\"Microsoft JhengHei\" w:hAnsi=\"Microsoft JhengHei\"/></w:rPr></w:pPr><w:r><w:rPr><w:rtl w:val=\"0\"/></w:rPr><w:t xml:space=\"preserve\">%s</w:t></w:r></w:p>";
+const REFL_PARTS = {
+  "word/header1.xml": [3409, 1173558899, "7ZfNcts2EICfoO+g4d2m5Niqo4mcuHLTNuNkPG77ACtgKaICAcwClOy8Qs89OMmp0+n00ltn2hdKOn6LACRB2VKc0uolh/hgkvvz7YK7WFCPHl8UsrdAskKrcTLY7Sc9VExzoWbj5Mcfnu4cJj3rQHGQWuE4uUSbPD764tFylHPqeWdlRwUbJ7lzZpSmluVYgN3VBpVXZpoKcP6RZmkBNC/NDtOFASemQgp3me71+8OkwehxUpIaNYidQjDSVmcuuIx0lgmGzSV6UJe4tcuJZmWBylURU0Lpc9DK5sLYSCu2pXllHiGLjy1iUchotzRdonGCpa9EIetAS03ckGZorZee1MqWOOh3eIEB0Xp0SeF2zJhJAUK1mNAXa6A29q6P3by0CrVayOpdWNklkVp1KqYEdLmZBWzxPm/6G8G2IHgvV1LbkNsgWA7kIkBuQ5CazZFPQC2gbWY+K7YgcQEzgmLVpPZelR3019rl+xwMrmiz/0f7hnRpVu2+vw3txg4cHNwPsLcBGN4PcLgJYHixHSP1njc5gt+PM2w5Is6DbgAHdm4D4WHKmylYidotQN04/jb4BtRe3w9kYNVATo780WJ6y5E/kfj5OOk3f0kjOkG5KTzbFJ2fYAaldB/QnNEt4WB/ZIDgOx6lg6/rJM4oXOaI5gVeOO+9gBA7SaP4VCi0a/Kl4Ho50cqRllE1qFXmK14RnQ7rswYYBrdw/7K5qcyVkLWDxMx1s5xq53TRzZbELO+KRbdEVF2M09X6bM69MhPSa6F0ujVlEoFqsoOpba6t1ncDUjD2Zhx9kZT/4gjPRvve3B8cPGh9o0+1ljtdDh/4j4s6txgvrMNPEm8BmQsO1UKm6GdiXJ4U4Tzb+3IYH85Lic1KqvhC8V5dnHGyczA8qBorJNIAMkHWnVaUpil+YjHh4NWUoW4veup7JTQRWCbEOHke90rvWY5q9i2KgGT2Lg2CdcdWwF36/FjZD2PrCq+173Sy3tBi/XnDwhYg5QTMhtyRmOOakGmpqZXVe7C2ftlul2GUrEJFWdm2XSh02rXd/AeuO5ZipqJuChZDbZv2qIqRtnuePjZszv9rpHyu7qdUXV8EJ2+lmbblceHMirPNEFqkBSZHE20uqw395Pr3P95d/fb2zc/Xr16/++Xq37//evvnP9dXv1YjpSbVfVP997+Ijt4D"],
+  "word/numbering.xml": [7210, 1330436664, "7ZlLbtswEIZP0DsYArqM9YxjG5GDoEGKFkUQNOkBaIqWiPAhkJQd79oTdNn7tRcpJVmyHdupXl1FK1kznI+/xkP9RnJ59UzJYImExJz5hj20jAFikAeYhb7x7fH2bGwMpAIsAIQz5BtrJI2r2bvL1ZQldI6EXjfQCCanFPpGpFQ8NU0JI0SBHPIYMZ1ccEGB0rciNCkQT0l8BjmNgcJzTLBam45ljYwNhvtGIth0gzijGAou+UKlJVO+WGCINpeiQlTZNy+54TChiKlsR1MgojVwJiMcy4JGm9J0Miogy9ceYklJsW4VV9ktEGCl+0xJvtGKiyAWHCIpdfQmT5ZE26rQwBRRVlSRsL9noYQCzEpMOh0vQOXeQ733pmkZavsg215IUkVInvqC5wKI9aEK0KCfu/Uxhg0IukolohzIJggYAaEKAGlCIBw+oeADYEtQDnMQ0gakAINQALodUlnrm7WtF+PyEIEYbWlhO9pHwZN4O+5eE9rOCbTP6wGcA8CoHmB8CIDouRnD1JW7HBzU44xKDi7eB9UACsgnmRImZrB5C2ah8giIahz9Ma1NUY6lX8gAZi9kY6YNBsylEjpwl9DB3t0n/ZR2toQsiU5hffENK4torxJKx5aApIvMWe5Ut7QMBghiCkie0pWP6LnMvbeHZfwzLKIELVQeju9FesEs0Lk07BveWFvmahoBFmaemd7rtWa5WNyL/F4zX2q2u9Ds/Pn+o67qyaiFaqeiasJXSHzlFLDjwt1jzRY4jE7rtj2vhXC3i3Z7tUfEnjgtRHtdiD5vMCOOZ7WQfd7RkIzqD4kzbnMmR130+6L2kLhumyN50YXocYMhccdtDuS4oyGZ1B8Sz613KM09C/qnPzlvyp/mCSFIHZX8+9fP/2FO2eWW658Oae8lxNg37rjigwfA5OBhTeecyJQC5YkEAlJdSwxOpKNrJo8ycyWZhN4ee3vs7bG3x94e69qj29tjb4+9Pfb22Ntjb49v0h5ZZots96+Zex6590RmtvKgzDld5rxS5p4uc3fLzJ1/8s3+Ag=="],
+  "word/settings.xml": [2152, 928924341, "pZbNctowEMefoO/A6E78EaCJJyaHZtIemhP0AWRJtjXoayQZwttXsi0bwkzHuCek/+7+Vl7WK7+8fnK2OBJtqBQ5SB5isCACSUxFlYM/+/flE1gYCwWGTAqSgzMx4HX77eWUGWKt8zILRxAm4ygHtbUqiyKDasKheZCKCGcspebQuq2uIg71oVFLJLmClhaUUXuO0jjegB4jc9BokfWIJadISyNL60MyWZYUkf4nROgpebuQN4kaToRtM0aaMHcGKUxNlQk0PpfmjHWAHP/1EEfOgt9JTcmGNTy5QnPWJTpJjZWWiBjj1LfOOBCTeEIBPWKImHKE65zhJBxSMWB8c3wBDbkfXO6+aC1qfJCxFoZNOUhn+k0LDfX59hRwRj0v4xVFMwguyjZ6aMg5CFRDbQOAzSEwiQ4E/4DiCIdmxhWfQcIUVhrysUnNXf9sEn9pl10NFRlp1f/RfmrZqLHdV3NoF29gsr4PkN4ANvcBnm4BiHzOY0Qu8pJD8X2czcChYR5MA1hoDsYTniPcT8FWGl4BPY3jlj7Wo9LYDWSI2oEMtu5+IbwgeK8bsj8r8i6d1+KUHaEbEwmIvAMmJWyY3cNiZ6UKxu9p3Jm7O2Zc7br7aoCsgVsKyN3curqOPiQm3tRoOr2aPmV0lZPpnQ8iH1CpLm1RJTlgtKpt4vnW7bC7DttNUaW9LW1taWdrNxAhVyPn3S9GLQ3ahd9j0B5HbRW01aitg7YetU3QNl6rXd01o+LgyhCWXi8lY/JE8K/RfiP19QjfCNu/"],
+  "word/fontTable.xml": [1887, 1347289415, "pZXbbtswDIafYO8g6D6xE2xBZ9QphhbrMKy7yfoAjCzbQnQwKDlu3n7yOW2CwfGuLIv6P1IURd0/vClJjhytMDqmq2VICdfMJEJnMX39831xR4l1oBOQRvOYnrilD9tP91WUGu0s8XJtI8VimjtXREFgWc4V2KUpuPbG1KAC538xCxTgoSwWzKgCnNgLKdwpWIfhhnYYE9MSddQhFkowNNakrpZEJk0F492nV+AUv63kybBSce0ajwFy6WMw2uaisD1NzaV5Y95Djv/axFHJfl1VTPGWIFT+LJRsHVUGkwIN49b62afWOBBX4YQE1ohBMSWE9z77SBQIPWDqyvgAGnwvve8uaQ1q3MiYCyunBNKafok9Ap4uo4AZ+TzXF4LNIHiVK3EoyDkIlgO6HiDnEKRhB548gj7CUMxJpmaQEgEZghqL1N50sqvwQ7nscij4SMv+j/aMpizGcv88h3Z2A1dfbgOsLwCb2wB3lwDG3+YxAq8854jkNs5m4Ii+H0wDOLAHWxO+BknXBZup4QrgNI4f1toatQ59QwbWNGS67R4XUkUalO8s31CApMHF/DP3BSzgiqVRkFct/EvGycvuypKXPiTyM+c6+8HFlUWPoPZ41cNv4wzZgbZkd1J7I+uwg3bNMLDbvw=="],
+  "word/_rels/fontTable.xml.rels": [156, 2931235351, "VcxBDsIgEIXhE3gHMnsLujDGQLvrAYweYEJHILYDYYjR28tSly9/3men97aqF1VJmR0cBgOK2OclcXBwv837MyhpyAuumcnBhwSmcWevtGLrH4mpiOoIi4PYWrloLT7ShjLkQtzLI9cNW5816IL+iYH00ZiTrr8GjFb/oeMX"],
+  "word/styles.xml": [5806, 3618351955, "7ZfdbuI4FMefYN8B5b5NSNOURUNHLdXMrjQ7u5p2NZejk8QkFo5t2Q6UPv3Y+SIkQAMUabpaboiPfX4+/ufY8fnw8TklgwUSEjM6sYaXjjVANGQRpvHE+vfp08XIGkgFNALCKJpYKyStj7e/fViOpVoRJAfan8pxGk6sRCk+tm0ZJigFeck4orpzxkQKSjdFbKcg5hm/CFnKQeEAE6xWtus4vlVi2MTKBB2XiIsUh4JJNlPGZcxmMxyi8q/yEH3mLVweWJiliKp8RlsgomNgVCaYy4qWHkvTnUkFWexbxCIl1bgl7zNbJGCpX0ZKiomWTERcsBBJqa0PRWdNHDo9BDSI2qNPCJtzVpGkgGmNManRAtVzX+q5S9Fy1Hohay0k6RNI0fUFBwLEqhsFHKFn05/j8AiC9lKZqBPyGESYgFAVgBxDICyco2gKdAF1MkdxegQpwhALSNdJKg96s0OnlS6PCXC0psWn0T4LlvF1unvH0Bo7cHh9GMDtAPzDAKMuIETPxzFs7dnk4Ogwjl9zcHUe9AMokHNpCL/bUXkK5qZ6C4h+HP1ofA3KdfSBDGF+IFu3+uuiwQ9oBhlR0jTFP6Jslq387xPT3oPlGGSI8cS6Exi0sstxKBsNBFLdSQwNU3JHZT3eNij5os0L0KeQ61aWqWzbCNC4sr0kP56+G7NdxmO3o+TtVo7lEOKcQrA5NN0b3yob3zKiDZApVmJ5iW2C7I40+XdYI9SKa3cFAUGGmJv/1CnxZCxfzYbP1x4Vrvpbn+tMIUXVkpoj8/WqgBRR64cpIuQvKFqMaxf96Rg6jrkwVHNHz1DqhGZq/4iAKcXS/WMEjpO9GHszMLsO2C6X35WHgzDHG082JOqlDq2FORT/BwJzn+oik6JjMCxFAYmiv2nV23wTFD2rbfYyq+YI8a+NISXQmL/ozJItO4cY3ev9Nr9H+ktQh+OUmV+nKMwU0nt56ObaB/ngieWNnP0pW2/QoDVvMG1Hst533qi77wpbY4MdI7u7U3b315Z9tKH6lX8O1a/8ruqF7UTVr3aqfvWeVHfPkuvullx33yLXvZ2qe7+26t6m6t5ZVPe2qO69gerXO1W/flequ2dRfed96kTV/Z2q++9KdecsqjtbVHdOUf0JK32x7FwZc+v/t5ebLVl+c1KWP2aB2ip53fGfvLy0a7rPiIkYQ1XVNZrruq5hLCu7ypLHhlsrwZ33GDLCRGXz899bXk931GRFPdB6gXtrsEfj/40t74FGj/gFtZZRjZgysnvEtjru1SpueP1qFfd6DbcV0qOGq57k7U8="],
+  "customXML/itemProps1.xml": [404, 2154160908, "nZDBasMwDIafYO9gdG+cdGOMUqeXMui1bLCrcZTEYFvBUsbK2LvPoethOewwgQSS0Kdf2h8+YlDvmNlTMtBUNShMjjqfBgOvL8+bJ1AsNnU2UEIDF2Q4tHf7jnedFctCGU+CURVOKjU2MIpMO63ZjRgtVzRhKs2ecrRS0jxo6nvv8EhujphEb+v6Ubu5sOJbDKAK2xfk6Wjgs/mxTbO9f1iFm39Bu+i5Ljxjz7/ThTdn/19hGYOV8h0e/cSg/2ZfryAq3NuagWgIWDmKepnWK6V6/cn2Gw=="],
+  "customXML/item1.xml": [693, 3878839287, "lVLZctowFP2C/gOj92KHtEnDYDK2kY0hJjF4Ad6EJSRTy9djyYnp19chXabT6bR91D3nnkXS5L6T5eCZNaqAykJXQxMNWJUDLSpuoST23n9CA6VJRUkJFbPQmSl0P3034TDmM8iV2yoNcivLGdFko6EhnA16zUqNOVhIaF2PDSO/sAB6QOWCSaKGHICXbJiDNNC3heYH/zsJalb12BEaSXR/bLgBx2ORs966lazSxsg0b4yGlUT3BZQoaoUGbVNYyL/o/4z4mi996zlC09f89Bfs/0M30FZUN0V9qV7wiui26a/IDnV3K/ltfbiZPzxdh1g621jJ9OCVdM5GeMMtC01dHnYPJ5vMI3BCJ9i5Yhc4ZrDBwnFyWYqD66QHWZ4Oo3UZ4KvYF+bSjvHGtyFzbepiEUTRdlHvsheeZh/r3eju837jrJIOqMvxGQu+9DifR6LXxN6ZZJ4KvLQl2ep57yc8TsM37+5fvaO/e3/hdl7gjp28/QpTf2fyD+sZfSTbRZbEKayvnSVNxHqdhC8UL/bEj6yJ8dtTTC+zP36v6Vc="],
+  "customXML/_rels/item1.xml.rels": [295, 3493091947, "jc/BisIwEAbgJ/AdwtxtWg8iS1Mvi+BNpMJeQzptwzaZkBlF397gaYU9eJwZ/u9n2v09LOqGmT1FA01Vg8LoaPBxMnDpD+sdKBYbB7tQRAMPZNh3q/aMi5WS4dknVgWJbGAWSV9as5sxWK4oYSyXkXKwUsY86WTdr51Qb+p6q/NfA7o3Ux0HA/k4NKD6R8JPbBpH7/Cb3DVglH8qtLuyUPgJyylTaVS9zROKAS8YXqumKibortVv/3VP"],
+  "word/_rels/document.xml.rels": [1082, 269829649, "rZNNasMwEIVP0DuI2dey0zYtJXI2pRBoN8WFbhV5/EMtyUiTUt++IiG2A8F0oeU8Me99mpE221/dsR90vrVGQJakwNAoW7amFvBZvN4+AfMkTSk7a1DAgB62+c3mAztJocc3be9ZMDFeQEPUP3PuVYNa+sT2aMJJZZ2WFEpX816qb1kjX6Xpmru5B+QXnmxXCnC7MgNWDD3+x9tWVavwxaqDRkNXIjiFXgyG0tVIAo7lScySYAb8OsMqJoNHojBcP2GclSWEu5gIlTVUyH03G8UoLUHcx4QwB71HF+49QYzSEsRD1GXQ0OF8Fcd6KX4dM14dPFn9FdJGgiQ5q+9vvCXUiy/zMSZNg7JEN6Gc6jGfX3z5/A8="],
+  "_rels/.rels": [298, 584017965, "jc87DsIwDAbgE3CHyDtNy4AQatIFIXVF5QBR4qYRzUNJePT2ZGAAxMBo+/dnue0ediY3jMl4x6CpaiDopFfGaQbn4bjeAUlZOCVm75DBggk6vmpPOItcdtJkQiIFcYnBlHPYU5rkhFakygd0ZTL6aEUuZdQ0CHkRGummrrc0vhvAP0zSKwaxVw2QYQn4j+3H0Ug8eHm16PKPE1+JIouoMTO4+6ioerWrwgLlLf14kT8B"],
+  "word/theme/theme1.xml": [7643, 2225232417, "7VlLb9s2HL8P2HcgdG9l2VZqB3WK2LHbrUkbOG6HHmmJllhTokDSSXwb2uOAAcO6YYcV2G2HYVuBFtil+zTZOmwd0K+wvx6WpZjOO1uH1gebpH7/94OkfP3GfsDQLhGS8rBlWFcrBiKhw10aei3j3qB3pWEgqXDoYsZD0jKmRBo31j784DpeVT4JCAL6UK7iluErFa2apnRgGcurPCIhPBtxEWAFU+GZrsB7wDdgZrVSWTEDTEMDhTgAtndHI+oQNIhZGmsz5l0GX6GS8YLDxI6TSCxSJFh3bMU/cio7TKBdzFoGyHH53oDsKwMxLBU8aBmV5GOYa9fNnIipJbQFul7yyegyAndcTeiEN8wJrV69eW0j519N+S/iut1up2vl/BIAdhyw1FrA1nsNqz3jWQClw0XenYpdqZfxBf61BXyz3W7bzRK+NsfXF/CNykp9vVrC1+d4e1H/9nqns1LC23P8ygK+d625Ui/jE5DPaDheQMfxzCOTQ0ac3dLCGwBvzBJgjjIL2ZXSh2pZrgX4IRc9ACTBxYqGSE0jMsIO4DqY0aGgsQC8SnDhSbrkyIWlWBaSjqCRahkfRxgqYg558/LHNy+fo4NHLw4e/XLw+PHBo581VLdw6BWpXn//xd9PP0V/Pf/u9ZOv9HhZxP/+02e//fqlHqiKwFdfP/vjxbNX33z+5w9PNPB1gYdF+IAGRKI7ZA/1eQCGaQSQoTgdxcDHtEixHnoShzim0aC7yi+h70wxwxpcm5Q9eF9AC9ABb04elhTe8cVEUQ3wth+UgFucszYXWptux7KKXpiEnl64mBRxfYx3dbI7h+LbnUSQy1THsuOTkprbDEKOPRISheJnfEyIhuwBpSW/blFHcMlHCj2gqI2p1iUDOlR6ols0gLhMsT7eJd9s3UdtznTsN8huGQlVgZmOJWElN97EE4UDrcY4YEXkJla+TsmdqXBKDpcKIu0RxlHXJVLqaO6KaUnd29A69GHfYtOgjBSKjnXITcx5EbnBxx0fB5FWZxr6RexHcgwpitE2V1oleLlC4jnEAYdLw32fEnW62r5HPV+fIPGTidCVBOHlepyyESZh1uFLvTqg4VGNO4C+jS+6cUOrfPXt0/9Ry14HJ7ATNOpluMPtucOFS9/+7ryBJ+E2gYJ435zfN+d3sTkvq+eLb8nzLmwWD9oJm2DpqXtEGdtRU0Y2ZdK/JZjn9mAxmSRE+SE/8mGYiSvhPIGTMRJcfUKVv+PjCMRYiQRPZqw9iSIu4WphLOWd3E8p2Jys2bNLJaCx2uJuulwrXjZzNsnMk0VBtZjBSYXVrp1PmJUCTyjNsvXS7COlmQVvQt0gHL9KsFaqqWhIFMyIG/s9ZTALyyWGyKoUYuRjl2iWC/ZZtUvxpn0qJS7GyZUFJ5uL1cTC8gzttYymXbUN5OCoZYzgtATDIAJ+Mu40mHlhy3BUauDxtXjI4qY+q6yKvczgkohISLWBpZ9SJY9mr1LCuf5Vux774WIMMM+qRa1h/YdamIdDS0Yj4qglK/Np9oxPFBE7vruHhmwi+hj0rqfZ5VIJnb46mwjI7XqWeOXCzWrj8CubrGYwi3ycZXujEPsUnoxzHZJZQT1zie5nNKV2gabY764pcebC+bTmJpcm2MUFRnGOtgwulM+hC0U+dXoC9v1EFuiFoCxilRCLX0DHupLded9KeaRNzvNVn3pIUOh0yheEbKvMzmOYWdXi9jhjlPWZXF0Zpb9DskvYIK7eldh+A/mzbpI5IsEdDpqpq66h13uLDy71M208c0H102x+dVu3+TWb51PhJBtwQVxVb3HVtk+61UZwy0DxFzRuKhw2P54OeB+ij/J9HkEiXmlk5ZcvDkHnRsG4mNW/dQpqVC7/7Fhwdm2JsyuVy3G2rfG1fbSrzcUSNQv3kGS28EcUHz4E2RtwvZmwdEVGMEsH2yIxeMjdaTZkMm0JqSNmLZ2FfTJC1N2fhfWQR7N/evLNvJ8KiG3PCWvHE2b4+SaSE1ePJ84pZne8nDi5xekYsLnkFJ9GOW+RuadYeB6XVc/qssp5XGZdisvU/tEuyzxl6hKP7CuBO7O/riB/zXnKrv0D"],
+  "[Content_Types].xml": [1505, 3517647123, "tVTLbsIwEPyC/kPka0UMPVRVReDQllMfHKjUq7E3YNWPyN5Q+PtuHo0EBYFauES2Z3Zmdh15OF5bk6wgRO1dxgZpnyXgpFfaLTL2Ppv07lgSUTgljHeQsQ1ENh5dDWebAmJCxS5mbIlY3HMe5RKsiKkvwBGS+2AF0jYseCHkp1gAv+n3b7n0DsFhDysNNho+Qi5Kg8lDc15JZ0wUhdFSIOXiJMaSpzWBTcxqz0+oWzm1E6bn81xLUF6WlkpSP8/LSGxQExLZMvEKMf+rTdtvGsDUnLjURbze7YPQWDm80QUEreA/nXz5oIrgJcRId2dNGgGRVq3rVAR8FZZkecXkP2jazvJ4hF0ZWUb09uPlmWsEOzhd6HgvrbQ100DEgBp+d7FtXxHjWTP8niduDByaZo1d1D4nrZmYG9ifoIMvGsKVdg6B1vtDdPBFQ3SIFdrtD9JRzpgD6XE7MPwaar6X/QeXIBSE/SEarPPn9Qs9+gY="],
+};
 function _zip(files){
   const enc=new TextEncoder(), chunks=[], central=[]; let offset=0;
   const u16=n=>[n&0xff,(n>>8)&0xff], u32=n=>[n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff];
   files.forEach(f=>{
-    const name=enc.encode(f.name), data=f.data, crc=_crc32(data);
-    const lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0)));
+    const name=enc.encode(f.name);
+    const pre=!!f.deflated;
+    const data=pre?f.deflated:f.data;
+    const crc=pre?f.crc:_crc32(f.data);
+    const usize=pre?f.size:f.data.length;
+    const method=pre?8:0;
+    const lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(method),u16(0),u16(0),u32(crc),u32(data.length),u32(usize),u16(name.length),u16(0)));
     chunks.push(lh,name,data);
-    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset))));
+    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(method),u16(0),u16(0),u32(crc),u32(data.length),u32(usize),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset))));
     central.push(name);
     offset += lh.length+name.length+data.length;
   });
@@ -3468,6 +3516,179 @@ function _zip(files){
   let total=0; chunks.forEach(c=>total+=c.length);
   const out=new Uint8Array(total); let p=0; chunks.forEach(c=>{ out.set(c,p); p+=c.length; });
   return out;
+}
+/* ═══ 反思表匯出 ═══════════════════════════════════════
+   七題全部從這一場的既有欄位推導，一個新欄位都沒有加。
+   範本把答案區設計成「每三題一塊」，所以這裡也照它分三組填。 */
+function reflectionAnswers(r){
+  const acc = r.acc || [];
+  const doneNames = ACC.map((a,i)=>({ i, name: a[0].replace(/^\d+ · /,'') }))
+                       .filter(x => accSt(acc[x.i]) === 2)
+                       .map(x => '核心職能 ' + (x.i+1) + ' ' + x.name);
+  const evid = [];
+  ACC.forEach((a,i)=>{
+    const mk = (acc[i] && acc[i].mk) || {};
+    (MK[i]||[]).forEach(m=>{
+      mkRows(mk[m.c]).forEach(row=>{
+        const t = String(row.t||'').trim(), x = String(row.x||'').trim();
+        if (t || x) evid.push(m.c + ' ' + (MK_SHORT[m.c]||'') + '：' + (t ? t + '　' : '') + x);
+      });
+    });
+  });
+  const q1 = (r.good||[]).map(t=>String(t).trim()).filter(Boolean);
+  const q2 = doneNames.length ? doneNames.concat(evid) : evid;
+  const q3 = [String(r.clientQuote||'').trim()].concat((r.special||[]).map(t=>String(t).trim()))
+               .filter(Boolean);
+  const q4 = (r.improve||[]).map(t=>String(t).trim()).filter(Boolean)
+               .concat(String(r.focus||'').trim() ? ['下一場只盯這一件事：' + String(r.focus).trim()] : []);
+  const q5 = [String(r.insight||'').trim()].filter(Boolean);
+  const q6 = [String(r.notCaught||'').trim() ? '當下沒接住的：' + String(r.notCaught).trim() : '']
+               .filter(Boolean).concat(String(r.because||'').trim()
+               ? ['客戶感受的依據：' + String(r.because).trim()] : []);
+  const q7 = loadQ().filter(q=>!q.answered).slice(0,2).map(q=>String(q.q||'').trim()).filter(Boolean);
+  const num = (n, arr) => arr.length ? arr.map(t=>n + '. ' + t) : [n + '. （這一場沒有填）'];
+  return {
+    a1: num(1,q1).concat(num(2,q2), num(3,q3)),
+    a2: num(4,q4).concat(num(5,q5), num(6,q6)),
+    a3: num(7,q7)
+  };
+}
+function exportReflectionDocx(id){
+  const r = load().find(x=>x.id === id);
+  if (!r) { toast('找不到這一場'); return; }
+  const a = reflectionAnswers(r);
+  const paras = lines => (lines.length ? lines : ['']).map(t=>REFL_PARA.replace('%s', xmlEsc(t))).join('');
+  const doc = REFL_DOC
+    .replace('{{CLIENT}}', xmlEsc(r.client || ''))
+    .replace('{{DATE}}',   xmlEsc(r.date || ''))
+    .replace('{{A1}}', paras(a.a1))
+    .replace('{{A2}}', paras(a.a2))
+    .replace('{{A3}}', paras(a.a3));
+  const files = [{ name:'word/document.xml', data:new TextEncoder().encode(doc) }];
+  Object.keys(REFL_PARTS).forEach(k=>{
+    const e = REFL_PARTS[k];
+    files.push({ name:k, size:e[0], crc:e[1], deflated:b64ToBytes(e[2]) });
+  });
+  /* 檔名格式由 Yi-En 指定：反思表_客戶名＿YY-MMDD */
+  const d = String(r.date || todayStr());
+  const stamp = d.slice(2,4) + '-' + d.slice(5,7) + d.slice(8,10);
+  downloadBlob(_zip(files), '反思表_' + (r.client || '未填') + '＿' + stamp + '.docx',
+               'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  toast('已匯出反思表');
+}
+function b64ToBytes(s){
+  const bin = atob(s); const out = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+/* ═══ ICF Client Coaching Log ═════════════════════════
+   範本：`馨晤_ICF Client Coaching Log_教練時數記錄表.xlsx`
+   欄位順序、標題文字、欄寬、A1:J1 合併都照範本，不是另創一份格式。
+
+   **一列＝一位客戶**（一段教練關係），不是一場會談——範本有 Start Date／End Date
+   與總時數，那是關係層級的欄位。
+
+   哪些填、哪些留空，是 Yi-En 2026-08-28 逐欄定的：
+     A No                 自動編號
+     B Client             填代號，她自己改成英文真名（工具裡沒有真名）
+     C Email              留空
+     D Individual/Group   留空
+     E Number in Group    留空
+     F Start Date         有第一次會談日期就填，沒有留空
+     G End Date           最後一次會談日期
+     H hours              該客戶所有場次的分鐘數 ÷ 60
+     I Paid / J Pro Bono  依客戶的 paid 欄位打 V；還沒選就兩欄都留空 */
+const ICF_COLS = ['No', 'Client (First Name Last Name)', 'Email(self or sponsor)',
+                  'Individual/  Group ', 'Number in Group', ' Start Date ', 'End Date',
+                  'hours', ' Paid ', 'Pro Bono'];
+const ICF_WIDTHS = [4.56, 34.11, 27.22, 9.67, 9.67, 15.44, 10.33, 10, 10, 10];
+function icfLogRows(){
+  const cs = loadC().slice().sort((a,b)=>(a.created||'').localeCompare(b.created||'')
+                                       || String(a.code||'').localeCompare(String(b.code||'')));
+  const out = [];
+  cs.forEach(c=>{
+    const rs = clientRecs(c.id).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    if (!rs.length) return;                       /* 沒有任何會談的客戶不列進時數表 */
+    const dated = rs.filter(r=>r.date);
+    const mins = rs.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
+    out.push({
+      client: c.code || '',
+      start: dated.length ? dated[0].date : '',
+      end:   dated.length ? dated[dated.length-1].date : '',
+      hours: Math.round(mins / 60 * 10) / 10,
+      paid:  c.paid || ''
+    });
+  });
+  return out;
+}
+/* 範本的日期是 M/D/YYYY（例：10/25/2026），工具內部是 YYYY-MM-DD */
+function icfDate(d){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || ''));
+  return m ? (Number(m[2]) + '/' + Number(m[3]) + '/' + m[1]) : '';
+}
+function exportICFLogXLSX(){
+  const rows = icfLogRows();
+  if (!rows.length) { toast('還沒有可以匯出的會談紀錄'); return; }
+  const enc = new TextEncoder();
+  const cell = (ref,st,txt) => txt === '' || txt == null ? ''
+    : `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(String(txt))}</t></is></c>`;
+  const numc = (ref,st,v) => `<c r="${ref}" s="${st}"><v>${v}</v></c>`;
+  const L = ['A','B','C','D','E','F','G','H','I','J'];
+  let xml = `<row r="1" ht="26" customHeight="1">${cell('A1',3,'ICF Client Coaching Log')}</row>`;
+  xml += '<row r="2" ht="30" customHeight="1">'
+       + ICF_COLS.map((h,i)=>cell(L[i]+'2',1,h)).join('') + '</row>';
+  rows.forEach((x,i)=>{
+    const r = i + 3;
+    xml += `<row r="${r}" ht="20" customHeight="1">`
+      + numc('A'+r, 6, i + 1)
+      + cell('B'+r, 2, x.client)
+      + cell('C'+r, 2, '')                      /* Email：留空給她填 */
+      + cell('D'+r, 6, '')                      /* Individual/Group：留空 */
+      + cell('E'+r, 6, '')                      /* Number in Group：留空 */
+      + cell('F'+r, 6, icfDate(x.start))
+      + cell('G'+r, 6, icfDate(x.end))
+      + numc('H'+r, 6, x.hours)
+      + cell('I'+r, 6, x.paid === 'paid' ? 'V' : '')
+      + cell('J'+r, 6, x.paid === 'probono' ? 'V' : '')
+      + '</row>';
+  });
+  const cols = '<cols>' + ICF_WIDTHS.map((w,i)=>
+    `<col customWidth="1" min="${i+1}" max="${i+1}" width="${w}"/>`).join('') + '</cols>';
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="2" topLeftCell="A3" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>${cols}<sheetData>${xml}</sheetData><mergeCells count="1"><mergeCell ref="A1:J1"/></mergeCells></worksheet>`;
+  downloadBlob(_zip(xlsxParts(enc, sheet, 'ICF Client Coaching Log')),
+    'ICF Client Coaching Log_' + icfStamp() + '.xlsx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  toast('已匯出 ICF 時數表');
+}
+/* 檔名格式由 Yi-En 指定：ICF Client Coaching Log_YY-MMDD */
+function icfStamp(){
+  const d = todayStr();
+  return d.slice(2,4) + '-' + d.slice(5,7) + d.slice(8,10);
+}
+/* 2026-08-28：xlsx 的骨架（styles／workbook／rels／Content_Types）抽成共用，
+   讓「導師提問」與「ICF 時數表」兩個匯出用同一份，不各抄一份會漂移的副本。
+   只有分頁名不同，所以參數化那一個。 */
+function xlsxParts(enc, sheet, sheetName){
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="12"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="9"/><color rgb="FF8A8378"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF2C2A28"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF2C2A28"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFB08968"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFDDD5C8"/></left><right style="thin"><color rgb="FFDDD5C8"/></right><top style="thin"><color rgb="FFDDD5C8"/></top><bottom style="thin"><color rgb="FFDDD5C8"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="4" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs></styleSheet>`;
+  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${sheetName || '工作表1'}" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const files = [
+    {name:'[Content_Types].xml', data:enc.encode(contentTypes)},
+    {name:'_rels/.rels', data:enc.encode(rootRels)},
+    {name:'xl/workbook.xml', data:enc.encode(workbook)},
+    {name:'xl/_rels/workbook.xml.rels', data:enc.encode(wbRels)},
+    {name:'xl/styles.xml', data:enc.encode(styles)},
+    {name:'xl/worksheets/sheet1.xml', data:enc.encode(sheet)}
+  ];
+  return files;
 }
 function exportQuestionsXLSX(){
   const arr = loadQ().slice().sort((a,b)=>a.id-b.id);
@@ -3484,24 +3705,7 @@ function exportQuestionsXLSX(){
   });
   const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="8" customWidth="1"/><col min="2" max="2" width="34" customWidth="1"/><col min="3" max="3" width="82" customWidth="1"/></cols><sheetData>${rowsXml}</sheetData><mergeCells count="2"><mergeCell ref="A1:C1"/><mergeCell ref="A2:C2"/></mergeCells></worksheet>`;
-  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="12"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="9"/><color rgb="FF8A8378"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF2C2A28"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF2C2A28"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFB08968"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFDDD5C8"/></left><right style="thin"><color rgb="FFDDD5C8"/></right><top style="thin"><color rgb="FFDDD5C8"/></top><bottom style="thin"><color rgb="FFDDD5C8"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf><xf numFmtId="0" fontId="4" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs></styleSheet>`;
-  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="導師提問" sheetId="1" r:id="rId1"/></sheets></workbook>`;
-  const wbRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
-  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
-  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
-  const files = [
-    {name:'[Content_Types].xml', data:enc.encode(contentTypes)},
-    {name:'_rels/.rels', data:enc.encode(rootRels)},
-    {name:'xl/workbook.xml', data:enc.encode(workbook)},
-    {name:'xl/_rels/workbook.xml.rels', data:enc.encode(wbRels)},
-    {name:'xl/styles.xml', data:enc.encode(styles)},
-    {name:'xl/worksheets/sheet1.xml', data:enc.encode(sheet)}
-  ];
+  const files = xlsxParts(enc, sheet, '導師提問');
   const zipped = _zip(files);
   const blob = new Blob([zipped], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const a = document.createElement('a');
@@ -3840,7 +4044,7 @@ function buildAcc() {
       </div>`;
     box.appendChild(item);
     item.querySelectorAll('#acc-seg-'+i+' button').forEach(b=>{
-      b.onclick = () => setAccSt(i, parseInt(b.dataset.v,10));
+      b.onclick = () => accStClick(i, parseInt(b.dataset.v,10));
     });
     (MK[i]||[]).forEach(m=>{
       mkAddRow(i, m.c);                 /* 預設一列「時間戳＋實例」 */
@@ -3880,6 +4084,25 @@ function setAccSt(i, v){
     b.classList.toggle('on', parseInt(b.dataset.v,10) === v));
   updateAccProgress();
   updateSegbar();      /* §13-E 側欄「n/8」徽章跟著這一場的四態走 */
+}
+/* 2026-08-28（Yi-En）：按「到位」＝底下每一條都做到了，自動幫她勾起來。
+
+   **刻意不放進 setAccSt()**：loadForm() 編輯舊紀錄時也會呼叫 setAccSt，
+   放在那裡等於一打開舊紀錄就把它的 marker 全部勾滿——那是偷改她的資料。
+   所以只掛在「使用者真的按下那顆鈕」這一條路徑上。
+
+   另外兩個限制：
+   ① 只勾沒勾過的，已經勾起來的不動（那些可能已經附了時間戳與實例）。
+   ② 只勾，不填時間戳。時間戳是送審用的證據，不能替她編。 */
+function accStClick(i, v){
+  const item = document.getElementById('acc-'+i);
+  const was = item ? parseInt(item.dataset.st, 10) : ST_NE;
+  setAccSt(i, v);
+  if (v !== 2 || was === 2) return;
+  (MK[i] || []).forEach(m => {
+    const cb = document.getElementById('mk-chk-' + mkId(i, m.c));
+    if (cb && !cb.checked) { cb.checked = true; refreshMk(i, m.c); }
+  });
 }
 /* 已評估幾項——提醒使用者哪些還沒看過，避免「沒填」被當成「未到位」 */
 function updateAccProgress(){
@@ -4218,7 +4441,8 @@ const VIEW_HEAD = {
                   back: '← 回客戶列表', backAction: "showView('clients')" },
   cred: { title: '認證進度',
           sub: 'ACC 與 PCC 是同一條路上的兩個門檻，不是兩個產品。',
-          actions: [['匯出時數表（CSV）', "exportTwoStep('csv')", 'btn-ghost', 'btn-exp-csv']] },
+          actions: [['匯出 ICF 時數表', 'exportICFLogXLSX()', 'btn-primary', 'btn-exp-icf'],
+                      ['匯出時數表（CSV）', "exportTwoStep('csv')", 'btn-ghost', 'btn-exp-csv']] },
   ask: { title: '想問導師',
          sub: '會談當下冒出來的疑問，記下來，下次 1on1 一次問完。',
          actions: [['＋ 新增問題', 'toggleCompose()', 'btn-primary', 'btn-new-ask']] },
@@ -5073,21 +5297,22 @@ function markerHitStats(recs){
     let assessed = 0;
     const hits = {};
     g.forEach(m => { hits[m.c] = 0; });
-    /* 2026-08-28 修正（Yi-En 實機回報）：職能 1、2 各自只有一條 marker，
-       職能 3–8 有 4–9 條。只有一條的時候，「這項職能到位」與「那條 marker 到位」
-       是同一件事——使用者在職能層標到位，不會再去勾那唯一一條。
-       實測她的資料：職能 1 評估過 25 場、標到位 8 場，但 1.1 只勾過 1 次，
-       畫面因此顯示成最淺色，等於把她做過 8 次的事說成 1 次。
-       所以單一 marker 的職能改以職能狀態為準；3–8 維持看 marker——
-       標職能到位並不指出是 3.1 還是 3.4 發生了，那個不能推導。 */
-    const single = g.length === 1;
+    /* 2026-08-28（Yi-En 兩次實機回報後定案）：
+       她標「到位」的意思就是「這一項底下每一條我都做到了」，只是不會再一條一條去勾。
+       實測 32 場：每項標到位 21–27 場，其中 23–24 場一條 marker 都沒勾；
+       「勾了部分但不是全部」全部職能加起來只有 9 次。
+
+       所以規則是：**該職能標到位、而且那一場一條都沒勾** → 底下每一條都算到。
+       只要她勾過任何一條，就完全照她勾的算——那 9 次是她刻意只選部分，不可以被覆蓋。
+       這條同時取代了先前「只有一條 marker 的職能才推導」的特例。 */
     rs.forEach(r => {
       const x = (r.acc || [])[i];
       const st = accSt(x);
       if (st === ST_NE) return;                /* 沒評估的那一場，這一項整個不計入分母 */
       assessed++;
       const mk = (x && x.mk) || {};
-      g.forEach(m => { if (mkOn(mk[m.c]) || (single && st === 2)) hits[m.c]++; });
+      const anyTicked = g.some(m => mkOn(mk[m.c]));
+      g.forEach(m => { if (mkOn(mk[m.c]) || (st === 2 && !anyTicked)) hits[m.c]++; });
     });
     return { i, assessed, markers: g.map(m => ({
       c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
@@ -5191,20 +5416,30 @@ function renderAccCum(){
       + hs.slice(MK_BASE_COUNT).map(rowHTML).join('')
     + '</div>';
 
-  /* 待補清單：送審時每條需要時間戳，這裡列還沒有時間戳的。
-     只列「這項職能你標過到位」的，否則等於在問你還沒開始練的東西。
-     排序：ACC 必評優先，再照編號。最多五條——超過就不是待辦而是壓力。 */
-  const ev = markerEvidenceCounts(recs);
+  /* 2026-08-28 語意變更（Yi-En）：「這裡不是應該秀出最沒有做到的五項嗎？」
+     舊版列的是「標過到位、但還沒留時間戳」的條目——那是**送審證據**的缺口，
+     跟「做到幾次」是兩把不同的尺。改完熱力圖之後兩把尺開始互相矛盾：
+     1.1 在熱圖是深藍（做過 9 次），卻同時出現在待補清單說「還沒有時間戳」。
+
+     改成跟熱力圖**同一個來源**（markerHitStats），照做到的次數由少到多排。
+     這也符合「同一份資料只能有一個計算來源」。
+     尚未評估過的職能（assessed === 0）不列——那是還沒開始練的東西，不是做不好。
+     同分時 ACC 必評優先，再照編號。最多五條——超過就不是待辦而是壓力。 */
   const todo = [];
-  MK.forEach((g,i)=>{
-    if (!st[i].done) return;                       // 這項還沒標過到位，先不催
-    g.forEach(m=>{ if ((ev[m.c] || 0) === 0) todo.push({ m, i }); });
+  hs.forEach(x=>{
+    if (!x.assessed) return;
+    x.markers.forEach(m=>{
+      const def = (MK[x.i]||[]).find(y=>y.c === m.c) || {};
+      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i, hits: m.hits, assessed: x.assessed });
+    });
   });
-  todo.sort((a,b)=> (b.m.acc?1:0) - (a.m.acc?1:0) || a.m.c.localeCompare(b.m.c));
+  todo.sort((a,b)=> a.hits - b.hits
+                 || (b.m.acc?1:0) - (a.m.acc?1:0)
+                 || a.m.c.localeCompare(b.m.c));
   const five = todo.slice(0, 5);
   const box = document.getElementById('cum-todo-list');
   if (!five.length){
-    box.innerHTML = '<div class="acc-none">你標過到位的職能，每一條都留過時間戳了。</div>';
+    box.innerHTML = '<div class="acc-none">還沒有評估過任何一項職能，這裡先空著。</div>';
     return;
   }
   box.innerHTML = five.map(x=>
@@ -5214,7 +5449,7 @@ function renderAccCum(){
         + '<span class="todo-short">' + esc(MK_SHORT[x.m.c] || x.m.c) + '</span>'
         + '<span class="todo-acc">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</span>'
         + (x.m.acc ? '<span class="mk-tag acc">ACC 必評</span>' : '')
-        + '<span class="todo-state">還沒有時間戳</span>'
+        + '<span class="todo-state">' + x.hits + '／' + x.assessed + ' 場</span>'
       + '</div>'
       + '<div class="todo-ex">' + esc(MK_EX[x.m.c] || '') + '</div>'
     + '</div>').join('');
@@ -5710,10 +5945,21 @@ function addClient(){
   if (!code) { toast('請填客戶代號'); return; }
   const cs = loadC();
   if (cs.some(c=>(c.code||'').trim().toLowerCase()===code.toLowerCase())) { toast('已有這位客戶'); return; }
-  cs.push({ id:'c'+Date.now(), code, status:'active', preSessions:0, goal:'', note:'', created:todayStr() });
+  cs.push({ id:'c'+Date.now(), code, status:'active', preSessions:0, goal:'', note:'',
+             paid: _newClientPaid, created:todayStr() });
   storeC(cs);
   document.getElementById('new-client-code').value = '';
+  setNewClientPaid('');
   renderClients(); toast('已新增客戶');
+}
+/* 付費／公益：ICF 時數表的 Paid 與 Pro Bono 是兩個獨立欄位，這裡存成三態。
+   '' 代表「還沒選」——匯出時那兩欄都留空，不替她猜。 */
+let _newClientPaid = '';
+const PAID_LABEL = { '': '還沒選', paid: '付費', probono: '公益（Pro Bono）' };
+function setNewClientPaid(v){
+  _newClientPaid = v;
+  document.querySelectorAll('#new-client-paid .pchip').forEach(b=>
+    b.classList.toggle('on', (b.dataset.paid || '') === v));
 }
 /* 一位客戶的場次／時數／最近一場：openClient 的統計卡與列表卡共用同一份 */
 function clientStats(id){
@@ -5938,6 +6184,12 @@ function openClient(id){
     <input type="hidden" id="c-status" value="${c.status==='closed'?'closed':'active'}">
     <label>開始記錄前已談次數 <span class="hint">用這工具之前已談過幾次就填幾，都在這裡記就填 0</span></label>
     <input type="text" id="c-pre" inputmode="numeric" value="${pre}">
+    <label>這位客戶是 <span class="hint">ICF 時數表的 Paid／Pro Bono</span></label>
+    <select id="c-paid">
+      <option value=""${(c.paid||'')===''?' selected':''}>還沒選</option>
+      <option value="paid"${c.paid==='paid'?' selected':''}>付費</option>
+      <option value="probono"${c.paid==='probono'?' selected':''}>公益（Pro Bono）</option>
+    </select>
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
     <div class="actions" style="margin-top:12px">
       ${rs.length ? '' : `<button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteClient('${c.id}')">刪除</button>`}
@@ -5963,6 +6215,8 @@ function saveClient(id){
   c.status = document.getElementById('c-status').value;
   c.preSessions = parseInt(document.getElementById('c-pre').value,10)||0;
   c.goal = document.getElementById('c-goal').value.trim();
+  const pd = document.getElementById('c-paid');
+  if (pd) c.paid = pd.value;
   /* 2026-08-28：備註欄位已從編輯表單移除（全檔沒有任何地方顯示或匯出它）。
      既有資料上的 c.note 原樣保留不動——不顯示不等於可以刪掉別人寫過的東西。 */
   storeC(cs);
