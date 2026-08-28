@@ -1149,6 +1149,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    原本左欄（八項導覽 ＋ AI 卡）會整個壓在職能表單上面，手機要滑過兩大塊才看得到
    「核心職能 1」——這是快速記錄工具，進來就該能開始勾。導覽移到後面不影響切換，
    acc-main 裡本來就有「← 上一項／下一項 →」。1024px 以上維持左右兩欄，order 歸零。 */
+/* 2026-08-28（Yi-En：「把「核心職能」那一排放在最最最最上面」）：
+   手機上原本順序是「本體 → 側欄（導覽籤＋AI 卡）」，籤在整頁最下面，
+   等於要先捲到底才能跳到別的職能。
+
+   .acc-side 用 display:contents 把自己攤掉，讓裡面的導覽籤與 AI 卡
+   直接變成 .acc-split 的項目，這樣三者才排得出「籤 → 本體 → AI 卡」。
+   1024px 以上恢復兩欄，order 全部歸零。 */
 .acc-main { order: 1; }
 .acc-side { order: 2; }
 @media (min-width: 1024px) {
@@ -1547,6 +1554,36 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .recap-copy{ height: auto; min-height: 44px; }
 }
 
+/* ═══ C 類：手機的底部固定操作列 ══════════════════════════
+   2026-08-28（Yi-En：「像 Facebook 那樣，最下面一排是固定的」）。
+   桌機（≥1024px）整條隱藏，頁首右上照舊——桌機沒有「拇指搆不到頂端」的問題，
+   固定列反而吃掉版面高度。
+   env(safe-area-inset-bottom) 是為了 iPhone 底部那條 home indicator，
+   不加的話最後一顆鈕會被它蓋住一半。 */
+.action-bar { display: none; }
+@media (max-width: 1023.98px) {
+  .action-bar {
+    display: flex; align-items: center; gap: 8px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 55;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface); border-top: 1px solid var(--line);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.06);
+  }
+  .action-bar[hidden] { display: none; }
+  /* 動作搬到底部列了，頁首右上那組就不要再出現一次——
+     兩處同時顯示等於同一顆鈕出現兩次，使用者會不知道按哪個。 */
+  .head-actions { display: none; }
+  .action-bar .btn { flex: 1 1 0; min-height: 44px; white-space: nowrap; padding-left: 10px; padding-right: 10px; }
+  .action-bar .ab-search { flex: 2 1 0; min-width: 0; min-height: 44px; margin: 0; }
+  .action-bar .ab-icon { flex: 0 0 auto; }
+  .action-bar .hd-count { flex: 0 0 auto; }
+  /* 內容要讓出固定列的高度，否則最後一張卡永遠被蓋住 */
+  #app { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  /* 抽屜蓋過固定列 */
+  .tabs { z-index: 60; }
+  .nav-scrim { z-index: 56; }
+}
+
 /* ═══ 桌機側欄：矮螢幕不要出現內部捲動 ══════════════════════
    2026-08-28（Yi-En 回報「左邊這排會滾動」）。側欄本來就是 position:fixed，
    不會跟著頁面捲——捲的是它自己：內容 879px，MacBook 的瀏覽器視窗只有 789px。
@@ -1571,6 +1608,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    「進度條算繪比例」那條既有守衛量不到東西——為了讓版面剛好，把一條有效的
    守衛弄成 NaN，不划算。760px 以下的視窗側欄仍會自己捲，這是已知且接受的限制。 */
 
+@media (max-width: 1023.98px) {
+  .acc-side { display: contents; }
+  .acc-nav  { order: 0; }
+  .acc-main { order: 1; }
+  .ai-card  { order: 2; }
+}
 </style>
 </head>
 <body>
@@ -1934,10 +1977,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <input type="text" id="hist-q" placeholder="搜尋日期、客戶或議題" oninput="onHistFilter()">
       <div class="hist-filters">
         <select id="hist-filter" onchange="onHistFilter()"></select>
+        <!-- 2026-08-28（Yi-En）：預設改成「最近 7 場」，「全部」移到後面。
+             理由是她的原話：「我不希望使用者一拉下去，全部的資料都顯示出來，
+             不然客戶要到什麼時候才能看到下面那一段洞察？」
+             用「幾場」不是「幾天」——場次數比日期區間好預期（她一週可能 0 場也可能 5 場）。 -->
         <div class="quickfilters" id="hist-quick">
-          <button type="button" class="pchip on" data-q="all"   onclick="setHistQuick('all')">全部</button>
-          <button type="button" class="pchip"    data-q="7d"    onclick="setHistQuick('7d')">最近 7 天</button>
-          <button type="button" class="pchip"    data-q="nopdf" onclick="setHistQuick('nopdf')">還沒匯出 PDF</button>
+          <button type="button" class="pchip on" data-q="recent" onclick="setHistQuick('recent')">最近 7 場</button>
+          <button type="button" class="pchip"    data-q="all"    onclick="setHistQuick('all')">全部</button>
+          <button type="button" class="pchip"    data-q="nopdf"  onclick="setHistQuick('nopdf')">還沒匯出 PDF</button>
         </div>
       </div>
       <div id="hist-list"></div>
@@ -2111,6 +2158,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   <div class="footer">
     <a onclick="openHelp()">使用說明</a> · <a onclick="openLegal()">使用條款・隱私政策</a><br>© 2026 李懿恩　<span id="app-ver"></span>
   </div>
+  <!-- ═══ C 類（2026-08-28）：手機的底部固定操作列 ═══
+       Yi-En：「最上面那一堆都可以放在下面一排固定的，就像 Facebook 那樣。」
+       五個頁面共用這一條，內容從 VIEW_HEAD[key].actions 來——跟頁首右上是**同一份設定**，
+       不是各寫一份會漂移的副本。桌機（≥1024px）隱藏這一條，頁首照舊。 -->
+  <div class="action-bar" id="action-bar" hidden></div>
 </div>
 
 <div class="wrap hidden" id="auth-screen">
@@ -4464,6 +4516,37 @@ function detailHeadSub(){
   return [ r.mins ? r.mins + ' 分鐘' : '', '到位 ' + c.done + ' 項',
            /* M3：不再顯示送審候選 */ '' ].filter(Boolean).join(' · ');
 }
+/* 底部固定列的頁面專屬追加內容。放在 VIEW_HEAD.actions 之後。
+   只出現在底部那一條，桌機看不到——桌機的對應功能還在原本的位置。 */
+const ACTION_BAR_EXTRA = {
+  /* 客戶頁：新增客戶（左）＋ 搜尋欄（中）＋ 搜尋鈕（右）。
+     Yi-En：「如果之後客戶變成 100 位、200 位，難道要讓使用者一直往下滑嗎？」 */
+  clients: () => '<input type="search" class="ab-search" id="ab-client-q" placeholder="搜尋客戶代號"'
+                 + ' value="' + esc(clientQuery) + '" oninput="onClientSearch()">'
+                 + '<button class="btn btn-ghost ab-icon" onclick="onClientSearch()" aria-label="搜尋">搜尋</button>',
+  /* 職能標記：回會談記錄。儲存與 ACC／PCC 計數本來就在 VIEW_HEAD.actions 裡，會自動進來 */
+  new2: () => '<button class="btn btn-ghost" onclick="goStep(1)">← 回會談記錄</button>',
+  /* 單場詳情：匯出 PDF／複製提示詞／刪除，本來寫在畫面中間，移到底部列 */
+  detail: () => '<button class="btn btn-primary" id="ab-btn-exp-one" onclick="exportTwoStep(\'one\')">匯出 PDF</button>'
+                + '<button class="btn btn-ghost" onclick="exportReflectionDocx(currentId)">反思表</button>'
+                + '<button class="btn btn-ghost" onclick="editCurrent()">編輯</button>',
+  /* 想問導師：複製待問清單與匯出 Excel 本來在畫面上方 */
+  ask: () => '<button class="btn btn-ghost" onclick="exportPending()">複製待問</button>'
+             + '<button class="btn btn-ghost" onclick="exportQuestionsXLSX()">匯出 Excel</button>'
+};
+/* 客戶頁的搜尋與分頁。CLIENT_PAGE 是「預設先看幾位」——她的原話是
+   「預設最新的幾場就好了，然後可以有一個按鈕是顯示全部」。 */
+let clientQuery = '';
+let clientShowAll = false;
+const CLIENT_PAGE = 8;
+function onClientSearch(){
+  const el = document.getElementById('ab-client-q');
+  clientQuery = el ? el.value : '';
+  clientShowAll = false;
+  renderClients();
+  const el2 = document.getElementById('ab-client-q');   /* renderClients 不動底部列，但保險 */
+  if (el2 && document.activeElement !== el2) el2.value = clientQuery;
+}
 const VIEW_HEAD = {
   new1: { title: '這一場發生了什麼',
           sub: '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。' },
@@ -4528,16 +4611,26 @@ function applyPageHead(v){
     bk.classList.toggle('hidden', !label);
     bk.onclick = cfg.backAction ? new Function(cfg.backAction) : null;
   }
-  /* 右上動作 */
-  const act = document.getElementById('page-actions');
-  if (act){
-    act.innerHTML = (cfg.actions || []).map(a => {
+  /* 右上動作。2026-08-28：同一份設定同時渲染到頁首（桌機）與底部固定列（手機）。
+     id 只能出現一次，否則 getElementById 會拿到錯的那個——底部那份的 id 加前綴 `ab-`，
+     需要同步兩邊的地方走 syncActionIds()。 */
+  const renderActions = (host, idPrefix) => {
+    if (!host) return;
+    host.innerHTML = (cfg.actions || []).map(a => {
       const [label, on, cls, id] = (typeof a === 'function') ? a() : a;
       /* cls === 'raw' 時 label 直接當 HTML 輸出——計數卡不是按鈕 */
-      if (cls === 'raw') return label;
-      return '<button class="btn ' + cls + '"' + (id ? ' id="' + id + '"' : '')
+      if (cls === 'raw') return idPrefix ? label.replace(/ id="/g, ' id="' + idPrefix) : label;
+      return '<button class="btn ' + cls + '"' + (id ? ' id="' + idPrefix + id + '"' : '')
         + ' onclick="' + on + '">' + label + '</button>';
     }).join('');
+  };
+  renderActions(document.getElementById('page-actions'), '');
+  const bar = document.getElementById('action-bar');
+  if (bar){
+    renderActions(bar, 'ab-');
+    const extra = ACTION_BAR_EXTRA[key];
+    if (extra) bar.insertAdjacentHTML('beforeend', extra());
+    bar.hidden = !bar.innerHTML.trim();
   }
   const n = document.getElementById('step-eyebrow-n');
   const es = document.getElementById('step-eyebrow-sub');
@@ -5588,7 +5681,9 @@ function renderAccCum(){
 
 /* ═══ §2-3 每一場 ═════════════════════════════════════
    四個篩選條件共用同一份邏輯，標頭的計數也從同一份推導——不可各算一次。 */
-let histQuick = 'all';
+/* 2026-08-28：預設從 'all' 改成 'recent'（最近 7 場）。 */
+let histQuick = 'recent';
+const HIST_RECENT_N = 7;
 /* ①③④（空狀態）與 §2-3 的篩選共用同一份來源：都從 histSource() 出發。
    總數一次算完存進 _histEmpty，三個地方共用，不各數一次。
    注意判斷的是「這個帳號有沒有紀錄」而不是「目前篩出幾場」——
@@ -5601,9 +5696,9 @@ function histFiltered(){
   const kw = (el ? el.value : '').trim().toLowerCase();
   const cut7 = (()=>{ const d = new Date(Date.now() - 7*86400000);
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
-  return histSource().filter(r=>{
+  const out = histSource().filter(r=>{
     if (histFilter && r.clientId !== histFilter) return false;
-    if (histQuick === '7d' && (r.date||'') < cut7) return false;
+    if (histQuick === '7d' && (r.date||'') < cut7) return false;   /* 舊值，保留相容 */
     if (histQuick === 'nopdf' && String(r.exportedAt||'')) return false;
     if (kw){
       const hay = ((r.date||'') + ' ' + (r.client||'') + ' ' + topicText(r)).toLowerCase();
@@ -5611,6 +5706,10 @@ function histFiltered(){
     }
     return true;
   }).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  /* 「最近 7 場」是**截取**不是過濾，所以在排序之後做。
+     有搜尋關鍵字時不截——她打字就是要找特定那一場，截掉會讓她以為沒有。 */
+  if (histQuick === 'recent' && !kw) return out.slice(0, HIST_RECENT_N);
+  return out;
 }
 /* 每一場那一列的職能格子：看的是那一場的職能四態，不是 marker 勾了幾條。
    只勾職能到位、沒逐條標 marker 的場次，先前會整排灰掉，看起來像那場什麼都沒做。
@@ -6212,9 +6311,24 @@ function renderClients(){
   const cnt = document.getElementById('client-count');
   if (cnt) cnt.textContent = clientCount() + ' 位';   // 與側欄徽章同一個來源
   if (!cs.length) { list.innerHTML = '<div class="empty">還沒有客戶。<br>在下面新增第一位（記得用代號就好）</div>'; return; }
-  const info = cs.map(c=>({ c, st: clientStats(c.id) })).sort((a,b)=>
+  /* 2026-08-28（Yi-En）：搜尋 ＋ 預設只顯示最近幾位。
+     「如果之後客戶變成 100 位、200 位、300 位，難道要讓使用者一直往下滑嗎？」
+     排序不變（進行中在前、最近一場新的在前），先篩後截。 */
+  const q = clientQuery.trim().toLowerCase();
+  let info = cs.map(c=>({ c, st: clientStats(c.id) })).sort((a,b)=>
     ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0)
     || (b.st.last||'').localeCompare(a.st.last||''));
+  const total = info.length;
+  if (q) info = info.filter(x=>String(x.c.code||'').toLowerCase().indexOf(q) >= 0);
+  const matched = info.length;
+  const shown = clientShowAll ? matched : Math.min(matched, CLIENT_PAGE);
+  const more = matched - shown;
+  info = info.slice(0, shown);
+  if (!info.length){
+    list.innerHTML = '<div class="empty">找不到「' + esc(clientQuery) + '」這位客戶。<br>'
+      + '換個關鍵字，或清空搜尋看全部。</div>';
+    return;
+  }
   list.innerHTML = '<div class="client-grid">' + info.map(x=>{
     /* 裸日期讀者不知道是什麼日期，一律帶「最近一場」 */
     const meta = [x.st.n + ' 場', x.st.hours + ' 小時',
@@ -6234,7 +6348,18 @@ function renderClients(){
     ${paidChip(x.c.paid)}
     ${x.c.goal?`<div class="ccard-goal">目標：${esc(x.c.goal)}</div>`:''}
     <div class="ctrend">${bars}</div>
-  </div>`;}).join('') + '</div>';
+  </div>`;}).join('') + '</div>'
+    + (more > 0
+        ? '<div class="actions" style="margin-top:12px">'
+          + '<button class="btn btn-ghost" onclick="clientShowAll=true;renderClients()">'
+          + '顯示全部 ' + matched + ' 位（還有 ' + more + ' 位）</button></div>'
+        : (clientShowAll && matched > CLIENT_PAGE
+            ? '<div class="actions" style="margin-top:12px">'
+              + '<button class="btn btn-ghost" onclick="clientShowAll=false;renderClients()">'
+              + '只看最近 ' + CLIENT_PAGE + ' 位</button></div>'
+            : ''))
+    + (q ? '<div class="sub-note" style="margin-top:8px">搜尋「' + esc(clientQuery)
+           + '」：' + matched + ' 位符合，共 ' + total + ' 位</div>' : '');
   renderClientInsight();
 }
 /* M2（2026-08-28）：客戶詳情最上方的狀態控制。
