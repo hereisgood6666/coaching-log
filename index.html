@@ -673,6 +673,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 }
 /* 0 次＝從來沒點到。空心，跟「最冷的顏色」明確區分——這是盲點，不是弱項。 */
 .hm-cell[data-lv="none"] { background: transparent; border-style: dashed; color: var(--ink-4); }
+.hm-cell[data-lv="zero"] { background: var(--line-3); border-color: var(--line-2); color: var(--ink-4); }
 .hm-cell[data-lv="1"] { background: var(--st1-bg); color: var(--st1-fg); border-color: var(--st1-line); }
 .hm-cell[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
 .hm-cell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
@@ -752,6 +753,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   border: 1px solid transparent;
 }
 .scell[data-lv="none"] { background: transparent; border-style: dashed; border-color: var(--line); color: var(--ink-4); }
+/* 評估過、但這一場一條都沒做到：實心淺灰。跟上面那個虛線（還沒評估）要分得出來。 */
+.scell[data-lv="zero"] { background: var(--line-3); border-color: var(--line-2); color: var(--ink-4); }
 .scell[data-lv="1"] { background: var(--st1-bg); color: var(--st1-fg); border-color: var(--st1-line); }
 .scell[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
 .scell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
@@ -1912,7 +1915,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
-      <div class="sub-note">一格是一條標記，顏色深淺＝在評估過的場次裡標到的比例。虛線空格是還沒點到的——那是還沒走到，不是做不到。滑過格子可以看確切次數。</div>
+      <div class="sub-note">一格是一條標記。虛線空格＝還沒點到，那是還沒走到，不是做不到。滑過格子看確切次數。</div>
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
@@ -5528,13 +5531,13 @@ function renderAccCum(){
   grid.innerHTML =
     '<div class="hm-legend">'
       + '<span class="hm-cell" data-lv="none"></span>還沒點到'
-      + '<span class="hm-cell" data-lv="1"></span>四分之一以下'
-      + '<span class="hm-cell" data-lv="2"></span>一半以下'
-      + '<span class="hm-cell" data-lv="3"></span>四分之三以下'
-      + '<span class="hm-cell" data-lv="4"></span>幾乎每一場'
+      + '<span class="hm-cell" data-lv="zero"></span>沒做到'
+      + '<span class="hm-cell" data-lv="1"></span>偶爾'
+      + '<span class="hm-cell" data-lv="2"></span>有時'
+      + '<span class="hm-cell" data-lv="3"></span>常常'
+      + '<span class="hm-cell" data-lv="4"></span>幾乎每場'
     + '</div>'
-    + '<div class="hm-caveat">顏色表示這段期間記錄到的證據分布，不是職能分數；'
-      + '不同職能之間不直接比較。marker 沒有證據不代表這項職能未到位。</div>'
+    + '<div class="hm-caveat">顏色是分布，不是分數；不同職能之間不直接比較。</div>'
     + '<div class="hm-sect">'
       + '<div class="hm-head">基礎｜核心職能 1–2</div>'
       + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
@@ -5621,12 +5624,27 @@ function cellLevel(st){ return CELL_LV[String(st)] != null ? CELL_LV[String(st)]
    回傳字串是為了跟熱力圖的 hitLevel 共用同一組 data-lv 樣式，只有一份色階定義。 */
 function sessCellLevel(r, i){
   const x = (r.acc || [])[i];
-  if (accSt(x) === ST_NE) return { lv: 'none', on: 0, total: (MK[i]||[]).length };
+  if (accSt(x) === ST_NE) return { lv: 'none', on: 0, total: (MK[i]||[]).length, derived: false };
   const g = MK[i] || [];
   const mk = (x && x.mk) || {};
-  const on = g.filter(m => mkOn(mk[m.c])).length;
+  const ticked = g.filter(m => mkOn(mk[m.c])).length;
   const total = g.length || 1;
-  return { lv: hitLevel(on, on / total), on, total };
+  /* 2026-08-28 修正（Yi-En 實機回報「8/21 那場到位 7 項，八格卻全是虛線」）：
+     這裡原本只數「有勾的 marker」，所以「標了到位但沒逐條勾」的場次一律變成 0 條 → 虛線空格。
+     實測她的資料：職能3 有 25 場到位，其中 **23 場沒勾任何 marker**——等於絕大多數場次
+     都被顯示成「沒做到」。
+
+     熱力圖（markerHitStats）早就有這條規則了，是單場這八格漏掉，同一份資料兩套算法。
+     現在統一：標到位、而且一條都沒勾 → 底下每一條都算到。
+     只要勾過任何一條，就完全照她勾的算——刻意只勾部分不可以被覆蓋。 */
+  const derived = (accSt(x) === 2 && ticked === 0);
+  const on = derived ? total : ticked;
+  /* 「未到位」與「尚未評估」是兩件事，不可以長得一樣。
+     舊版兩者都走 hitLevel(0,·) → 'none'（虛線空格＝還沒點到），
+     於是「我評估過、這一場沒做到」被畫成「我還沒評估」。
+     這裡把「評估過但一條都沒有」獨立成 zero：實心淺灰，跟虛線分得開。 */
+  if (on === 0) return { lv: 'zero', on: 0, total, derived: false };
+  return { lv: hitLevel(on, on / total), on, total, derived };
 }
 const ACK_MK = ['4.1','4.3','8.5'];   // 認可
 const EMP_MK = ['4.2','6.4'];         // 同理
@@ -5714,10 +5732,13 @@ function renderHist() {
          顏色＝這一場這項職能達到的小項數／該職能小項總數。 */
       const cellsHTML = ACC.map((a,i)=>{
         const s2 = sessCellLevel(r, i);
+        /* 推導來的（標到位、沒逐條勾）跟真的逐條勾過的要分得出來，提示文字講清楚。 */
+        const tip = s2.lv === 'none' ? '尚未評估'
+                  : s2.lv === 'zero'  ? '這一場沒有做到'
+                  : s2.derived ? '標為到位（沒有逐條勾標記）'
+                  : s2.on + '／' + s2.total + ' 條（' + Math.round(s2.on / s2.total * 100) + '%）';
         return '<span class="scell" data-lv="' + s2.lv + '" title="核心職能 ' + a[0]
-          + '：' + (s2.lv === 'none' ? '尚未評估'
-                   : s2.on + '／' + s2.total + ' 條（' + Math.round(s2.on / s2.total * 100) + '%）')
-          + '">' + (i+1) + '</span>';
+          + '：' + tip + '">' + (i+1) + '</span>';
       }).join('');
       return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
           + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
