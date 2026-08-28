@@ -53,6 +53,9 @@
   --st-miss: #4E4842;   /* 未到位 */
   /* 認證進度卡隨進度換段（色票.html「認證進度卡 — 隨進度換段」） */
   --amber:      #B57A26;   /* 34–66% 的 bar */
+  /* 趨勢圖第四條線（2026-08-28）：與深藍綠／琥珀／綠三條都拉得開的紫紅。
+     原本第四條用 --warm-2 #C08A6E，跟琥珀太近；第二條用 --cool-2，跟第一條同色系。 */
+  --chart-4:    #8E4A6B;
   --amber-bg:   #FBF0DC;   /* 34–66% 的底 */
   --amber-ink:  #8A6A18;
   --seg1-bar: #A6604A; --seg1-bg: #FBEEE6;   /*   0–33%  起步   */
@@ -320,9 +323,26 @@ textarea { resize: vertical; min-height: 46px; }
    cum-grid / cum-legend / quickfilters 三個都中）。hidden 的語意就是隱藏，不該被覆寫。 */
 /* phrase cheat sheet */
 .phrase-card { background: var(--surface-2); border: 1px solid var(--warm-line); }
+/* 2026-08-28（Yi-En 實機回報）：洞察展開後可能有上百條，捲到下面想收合卻要一路捲回最上面。
+   展開時把標題列吸在頂端（手機讓開 sticky 頂欄的 52px），收合鈕就永遠按得到。
+   只在展開時 sticky——收合狀態下吸頂會平白多一條停在畫面上的橫線。 */
 .phrase-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.phrase-card:has(.phrase-body:not(.collapsed)) .phrase-head {
+  position: sticky; top: 0; z-index: 5; background: var(--surface-2);
+  padding: 6px 0; margin: -6px 0 0; border-bottom: 1px solid var(--warm-line);
+}
+@media (max-width: 1023.98px) {
+  .phrase-card:has(.phrase-body:not(.collapsed)) .phrase-head { top: 53px; }
+}
 .phrase-head .arrow { color: var(--warm); font-size: 13px; }
 .phrase-body { margin-top: 10px; }
+/* #1（2026-08-28）：客戶詳情的「編輯客戶資料」折疊 */
+.cinfo-head { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px;
+              padding: 0; border: 0; background: none; font: inherit; color: var(--ink-2);
+              font-weight: 700; font-size: 14px; text-align: left; cursor: pointer; }
+.cinfo-head:hover { color: var(--warm-ink); }
+.cinfo-arrow { color: var(--ink-4); font-size: 11px; }
+.cinfo-body.collapsed { display: none; }
 .phrase-body.collapsed { display: none; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px; background: var(--surface);
@@ -541,6 +561,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 @media (min-width: 1024px) {
   .appbar, .nav-scrim, .drawer-close { display: none !important; }
 }
+
+
 @media (prefers-reduced-motion: reduce) { .tabs { transition: none; } }
 
 /* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
@@ -734,8 +756,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    於是它們以 inline 流排、字全部黏在一起（「08-24第四次會談想更清楚未來的方向…60 分・到位 7 項」）。
    歷史紀錄頁走的是 .sess-cols grid（有 gap）所以沒事，這個容器是漏掉的。 */
 .sess-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sess-top .sess-topic { flex: 1 1 auto; }
 .sess-top .sess-meta { margin-left: auto; }
+/* 2026-08-28：客戶詳情的每一場改兩層——上層四個短欄，議題自己佔滿第二層，
+   不再跟「第幾次」搶寬度。.sess-client（第幾次）設成不可壓縮，否則又會變成「第…」。 */
+.cd-sess .sess-client { flex: 0 0 auto; overflow: visible; }
+.cd-sess > .sess-topic { display: block; margin-top: 5px; white-space: normal;
+                         overflow: visible; text-overflow: clip; line-height: 1.5; }
 .sess-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sess-client { font-size: 12.5px; color: var(--ink-2); min-width: 0; overflow: hidden;
                text-overflow: ellipsis; white-space: nowrap; }
@@ -1131,11 +1157,19 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    設計稿（桌機版設計稿.dc.html）@media 命中 0 次——它從來沒有規範過手機。
    所以手機的尺寸沒有基準可以違反，以下由 Yi-En 2026-08-27 定案。 */
 
-/* C2：AI 卡的收合開關。桌機隱藏開關、內容強制展開，等於這段不存在。 */
+/* C2：AI 卡的收合開關。純 CSS（隱藏 checkbox ＋ label），不需要 JS。
+   2026-08-28（Yi-En 要求）：原本只有手機收合、桌機強制展開。改成**所有寬度都可收合、
+   預設收起來**——這張卡是「選用」的輔助功能，不該在每次記錄時都佔掉左欄一大塊。 */
 .ai-open-cb { position: absolute; opacity: 0; pointer-events: none; }
-.ai-toggle { display: block; }
-.ai-toggle .ai-title { margin-bottom: 7px; }
-.ai-chev { display: none; }
+.ai-toggle { display: flex; align-items: center; justify-content: space-between;
+             gap: 10px; cursor: pointer; }
+.ai-toggle .ai-title { margin-bottom: 0; }
+.ai-chev { display: inline-block; color: var(--cool-d); font-size: 12px;
+           transition: transform .15s ease; }
+.ai-body { display: none; }
+.ai-open-cb:checked ~ .ai-toggle .ai-chev { transform: rotate(180deg); }
+.ai-open-cb:checked ~ .ai-body { display: block; }
+.ai-open-cb:focus-visible ~ .ai-toggle { outline: 2px solid var(--cool); outline-offset: 2px; }
 
 @media (max-width: 1023px) {
   /* C1：八項導覽從直式清單收成一列可橫向捲動的籤。
@@ -1151,16 +1185,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .an-name { white-space: nowrap; font-size: 12.5px; }
   .an-meta { display: none; }
 
-  /* C2：預設收合，只留眉標、標題與箭頭。 */
-  .ai-toggle { display: flex; align-items: center; justify-content: space-between;
-               gap: 10px; cursor: pointer; }
-  .ai-toggle .ai-title { margin-bottom: 0; }
-  .ai-chev { display: inline-block; color: var(--cool-d); font-size: 12px;
-             transition: transform .15s ease; }
-  .ai-body { display: none; }
-  .ai-open-cb:checked ~ .ai-toggle .ai-chev { transform: rotate(180deg); }
-  .ai-open-cb:checked ~ .ai-body { display: block; }
-  .ai-open-cb:focus-visible ~ .ai-toggle { outline: 2px solid var(--cool); outline-offset: 2px; }
+  /* C2 的收合規則已移到基礎層（2026-08-28 起桌機也收合），這裡不再重複。 */
 }
 /* 右欄面板 */
 .acc-cur-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
@@ -1481,6 +1506,30 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .pchip, .quickfilters .pchip { min-height: 44px; display: inline-flex; align-items: center; }
   .recap-copy{ height: auto; min-height: 44px; }
 }
+
+/* ═══ 桌機側欄：矮螢幕不要出現內部捲動 ══════════════════════
+   2026-08-28（Yi-En 回報「左邊這排會滾動」）。側欄本來就是 position:fixed，
+   不會跟著頁面捲——捲的是它自己：內容 879px，MacBook 的瀏覽器視窗只有 789px。
+   實測各區塊：群組標題 4 個共 193px（每個高 24 卻帶 24 上邊距，是最大的一塊）、
+   分頁鈕 8 個 296px、認證卡 177px、側欄 padding 56px、頁尾 71px、站名 25px。
+   只在螢幕矮的時候收緊，高螢幕維持原本的舒適間距。 */
+@media (min-width: 1024px) and (max-height: 900px) {
+  .tabs { padding-top: 22px; padding-bottom: 16px; }
+  .nav-group { margin-top: 12px; }
+  #credcard { margin-top: 18px; }
+}
+@media (min-width: 1024px) and (max-height: 860px) {
+  /* 這一段涵蓋最常見的 MacBook 瀏覽器視窗高（約 789px）。實測只收緊間距還差 30px，
+     所以把認證卡的大數字與頁尾也一起壓，剛好塞得下，八個分頁與頁尾全部看得到。 */
+  .tabs .tab { padding-top: 7px; padding-bottom: 7px; }
+  .nav-group { margin-top: 8px; }
+  #credcard { margin-top: 12px; padding: 11px 13px; }
+  #credcard .cc-hours { font-size: 24px; }
+  .nav-foot { padding-top: 10px; gap: 4px; font-size: 11.5px; }
+}
+/* 760px 以下不再另外處理。試過隱藏側欄那張認證卡（可以塞下），但那會讓
+   「進度條算繪比例」那條既有守衛量不到東西——為了讓版面剛好，把一條有效的
+   守衛弄成 NaN，不划算。760px 以下的視窗側欄仍會自己捲，這是已知且接受的限制。 */
 
 </style>
 </head>
@@ -1867,7 +1916,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="sub-note">備份會把六個集合完整下載成一個 JSON 檔。還原是「匯入並合併」，同 ID 保留現有那一筆。</div>
       <div class="actions" style="margin-top:10px">
         <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
-        <span id="admin-backup-slot"></span>
+        <!-- 2026-08-28：這個 span 是 flex 項目，裡面的鈕不會跟著伸縮，所以三顆對不齊。
+             display:contents 讓 span 自己不佔版面，裡面那顆鈕直接成為 .actions 的 flex 項目。 -->
+        <span id="admin-backup-slot" style="display:contents"></span>
         <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
         <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
       </div>
@@ -1907,11 +1958,10 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <div id="cred-warn"></div>
     <div class="cred-wrap" id="cred-cards"></div>
     <!-- M3（2026-08-28）：撤下整張「送審錄音候選」卡。教練學院已處理送審，本工具不追蹤。 -->
-    <div class="card">
-      <label style="margin-top:0">匯出 ICF 時數表</label>
-      <div class="sub-note">工具裡只有客戶代號、日期、會談次數、時長。ICF 的時數表另外要求客戶<b>真實姓名、聯絡方式、關係起訖日</b>——
-        這三欄是刻意不放進工具的（去識別化），匯出的 CSV 會留三個空白欄位讓你自己填。</div>
-    </div>
+    <!-- 2026-08-28（Yi-En 實機回報）：頁尾那張「匯出 ICF 時數表」說明卡撤下。
+         它跟頁首右上那顆「匯出時數表（CSV）」是同一件事，但被拆到整頁最下面，
+         按鈕在上、說明在下，中間隔著兩張門檻卡。說明已併進那顆鈕的兩段式流程
+         （按一下出說明，再按一次才產檔），出口與說明從此在同一個地方。 -->
     <div style="height:24px"></div>
   </div>
 
@@ -3277,7 +3327,9 @@ const EXPORTS = {
       return { head: '會匯出 ' + arr.length + ' 列，' + HOURS_COLS.length + ' 個欄位',
                items: filled.map(n=>n + '（有值）').concat(blank.map(n=>n + '（留空白）')),
                warn: 'ICF 時數表要求的<b>真實姓名／聯絡方式／關係起訖日</b>這三欄會留空白，'
-                   + '匯出後要你自己填。<b>代號不會自動換成姓名</b>——工具裡本來就沒有姓名。' };
+                   + '匯出後要你自己填。<b>代號不會自動換成姓名</b>——工具裡本來就沒有姓名。',
+               /* 2026-08-28：原本頁尾那張說明卡的內容併到這裡，出口與說明放在同一個地方 */
+               note: '工具裡只有客戶代號、日期、會談次數、時長。那三欄是刻意不放進工具的（去識別化）。' };
     },
     run(){ exportHoursCSV(); }
   },
@@ -3500,7 +3552,10 @@ function scoreNum(r, k){ const v = scoreVal(r, k); const n = parseFloat(v); retu
 const CHART = (() => {
   const cs = getComputedStyle(document.documentElement);
   const v = n => cs.getPropertyValue(n).trim();
-  return { perf: v('--cool'), feel: v('--cool-2'), progress: v('--ok'), client: v('--warm-2'),
+  /* 2026-08-28（Yi-En 實機回報）：原本 perf=--cool(#16748C)、feel=--cool-2(#7FB3C4)，
+     兩條同屬藍色系，手機上看就是「兩個深藍」，分不出誰是誰。
+     四條改成四個不同色相：深藍綠／琥珀／綠／紫紅，任兩條並排都分得開。 */
+  return { perf: v('--cool'), feel: v('--amber'), progress: v('--ok'), client: v('--chart-4'),
            grid: v('--line-2'), ink: v('--ink-3'), ink4: v('--ink-4'), ink2: v('--ink-2'),
            surface: v('--surface') };
 })();
@@ -5018,12 +5073,21 @@ function markerHitStats(recs){
     let assessed = 0;
     const hits = {};
     g.forEach(m => { hits[m.c] = 0; });
+    /* 2026-08-28 修正（Yi-En 實機回報）：職能 1、2 各自只有一條 marker，
+       職能 3–8 有 4–9 條。只有一條的時候，「這項職能到位」與「那條 marker 到位」
+       是同一件事——使用者在職能層標到位，不會再去勾那唯一一條。
+       實測她的資料：職能 1 評估過 25 場、標到位 8 場，但 1.1 只勾過 1 次，
+       畫面因此顯示成最淺色，等於把她做過 8 次的事說成 1 次。
+       所以單一 marker 的職能改以職能狀態為準；3–8 維持看 marker——
+       標職能到位並不指出是 3.1 還是 3.4 發生了，那個不能推導。 */
+    const single = g.length === 1;
     rs.forEach(r => {
       const x = (r.acc || [])[i];
-      if (accSt(x) === ST_NE) return;          /* 沒評估的那一場，這一項整個不計入分母 */
+      const st = accSt(x);
+      if (st === ST_NE) return;                /* 沒評估的那一場，這一項整個不計入分母 */
       assessed++;
       const mk = (x && x.mk) || {};
-      g.forEach(m => { if (mkOn(mk[m.c])) hits[m.c]++; });
+      g.forEach(m => { if (mkOn(mk[m.c]) || (single && st === 2)) hits[m.c]++; });
     });
     return { i, assessed, markers: g.map(m => ({
       c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
@@ -5105,18 +5169,11 @@ function renderAccCum(){
       + '<div class="hm-den">' + (x.assessed ? x.assessed + ' 場評估過' : '尚未評估') + '</div>'
     + '</div>';
   };
+  /* 2026-08-28（Yi-En 實機回報）：
+     ① 圖例移到格子上面。看不懂顏色的人正是還沒往下捲的人，說明放在最後面才讀到已經太遲。
+     ② 刪掉「基礎｜核心職能 1–2」底下那段補充說明——分區標題已經講完了，那段是多餘的解釋。 */
   grid.innerHTML =
-    '<div class="hm-sect">'
-      + '<div class="hm-head">基礎｜核心職能 1–2</div>'
-      + '<div class="hm-note">核心職能 1、2 屬於基礎，較多反映跨場次的一貫實踐；'
-        + '單場難以完整舉證，不代表沒有做到。</div>'
-      + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
-    + '</div>'
-    + '<div class="hm-sect">'
-      + '<div class="hm-head">會談中的實踐｜核心職能 3–8</div>'
-      + hs.slice(MK_BASE_COUNT).map(rowHTML).join('')
-    + '</div>'
-    + '<div class="hm-legend">'
+    '<div class="hm-legend">'
       + '<span class="hm-cell" data-lv="none"></span>還沒點到'
       + '<span class="hm-cell" data-lv="1"></span>1 次'
       + '<span class="hm-cell" data-lv="2"></span>2 次'
@@ -5124,7 +5181,15 @@ function renderAccCum(){
       + '<span class="hm-cell" data-lv="4"></span>5 次以上'
     + '</div>'
     + '<div class="hm-caveat">顏色表示這段期間記錄到的證據分布，不是職能分數；'
-      + '不同職能之間不直接比較。marker 沒有證據不代表這項職能未到位。</div>';
+      + '不同職能之間不直接比較。marker 沒有證據不代表這項職能未到位。</div>'
+    + '<div class="hm-sect">'
+      + '<div class="hm-head">基礎｜核心職能 1–2</div>'
+      + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
+    + '</div>'
+    + '<div class="hm-sect">'
+      + '<div class="hm-head">會談中的實踐｜核心職能 3–8</div>'
+      + hs.slice(MK_BASE_COUNT).map(rowHTML).join('')
+    + '</div>';
 
   /* 待補清單：送審時每條需要時間戳，這裡列還沒有時間戳的。
      只列「這項職能你標過到位」的，否則等於在問你還沒開始練的東西。
@@ -5825,15 +5890,20 @@ function openClient(id){
   document.getElementById('client-recs').innerHTML = rl.length
     ? rl.map(r=>{
         const mk = sessionMkCounts(r);
-        return '<div class="sess" onclick="openDetail(' + r.id + ',\'client\')">'
+        /* 2026-08-28（Yi-En 實機回報）：五個東西擠同一列，「第四次會談」被壓成「第…」。
+           議題是這一列最重要的資訊，不能為了塞下別的而截短，「第幾次」也不該消失。
+           改成兩層：上層 日期｜第幾次｜時長・到位｜›，議題自己佔滿第二層。
+           這跟歷史頁那張表當初改兩層是同一個原因——句子欄跟短欄擠同一列，句子永遠輸。 */
+        return '<div class="sess cd-sess" onclick="openDetail(' + r.id + ',\'client\')">'
           + '<div class="sess-top">'
             + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
             + '<span class="sess-client">' + (esc(formatSession(r.session)) || '會談') + '</span>'
-            + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
-              + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
             + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 ' + mk.done + ' 項</span>'
             + '<span class="sess-arrow">›</span>'
-          + '</div></div>';
+          + '</div>'
+          + '<div class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
+            + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</div>'
+        + '</div>';
       }).join('')
     : '<div class="acc-none">這位客戶還沒有紀錄。</div>';
 
@@ -5853,8 +5923,15 @@ function openClient(id){
   /* M2（2026-08-28）：recap 卡已撤下（與歷史紀錄重複）。容器不在 DOM 裡，這裡不再渲染。
      clientRecapRows()／copyClientRecap() 暫留在相容層，等確認無其他依賴再清死碼。 */
 
-  /* 客戶資料編輯（規格的版面三段之外，保留在最下面） */
+  /* 客戶資料編輯。2026-08-28（Yi-En 實機回報）：這一整組常駐在詳情頁最下面是噪音。
+     但整段刪掉會一起失去三個能力——改代號、改「開始記錄前已談次數」（會談次數自動編號要用它）、
+     刪除客戶。所以改成預設收合的「編輯客戶資料」，能力不變，畫面上看不到。
+     「備註」欄位確認全檔沒有任何地方顯示或匯出，直接移除。 */
   document.getElementById('client-info').innerHTML = `
+    <button type="button" class="cinfo-head" onclick="toggleClientInfo()">
+      <span class="cinfo-arrow" id="cinfo-arrow">▸</span><span>編輯客戶資料</span>
+    </button>
+    <div class="cinfo-body collapsed" id="cinfo-body">
     <label style="margin-top:0">客戶代號</label><input type="text" id="c-code" value="${esc(c.code)}">
     <!-- M2（2026-08-28）：狀態已移到本頁最上方，這裡不再重複；
          saveClient() 仍會讀 #c-status，所以保留一個隱藏欄位承接目前值，避免存檔時把狀態清掉。 -->
@@ -5862,14 +5939,22 @@ function openClient(id){
     <label>開始記錄前已談次數 <span class="hint">用這工具之前已談過幾次就填幾，都在這裡記就填 0</span></label>
     <input type="text" id="c-pre" inputmode="numeric" value="${pre}">
     <label>目標 <span class="hint">這位客戶的教練目標（選填）</span></label><textarea id="c-goal">${esc(c.goal||'')}</textarea>
-    <label>備註 <span class="hint">選填，同樣不要寫可辨識個資</span></label><textarea id="c-note">${esc(c.note||'')}</textarea>
     <div class="actions" style="margin-top:12px">
       ${rs.length ? '' : `<button class="btn btn-ghost" style="color:var(--danger)" onclick="deleteClient('${c.id}')">刪除</button>`}
       <button class="btn btn-primary" onclick="saveClient('${c.id}')">儲存客戶資料</button>
+    </div>
     </div>`;
   showView('clientdetail');
 }
 
+/* #1：編輯客戶資料的折疊。狀態不需要記憶——每次進客戶詳情都重新收起來才對，
+   常駐展開的話等於沒收。 */
+function toggleClientInfo(){
+  const b = document.getElementById('cinfo-body'), a = document.getElementById('cinfo-arrow');
+  if (!b) return;
+  const open = b.classList.toggle('collapsed') === false;
+  if (a) a.textContent = open ? '▾' : '▸';
+}
 function saveClient(id){
   const cs = loadC(); const c = cs.find(x=>x.id===id); if (!c) return;
   const code = document.getElementById('c-code').value.trim();
@@ -5878,7 +5963,8 @@ function saveClient(id){
   c.status = document.getElementById('c-status').value;
   c.preSessions = parseInt(document.getElementById('c-pre').value,10)||0;
   c.goal = document.getElementById('c-goal').value.trim();
-  c.note = document.getElementById('c-note').value.trim();
+  /* 2026-08-28：備註欄位已從編輯表單移除（全檔沒有任何地方顯示或匯出它）。
+     既有資料上的 c.note 原樣保留不動——不顯示不等於可以刪掉別人寫過的東西。 */
   storeC(cs);
   // 代號改了，同步更新既有紀錄上的顯示名稱
   const recs = load(); let ch = false;
