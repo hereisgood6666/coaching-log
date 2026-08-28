@@ -2613,6 +2613,9 @@ async function initSync(){
 function startLocal(){
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  /* 第一筆歷史用 replaceState 蓋上目前狀態，不新增項目——
+     這樣從第一頁按上一頁還是會離站（本來就該離），但從第二頁回得來。 */
+  navReplace();
   maybeOnboard();
 }
 function isInAppBrowser(){
@@ -4415,12 +4418,16 @@ function goStep(n){
   document.querySelectorAll('#view-new [data-step-only]').forEach(el => {
     el.classList.toggle('hidden', el.getAttribute('data-step-only') !== String(formStep));
   });
-  if (document.getElementById('view-new').classList.contains('hidden')) showView('new');
+  const wasHidden = document.getElementById('view-new').classList.contains('hidden');
+  if (wasHidden) showView('new');
   else { applyPageHead('new');
          document.getElementById('tabNew').classList.toggle('active', formStep===1);
          document.getElementById('tabMark').classList.toggle('active', formStep===2); }
   window.scrollTo(0, 0);
   updateSegbar();
+  /* 步驟 1 ↔ 2 也是一次移動：從職能標記按上一頁應該回到會談記錄，不是離站。
+     showView('new') 那一路已經推過了，這裡只補「本來就在 new、只換步驟」的情況。 */
+  if (!wasHidden) navPush();
   closeDrawer();          /* M1：抽屜裡點「新增紀錄／職能標記」也要關 */
 }
 /* §13-A 每一頁自己的標題。新增紀錄頁兩步各有標題，其餘頁沿用站名。
@@ -4560,8 +4567,49 @@ function toggleCompose(){
   toggleHeadBox('ask-compose-box', 'ask-q', 'btn-new-ask', '＋ 新增問題', '收起');
 }
 
+/* ═══ 瀏覽器的「上一頁」 ══════════════════════════════
+   2026-08-28（Yi-En：「在這個網頁裡面按上一頁，就會跳出這個網頁，這樣不太合理」）。
+   這是單檔 SPA，換頁只是切 .hidden，從來沒有推過任何 history 項目，
+   所以瀏覽器的歷史只有一筆——按上一頁當然就離站了。
+
+   三個實作上的決定：
+   ① `pushState` **不帶網址**。測試跑在 file:// 上，帶網址（即使只是 #hash）
+      會被瀏覽器以跨來源為由擋掉；不帶網址一樣會產生一筆歷史項目。
+      代價是網址列不會反映目前頁面，也就沒有深連結——她要的是「上一頁能用」，不是分享網址。
+   ② 還原時不可以再推（`_navRestoring`），否則每按一次上一頁就多一筆，永遠回不去。
+   ③ 抽屜開著時按上一頁＝關抽屜，這是手機的標準行為。 */
+let currentView = 'new';
+let _navRestoring = false;
+function navSnapshot(){
+  return { app:1, v: currentView, id: currentId, cid: currentClientId,
+           step: formStep, from: detailFrom, drawer: !!_drawerOpen };
+}
+function navPush(){
+  if (_navRestoring) return;
+  try { history.pushState(navSnapshot(), ''); } catch (e) {}
+}
+function navReplace(){
+  try { history.replaceState(navSnapshot(), ''); } catch (e) {}
+}
+function navRestore(st){
+  if (!st || !st.app) return;
+  _navRestoring = true;
+  try {
+    if (_drawerOpen && !st.drawer) closeDrawer();
+    else if (!_drawerOpen && st.drawer) openDrawer();
+    currentId = st.id; currentClientId = st.cid; detailFrom = st.from || 'hist';
+    if (st.v === 'detail' && st.id != null)            openDetail(st.id, st.from);
+    else if (st.v === 'clientdetail' && st.cid)        openClient(st.cid);
+    else if (st.v === 'new')                           goStep(st.step === 2 ? 2 : 1);
+    else                                               showView(st.v);
+  } finally { _navRestoring = false; }
+}
+window.addEventListener('popstate', e => navRestore(e.state));
+
 function showView(v) {
   exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
+  const changed = (v !== currentView);
+  currentView = v;
   applyPageHead(v);
   document.getElementById('view-new').classList.toggle('hidden', v!=='new');
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
@@ -4584,6 +4632,7 @@ function showView(v) {
   if (v==='cred') renderCred();
   if (v==='journal') renderJournal();
   closeDrawer();          /* M1：選取頁面後關閉抽屜 */
+  if (changed) navPush();
 }
 
 /* ---- save ---- */
@@ -6789,6 +6838,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
    開關條件：漢堡、關閉鈕、點遮罩、Esc、選取頁面。
    開啟時鎖背景捲動；關閉後焦點回到漢堡鈕。ARIA 由 aria-expanded 表達。 */
 let _drawerOpen = false;
+/* 抽屜開著時按上一頁＝關抽屜（手機的標準行為），所以開的時候也推一筆。 */
 function openDrawer(){
   if (_drawerOpen) return;
   _drawerOpen = true;
@@ -6796,6 +6846,7 @@ function openDrawer(){
   const sc = document.getElementById('nav-scrim'); if (sc) sc.hidden = false;
   const b = document.getElementById('ab-burger'); if (b) b.setAttribute('aria-expanded', 'true');
   const c = document.getElementById('drawer-close'); if (c) c.focus();
+  navPush();          /* 上一頁＝關抽屜 */
 }
 function closeDrawer(){
   if (!_drawerOpen) return;
