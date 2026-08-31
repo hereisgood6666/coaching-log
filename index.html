@@ -11,7 +11,7 @@
    底色用有色調的白，不用純白純黑 */
 :root {
   color-scheme: light;          /* 深色系統下維持自家淺色配色，不讓瀏覽器反轉造成對比爆掉 */
-  --bg:        #FAF8F4;
+  --bg:        #EFEBE4;   /* 2026-09-01 第1批 S5：底色壓深，拉開卡片(--surface #FFFCF8)與背景的對比。--surface 不動 */
   --surface:   #FFFCF8;
   --surface-2: #F6F1EA;
   --ink:       #2C2A28;
@@ -1658,6 +1658,119 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 }
 .todo-state { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.35; }
 .todo-den { font-size: 11px; color: var(--ink-4); font-weight: 400; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   §41 第 1 批：外殼（S1 側欄深色／S2 分組標題／S4 徽章）
+   規格：文件/BUILD交接包_V3桌機設計_2026-09-01.md「第 1 批 外殼」
+   來源：教練管理系統UI優化_V3/靜態版/isHome.html（設計稿 27-47、1099-1113 行）
+
+   寫在樣式表最尾端是刻意的：這一節整節都是覆寫，
+   要蓋掉前面 §7（.nav-group）、§13-E（.nav-foot/.nav-badge）與 575 行起的 .tabs/.tab。
+   同特異性時後出現者勝——寫在前面會被蓋掉（lessons 2026-08-29 一天踩四次那條）。
+
+   全部包在 min-width:1024px：手機的側欄是抽屜（530 行那一段），
+   深色會蓋掉底部固定列，所以手機一個字都不動。
+
+   ── 對比度：設計稿有三個值達不到交接包自己要求的 4.5:1 ──
+   實測（#EFEBE4 疊在 #2C2A28 上，WCAG 2.1 相對亮度）：
+     alpha 1.00 → 12.03:1   .72 → 7.00:1   .60 → 5.34:1   .55 → 4.74:1
+     alpha  .50 →  4.19:1   .45 → 3.68:1   .40 → 3.22:1   .32 → 2.57:1
+   設計稿的分組標題(.4)、徽章(.45)、底部文字(.5) 都不到 4.5，且都是 10–11.5px
+   的小字，不適用 WCAG 大字例外。這裡把它們提到剛好過關的層級，
+   並保留三階層次（項目 .72 ＞ 品牌與底部 .60 ＞ 分組標題與徽章 .55）。
+   **這是唯一偏離設計稿的地方，R2 請 Yi-En 看一眼再決定要不要退回設計值。**
+   ═══════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .tabs {
+    background: #2C2A28;
+    border-right: 1px solid rgba(239,235,228,.12);
+  }
+  /* S1 站名與次要文字 */
+  .nav-brand-name { color: #EFEBE4; }
+  .nav-brand-user { color: rgba(239,235,228,.60); }
+
+  /* S2 分組標題：字級、字距、顏色、左右內距。 */
+  .nav-group {
+    font-size: 10px; letter-spacing: .11em; color: rgba(239,235,228,.55);
+    padding-left: 12px; padding-right: 12px;
+  }
+
+  /* S2 群組分隔線（設計稿 1112 行）——**高度零成本**的做法。
+     R2 定案：Yi-En 要這條線，並且願意拿掉側欄的 ACC 認證卡來換。
+     實測後不需要拿掉卡，理由如下：
+
+     側欄的自然內容高與可用高在 768–900px 每一個高度都**剛好貼齊，餘裕是 0**
+     （量測腳本見 outputs/第1批_外殼_20260901/側欄餘裕.txt）。
+     所以「先修好覆寫順序、讓 1615／1620 的收緊生效」也救不回來——
+     那只找回第一版多出來的 20px 裡的一部分，四條 1px 的線仍然沒有地方放。
+
+     第三條路：**不新增高度，把線畫進已經存在的間距裡。**
+     每一組的視覺上距維持原本的總量（高螢幕 24px、≤900px 12px、≤860px 8px），
+     只是把它拆成 margin ＋ border ＋ padding 三段，線落在中間。
+     淨高度變化 = 0，認證卡留著，四條測試（tests/run.mjs:233／4102／7054／7062）
+     與 EXPECTED_FNS 裡的 renderCredCard 都不用動。
+
+     第一組（記錄）不畫線——設計稿 1112 行也是 gi>0 才有 border，
+     而且它上面就是認證卡，本來就有分界。它的 margin-top 完全不動，
+     所以 §27 那兩條（量的是第一個 .nav-group 的 margin-top）也不用改期望值。 */
+  .nav-group:not(:first-of-type) {
+    margin-top: 10px; padding-top: 13px;      /* 10 + 13 + 1 = 24，與原本相同 */
+    border-top: 1px solid rgba(239,235,228,.12);
+  }
+  /* 矮螢幕跟著 1615／1620 那兩段一起收，總量維持 12 / 8。
+     **這兩個 @media 必須巢狀在這個 min-width:1024 區塊裡面**——
+     2026-09-01 第一版把它們寫成平行的區塊、順手多打一個 }，
+     結果把底下的 .tab / .nav-badge / .nav-foot 全部關進 max-height:860 那層，
+     900px 高的螢幕整個吃不到深色文字色，對比掉到 2.04:1。
+     大括號是配對的，`node --check` 也過——**配對不等於巢狀正確**。 */
+  @media (max-height: 900px) {
+    .nav-group:not(:first-of-type) { margin-top: 5px; padding-top: 6px; }   /* 5 + 6 + 1 = 12 */
+  }
+  @media (max-height: 860px) {
+    .nav-group:not(:first-of-type) { margin-top: 3px; padding-top: 4px; }   /* 3 + 4 + 1 = 8 */
+  }
+
+  /* S1 導覽項目：未選中是透明底、淺字；選中維持陶土（產品側欄唯一的主色，
+     等同設計稿留給「＋新增紀錄」主鈕的位置——產品沒有那顆獨立主鈕） */
+  .tab { color: rgba(239,235,228,.72); }
+  .tab:hover { background: rgba(239,235,228,.09); }
+  .tab.active { background: var(--warm); color: #FFFCF8; }
+  .tab.active:hover { background: var(--warm); }
+
+  /* S4 徽章：跟著深色底調整；選中列沿用既有規則吃分頁文字色 */
+  .nav-badge { color: rgba(239,235,228,.55); }
+
+  /* S1 側欄底部 */
+  .nav-foot { border-top: 1px solid rgba(239,235,228,.12); }
+  .nav-foot-ver { color: rgba(239,235,228,.60); }
+  .nav-foot-links a { color: rgba(239,235,228,.60); }
+  .nav-foot-links a:hover { color: #EFEBE4; }
+}
+
+/* ── S6（R2 追加）：手機／平板的抽屜也用同一套深色 ──
+   Yi-En 2026-09-01 R2 決定：抽屜要跟桌機一致。
+   抽屜是 modal（z-index 80／scrim 70），底部固定列 .action-bar 是 z-index 55——
+   抽屜「開著的時候」蓋住底部列是 modal 本來就該有的行為，不是缺陷；
+   抽屜收起來時 transform: translateX(-100%) 整個在畫面外，蓋不到任何東西。
+   這裡只換顏色，不動 z-index、不動 transform、不動 --ab-h 那套實測高度。 */
+@media (max-width: 1023.98px) {
+  .tabs {
+    background: #2C2A28;
+    border-right: 1px solid rgba(239,235,228,.12);
+  }
+  .tabs .tab { color: rgba(239,235,228,.72); }
+  .tabs .tab:hover { background: rgba(239,235,228,.09); }
+  /* 選中列跟桌機同一個處理：陶土底＋淺字（手機原本是淺陶土底＋深陶土字，在深底上會糊） */
+  .tabs .tab.active { background: var(--warm); color: #FFFCF8; }
+  .tabs .nav-group { color: rgba(239,235,228,.55); }
+  .tabs .nav-badge { color: rgba(239,235,228,.55); }
+  .tabs .nav-foot-ver { color: rgba(239,235,228,.60); }
+  .tabs .nav-foot-links a { color: rgba(239,235,228,.60); }
+  .tabs .nav-foot-links a:hover { color: #EFEBE4; }
+  /* 關閉鈕原本吃 --ink-3（深灰），在深底上等於看不見 */
+  .drawer-close { color: rgba(239,235,228,.72); }
+  .drawer-close:hover { background: rgba(239,235,228,.09); }
+}
 </style>
 </head>
 <body>
