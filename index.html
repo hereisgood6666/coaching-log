@@ -1771,6 +1771,36 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .drawer-close { color: rgba(239,235,228,.72); }
   .drawer-close:hover { background: rgba(239,235,228,.09); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   §42 第 2 批：職能標記版面（K3 整體判定標籤／K11 左右分欄）
+   規格：文件/BUILD交接包_V3桌機設計_2026-09-01.md「第 2 批」更正後的版本
+   來源：教練管理系統UI優化_V3/靜態版/isStep2.html（設計稿 432-470 行）
+
+   **K1 與 K10 刻意不動**——2026-09-01 查證：現況 .acc-split 是
+   274px minmax(0,1fr)、AI 卡在左欄 .acc-side 裡，實測 .acc-nav x=286 w=274／
+   .ai-card x=286 w=274／.acc-main x=586 w=800，已經等於設計稿的 272px 骨架。
+   原規格叫人去改的是「已經對的東西」，SPEC 已更正交接包。
+
+   K11 的 1fr 340px 是**主體內部**「整體判定 ｜ 具體事例／證據」的分欄，
+   不是整頁配置（設計稿 447 行）。手機維持上下排。 */
+.acc-judge-note {
+  margin-top: 10px; font-size: 11.5px; line-height: 1.7; color: var(--ink-2);
+}
+@media (min-width: 1024px) {
+  /* K11：桌機左右分欄。340px 照設計稿 447 行。
+     **右欄寫成 minmax(0,340px) 而不是死的 340px**——實測 1100px 與 1180px 兩個寬度，
+     死的 340px 會把左欄壓到 116／156px，四態選鈕列內部溢出 79／39px（鈕被切掉）。
+     成因：1100–1179 那一段側欄用回完整 232px（575 行起那段），內容區反而比
+     1024–1099（窄側欄 76px）還窄。左欄給 200px 下限，右欄有空間才吃滿 340。
+     實測結果見 outputs/第2批_職能標記_20260901/四態列寬度.txt。 */
+  .acc-top {
+    display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 340px);
+    gap: 14px; align-items: start;
+  }
+  /* 兩欄等高感：右欄兩個欄位之間的間距沿用原本 .acc-field 的節奏，不另外定義 */
+  .acc-fields { display: flex; flex-direction: column; }
+}
 </style>
 </head>
 <body>
@@ -4298,19 +4328,27 @@ function buildAcc() {
           <div class="acc-desc">${a[1]}</div>
         </div>
       </div>
-      <div class="seg" id="acc-seg-${i}">
-        <button type="button" data-v="-1">尚未評估</button>
-        <button type="button" data-v="0">未到位</button>
-        <button type="button" data-v="1">部分到位</button>
-        <button type="button" data-v="2">到位</button>
-      </div>
-      <div class="acc-field">
-        <div class="acc-flabel">具體事例／證據</div>
-        <input type="text" id="acc-note-${i}" placeholder="做到的地方與時間戳（選填）">
-      </div>
-      <div class="acc-field">
-        <div class="acc-flabel">需要改善的地方 <span class="hint">跨 marker 的話寫這裡</span></div>
-        <textarea id="acc-imp-${i}" rows="1" placeholder="這項要往哪裡練——不必勾選也可以寫（選填）"></textarea>
+      <div class="acc-top">
+        <div class="acc-judge">
+          <div class="acc-flabel">這一項這一場的整體判定</div>
+          <div class="seg" id="acc-seg-${i}">
+            <button type="button" data-v="-1">尚未評估</button>
+            <button type="button" data-v="0">未到位</button>
+            <button type="button" data-v="1">部分到位</button>
+            <button type="button" data-v="2">到位</button>
+          </div>
+          <div class="acc-judge-note">「尚未評估」和「未到位」是兩件事：沒填不等於沒做到。按「到位」會把底下沒標過的標記一起勾起來，不會覆蓋已標成 No／反 的那幾條。</div>
+        </div>
+        <div class="acc-fields">
+          <div class="acc-field">
+            <div class="acc-flabel">具體事例／證據</div>
+            <input type="text" id="acc-note-${i}" placeholder="做到的地方與時間戳（選填）">
+          </div>
+          <div class="acc-field">
+            <div class="acc-flabel">需要改善的地方 <span class="hint">跨 marker 的話寫這裡</span></div>
+            <textarea id="acc-imp-${i}" rows="1" placeholder="這項要往哪裡練——不必勾選也可以寫（選填）"></textarea>
+          </div>
+        </div>
       </div>
       <button type="button" class="mk-toggle" id="mk-tog-${i}" onclick="toggleMk(${i})">
         收合 ACC 標記 ▴</button>
