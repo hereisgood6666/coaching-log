@@ -1656,6 +1656,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* 手機觸控目標 44px（跟 2026-08-28 那批觸控修正同一個標準） */
   .mk-negbtn { min-height: 44px; padding: 0 16px; }
 }
+.todo-state { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.35; }
+.todo-den { font-size: 11px; color: var(--ink-4); font-weight: 400; }
 </style>
 </head>
 <body>
@@ -2004,7 +2006,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
-        <div class="sub-note">這幾條是你做到次數最少的・例句可以直接用</div>
+        <div class="sub-note">這幾條是你<b>做到比例最低</b>的・例句可以直接用<br>
+          比例的分母是「你在那一項<b>逐條勾過</b>的場次」，不是全部場次；每次都做到的不會列在這裡</div>
         <div id="cum-todo-list"></div>
       </div>
     </div>
@@ -5838,16 +5841,33 @@ function renderAccCum(){
     if (!x.basis) return;      /* 2026-08-29：沒有逐條勾過的職能不列——那是沒資料，不是做不好 */
     x.markers.forEach(m=>{
       const def = (MK[x.i]||[]).find(y=>y.c === m.c) || {};
-      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i, hits: m.hits, assessed: x.basis });
+      /* 2026-08-29（Yi-En 實機回報）：「如果我做了 10 場，其中一個點只做到 2 場，
+         另一個點 10 場都做滿了，那當然是只做到 2 場的那個要放上來。」
+         她說得對——舊版排的是**絕對次數**（a.hits - b.hits），
+         但熱力圖改成各職能各自的分母之後，絕對次數已經不能互相比：
+         1.1 是 2／2 場（100%，每次都做到）卻因為「只有 2 次」排在很前面，
+         6.4 是 2／7 場（29%）反而排後面。完全反了。 */
+      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i,
+                  hits: m.hits, basis: x.basis, rate: m.rate });
     });
   });
-  todo.sort((a,b)=> a.hits - b.hits
-                 || (b.m.acc?1:0) - (a.m.acc?1:0)
+  /* 每次都做到的不必「補」——100% 直接不列，不然像 1.1／2.1 這種
+     「你逐條勾過的每一場都有做到」會出現在「做到最少」的清單上，自相矛盾。 */
+  const todoAll = todo.length;
+  const todoPool = todo.filter(x => x.rate < 1);
+  todoPool.sort((a,b)=> a.rate - b.rate            /* 比例低的先補 */
+                 || b.basis - a.basis              /* 同比例時，樣本多的比較可信 */
+                 || (b.m.acc?1:0) - (a.m.acc?1:0)  /* 再來是 ACC 必評優先 */
                  || a.m.c.localeCompare(b.m.c));
-  const five = todo.slice(0, 5);
+  const five = todoPool.slice(0, 5);
   const box = document.getElementById('cum-todo-list');
   if (!five.length){
-    box.innerHTML = '<div class="acc-none">還沒有評估過任何一項職能，這裡先空著。</div>';
+    /* 兩種空法意思完全不同，不可以用同一句話帶過 */
+    box.innerHTML = '<div class="acc-none">'
+      + (todoAll
+          ? '你逐條勾過的每一條，在有勾的那些場次裡都做到了——這裡先空著。'
+          : '還沒有逐條勾過任何一條標記，這裡先空著。')
+      + '</div>';
     return;
   }
   box.innerHTML = five.map(x=>
@@ -5857,7 +5877,10 @@ function renderAccCum(){
         + '<span class="todo-short">' + esc(MK_SHORT[x.m.c] || x.m.c) + '</span>'
         + '<span class="todo-acc">' + esc(ACC[x.i][0].replace(/^\d+ · /,'')) + '</span>'
         + (x.m.acc ? '<span class="mk-tag acc">ACC 必評</span>' : '')
-        + '<span class="todo-state">' + x.hits + '／' + x.assessed + ' 場</span>'
+        /* 2026-08-29：舊版只寫「2／2 場」，Yi-En 讀成「兩場裡做到兩場、那為什麼在這」。
+           先寫百分比（排序依據就是它），再把分母講清楚是「有逐條勾的場次」。 */
+        + '<span class="todo-state">' + Math.round(x.rate * 100) + '%'
+          + '<span class="todo-den">' + x.hits + '／' + x.basis + ' 場有勾</span></span>'
       + '</div>'
       + '<div class="todo-ex">' + esc(MK_EX[x.m.c] || '') + '</div>'
     + '</div>').join('');
