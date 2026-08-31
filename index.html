@@ -3545,29 +3545,21 @@ function exportCollapse(){
   if (btn){ btn.textContent = c.label; btn.classList.remove('armed'); }
   expArmed = null;
 }
+/* 2026-08-29（Yi-En）：「儲存好記錄之後，點下『輸出 PDF』會出現這個提醒，
+   完全不需要，刪掉。」——原本是二段式：第一下展開「這次會匯出什麼」清單、
+   按鈕變成「確定匯出」，第二下才產檔。現在一下就產檔。
+
+   保留的是 `cfg.build().blocked` 那道檢查：沒有紀錄／手帳是空的這種情況仍然只跳 toast，
+   不會產生一個空檔案。**只拿掉預覽，沒有拿掉防呆。**
+   `expArmed` / `exportCollapse()` 還留著——別的地方（切頁、切鈕）會呼叫它們收合狀態，
+   而且清單本體 `cfg.build()` 也還在用，之後要把預覽加回來不必重寫。 */
 function exportTwoStep(key){
   const cfg = EXPORTS[key];
   if (!cfg) return;
-  if (expArmed === key){        // 第二下才產檔
-    exportCollapse();
-    cfg.run();
-    return;
-  }
-  exportCollapse();             // 別處展開中的先收起來
+  exportCollapse();             // 舊狀態殘留的話先收乾淨
   const info = cfg.build();
   if (info.blocked){ toast(info.blocked); return; }
-  const box = document.getElementById(cfg.box);
-  box.innerHTML = '<div class="expbox">'
-    + '<div class="exp-head">這次會匯出什麼</div>'
-    + '<div class="exp-sub">' + info.head + '</div>'
-    + '<ul class="exp-list">' + info.items.map(i=>'<li>' + i + '</li>').join('') + '</ul>'
-    + (info.warn ? '<div class="exp-warn">' + info.warn + '</div>' : '')
-    + (info.note ? '<div class="exp-note">' + info.note + '</div>' : '')
-    + '<div class="exp-foot">看過了就再按一次「確定匯出」。</div>'
-    + '</div>';
-  const btn = document.getElementById(cfg.btn);
-  if (btn){ btn.textContent = '確定匯出'; btn.classList.add('armed'); }
-  expArmed = key;
+  cfg.run();
 }
 
 /* §11 覺察手帳 PDF：第 8 批做完手帳之後才有東西可匯 */
@@ -4219,7 +4211,11 @@ function buildAcc() {
       mkAddRow(i, m.c);                 /* 預設一列「時間戳＋實例」 */
       const chk = document.getElementById('mk-chk-'+mkId(i,m.c));
       /* 勾「做到」就把 No／反 清掉（互斥的另一半，另一半在 setMkNeg） */
-      if (chk) chk.onchange = () => { if (chk.checked) clearMkNeg(i, m.c); refreshMk(i, m.c); };
+      if (chk) chk.onchange = () => {
+        if (chk.checked) clearMkNeg(i, m.c);
+        refreshMk(i, m.c);
+        syncAccStFromMk(i);          /* 勾／取消勾之後，職能狀態跟著小項走 */
+      };
       refreshMk(i, m.c);
     });
     setAccSt(i, ST_NE);
@@ -4264,6 +4260,40 @@ function setAccSt(i, v){
    另外兩個限制：
    ① 只勾沒勾過的，已經勾起來的不動（那些可能已經附了時間戳與實例）。
    ② 只勾，不填時間戳。時間戳是送審用的證據，不能替她編。 */
+/* 2026-08-29（Yi-En）：「部分到位」「到位」要跟底下的小項連動。她的原話：
+   「如果小項我有勾，就要自動幫我切換到部分到位；如果小項我全勾了，也要自動幫我把到位點上。」
+
+   規則（只有這三條，其餘一律不動狀態）：
+   ① 勾了一部分（1 條以上、未滿）→ 部分到位
+   ② 全部都勾了            → 到位
+   ③ **一條都沒勾 → 什麼都不做**
+
+   ③ 是關鍵：實測 18 位使用者 61 場，84% 的場次一條 marker 都沒勾，
+   他們是直接按「到位」。如果零勾就把狀態改掉（例如退回未到位），
+   等於把絕大多數人的評估洗掉，而且違反「不要把沒有填當成未到位」那條硬約束。
+
+   **刻意不放進 refreshMk()**：loadForm() 編輯舊紀錄時也會逐條呼叫 refreshMk，
+   放在那裡等於一打開舊紀錄就依當時的勾選改寫它存好的狀態——那是偷改她的資料。
+   所以只掛在「使用者真的動了那條 marker」的路徑上（勾選、打時間戳、標 No／反）。
+
+   範圍是**全部** marker，不是畫面上看得到的那些。開了「只顯示 ACC 也會看的 20 條」時，
+   把看得到的都勾滿仍然只算部分到位——因為其餘那幾條確實還沒表態。 */
+let _accSyncing = false;
+function syncAccStFromMk(i){
+  if (_accSyncing) return;
+  const g = MK[i] || [];
+  if (!g.length) return;
+  const ticked = g.filter(m => {
+    const cb = document.getElementById('mk-chk-' + mkId(i, m.c));
+    return cb && cb.checked;
+  }).length;
+  if (!ticked) return;                       /* ③ 零勾不動 */
+  const want = (ticked === g.length) ? 2 : 1;
+  const item = document.getElementById('acc-' + i);
+  if (!item || parseInt(item.dataset.st, 10) === want) return;
+  _accSyncing = true;
+  try { setAccSt(i, want); } finally { _accSyncing = false; }
+}
 function accStClick(i, v){
   const item = document.getElementById('acc-'+i);
   const was = item ? parseInt(item.dataset.st, 10) : ST_NE;
@@ -4311,7 +4341,8 @@ function mkAddRow(i, code, t, x){
     + '<input type="text" class="mk-x" placeholder="那一刻發生了什麼（可空白）" value="' + esc(x || '') + '">'
     + '<button type="button" class="mini-btn mk-del" title="刪掉這一列">×</button>';
   box.appendChild(row);
-  row.querySelector('.mk-t').oninput = () => refreshMk(i, code);
+  /* 打時間戳會讓 refreshMk 自動把那條勾起來，所以也要同步職能狀態 */
+  row.querySelector('.mk-t').oninput = () => { refreshMk(i, code); syncAccStFromMk(i); };
   row.querySelector('.mk-del').onclick = () => {
     row.remove();
     if (!box.children.length) mkAddRow(i, code);   /* 至少留一列，不然沒地方打字 */
@@ -4356,6 +4387,9 @@ function setMkNeg(i, code, v){
     if (chk && chk.checked) chk.checked = false;
   }
   refreshMk(i, code);
+  /* 標了 No／反 等於那條沒做到，勾選會被取消——職能狀態也要跟著降下來，
+     不然會出現「這項到位、可是底下有一條寫著反例」這種自相矛盾的畫面。 */
+  syncAccStFromMk(i);
 }
 /* 把某條標記的 No／反 清成「沒選」。勾「做到」時會叫它。 */
 function clearMkNeg(i, code){
