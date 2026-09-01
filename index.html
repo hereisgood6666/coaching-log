@@ -1801,6 +1801,74 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* 兩欄等高感：右欄兩個欄位之間的間距沿用原本 .acc-field 的節奏，不另外定義 */
   .acc-fields { display: flex; flex-direction: column; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   §44 第 4 批：客戶頁（L2 詳情兩欄／L4 職能覆蓋）
+   規格：文件/BUILD交接包_V3桌機設計_2026-09-01.md「第 4 批」**更正後**的版本
+   來源：教練管理系統UI優化_V3/靜態版/isClient.html
+
+   L4 的橫條照設計稿：高 7px、圓角、左邊職能全名、右邊 N/M。
+   顏色沿用熱力圖的 data-lv（--hm-* 那組），不另定色票。 */
+.cov-row {
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(60px,1.3fr) auto;
+  align-items: center; gap: 10px; padding: 5px 0;
+}
+.cov-label { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cov-track { height: 7px; border-radius: var(--r-pill); background: var(--line-3); overflow: hidden; }
+.cov-fill  { display: block; height: 100%; border-radius: var(--r-pill); background: var(--cool-2); }
+/* 一條都沒標到：留空槽，不上色——沒標到不等於沒做到 */
+.cov-fill[data-lv="none"] { background: transparent; }
+.cov-fill[data-lv="1"] { background: #DCE9EE; }
+.cov-fill[data-lv="2"] { background: var(--cool-2); }
+.cov-fill[data-lv="3"] { background: #4E96AC; }
+.cov-fill[data-lv="4"] { background: var(--cool); }
+.cov-num {
+  font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  white-space: nowrap; min-width: 54px; text-align: right;
+}
+@media (min-width: 1024px) {
+  /* L2：客戶詳情桌機兩欄 1.35fr 1fr（設計稿 isClient 唯一那個 1.35fr 1fr，
+     底下裝的就是「自評趨勢 ｜ 職能覆蓋」）。
+     右欄同樣不寫死（第 2 批的教訓），只給比例。 */
+  #view-client-detail { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr);
+                        gap: 0 16px; align-items: start; }
+  #view-client-detail > .card:not(#client-chart-card):not(#client-cov-card),
+  #view-client-detail > .actions,
+  #view-client-detail > div:not(.card):not(.actions) { grid-column: 1 / -1; }
+  #client-chart-card { grid-column: 1; }
+  #client-cov-card   { grid-column: 2; }
+
+  /* ── L1：桌機 master-detail（Yi-En 2026-09-01 R2：「留著直接換人（照設計）」）──
+     只在**客戶詳情**這個畫面生效：左邊 280px 清單留著、右邊換內容。
+     「客戶列表」那個畫面維持現況的卡牆，所以：
+       · `showView()` 的語意沒有改（仍然一次一個 view）
+       · 導覽堆疊沒有改 → §31 的 navPush／navRestore 八條不受影響
+       · 在客戶詳情按上一頁 → 照舊回到「客戶列表」（卡牆），行為與現在完全相同
+     手機（<1024）整段不生效：仍然整頁換詳情、按「返回客戶列表」才換人。
+
+     `.hidden` 帶 `!important`，所以這裡也要 `!important` 才蓋得掉；
+     選擇器特異性 (0,2,1) 高於 `.hidden` 的 (0,1,0)，加上寫在樣式表尾端，兩層都贏。 */
+  body[data-view="clientdetail"] #app {
+    display: grid; grid-template-columns: 280px minmax(0, 1fr);
+    gap: 0 18px; align-items: start;
+  }
+  body[data-view="clientdetail"] .page-head,
+  body[data-view="clientdetail"] .footer { grid-column: 1 / -1; }
+  body[data-view="clientdetail"] #view-clients.hidden { display: block !important; }
+  body[data-view="clientdetail"] #view-clients { grid-column: 1; }
+  body[data-view="clientdetail"] #view-client-detail { grid-column: 2; }
+  /* 清單擠進 280px：卡牆改單欄。**同一份 HTML，只換格線** */
+  body[data-view="clientdetail"] .client-grid { grid-template-columns: minmax(0, 1fr); }
+  /* 窄欄裡放不下也用不到的東西收起來（新增客戶在卡牆那頁做） */
+  body[data-view="clientdetail"] #new-client-box { display: none; }
+  /* 現在看的是誰——左欄那張卡標出來。
+     用 class 而不是屬性選擇器：CSS 無法比對「卡片的 data-cid 等於 body 的 data-cid」。
+     class 由 markCurrentClientCard() 用 querySelectorAll 全部一起換
+     （lessons：同一份片段渲染多處就用 class，不要寫死 id、不要另渲染一份）。 */
+  body[data-view="clientdetail"] .ccard.on {
+    border-color: var(--warm); box-shadow: inset 3px 0 0 var(--warm);
+  }
+}
 </style>
 </head>
 <body>
@@ -2280,6 +2348,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <div class="card" id="client-chart-card">
       <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
       <div class="chart-box" id="clientChart"></div>
+    </div>
+    <!-- L4（V3 第 4 批）：這位客戶的職能覆蓋。八列橫條，照設計稿 isClient。
+         資料一律走 markerHitStats()，只是把輸入限縮成這位客戶的紀錄——
+         不另寫算法（CLAUDE.md §七-10：同一份資料只能有一個計算來源）。 -->
+    <div class="card" id="client-cov-card">
+      <label style="margin-top:0">這位客戶的職能覆蓋</label>
+      <div class="sub-note" id="cov-sub"></div>
+      <div id="cov-rows"></div>
     </div>
     <div class="card" id="client-info"></div>
     <div class="actions">
@@ -5023,6 +5099,9 @@ function showView(v) {
   exportCollapse();          /* 換頁時把展開中的匯出清單收起來，免得回來按一下就直接產檔 */
   const changed = (v !== currentView);
   currentView = v;
+  /* L1（V3 第 4 批）：CSS 靠這個屬性決定桌機要不要進 master-detail。
+     用屬性而不是另寫一套渲染——同一份 DOM，兩種版面。 */
+  document.body.dataset.view = v;
   applyPageHead(v);
   document.getElementById('view-new').classList.toggle('hidden', v!=='new');
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
@@ -5895,6 +5974,46 @@ function markerHitStats(recs){
    原因見 markerHitStats 的註解——推導版的實際分佈落在 39~100%，
    切在 25／50／75 的話 83% 與 97% 同色，整張圖看起來就「全部一樣」。
    50／75／90 之下：39%、41% → 偶爾；82~89% → 常常；93~100% → 幾乎每場。 */
+/* L4（V3 第 4 批）這位客戶的職能覆蓋。
+   **輸入是這位客戶的紀錄，算法完全沿用 markerHitStats()／hitLevel()，這裡不做任何計算。**
+   「標到幾條」＝該職能底下有被標到過（hits > 0）的 marker 條數。 */
+function clientCoverage(recs){
+  return markerHitStats(recs || []).map(g => {
+    const total = g.markers.length;
+    const touched = g.markers.filter(m => m.hits > 0).length;
+    return { i: g.i, label: ACC[g.i][0], assessed: g.assessed,
+             touched: touched, total: total,
+             rate: total ? touched / total : 0,
+             lv: hitLevel(touched, total ? touched / total : 0) };
+  });
+}
+/* L1：標出左欄「現在看的是誰」。清單可能還沒渲染（例如直接進詳情），
+   所以 renderClients() 之後也要再呼叫一次——兩處共用這一個函式，不產生第二套邏輯。 */
+function markCurrentClientCard(id){
+  document.querySelectorAll('#client-list .ccard').forEach(el =>
+    el.classList.toggle('on', !!id && el.dataset.cid === id));
+}
+function renderClientCoverage(recs){
+  const box = document.getElementById('cov-rows');
+  const sub = document.getElementById('cov-sub');
+  if (!box) return;
+  const rs = recs || [];
+  if (!rs.length){
+    /* 沒有紀錄＝還沒評估，不是沒做到（CLAUDE.md §七-1） */
+    sub.textContent = '';
+    box.innerHTML = '<div class="acc-none">這位客戶還沒有紀錄，八大職能都還沒評估。</div>';
+    return;
+  }
+  const rows = clientCoverage(rs);
+  sub.textContent = '這 ' + rs.length + ' 場裡，八大職能各標到幾條';
+  box.innerHTML = rows.map(r =>
+    '<div class="cov-row">'
+    + '<span class="cov-label">' + esc(r.label) + '</span>'
+    + '<span class="cov-track"><span class="cov-fill" data-lv="' + r.lv
+    + '" style="width:' + Math.round(r.rate * 100) + '%"></span></span>'
+    + '<span class="cov-num">' + (r.assessed ? r.touched + '/' + r.total : '還沒評估') + '</span>'
+    + '</div>').join('');
+}
 function hitLevel(hits, rate){
   if (!hits) return 'none';
   const p = rate * 100;
@@ -6739,7 +6858,7 @@ function renderClients(){
           + '" style="width:' + (t.v === null ? 0 : t.v * 10) + '%"></div></div>'
         + '<span class="ct-val" data-lv="' + t.lv + '">' + t.valText + ' ' + t.dText + '</span>'
       + '</div>').join('');
-    return `<div class="ccard" onclick="openClient('${x.c.id}')">
+    return `<div class="ccard" data-cid="${x.c.id}" onclick="openClient('${x.c.id}')">
     <div class="ccard-top">
       <span class="ccard-id"><span class="ccard-code">${esc(x.c.code)}</span><span class="ccard-st" data-s="${x.c.status==='closed'?'closed':'active'}">${x.c.status==='closed'?'已結案':'進行中'}</span></span>
       <span class="ccard-meta">${meta}</span>
@@ -6786,6 +6905,7 @@ function renderClientInsight(){
         + '<span class="prac-n">練了 ' + x.n + ' 場</span></div>'
         + (x.tip ? '<div class="prac-tip">' + esc(x.tip) + '</div>' : '') + '</div>').join('')
     : '<div class="acc-none">還沒有連續出現兩場以上的焦點。</div>';
+  markCurrentClientCard(currentClientId);
 }
 /* recap 卡的五個欄位：對齊 coaching-recap 的核心結構（議題／成果／衡量／重要性／阻礙）。
    全部取自既有資料，沒有新增任何欄位：
@@ -6838,6 +6958,8 @@ function copyClientRecap(id){
 function openClient(id){
   currentClientId = id;
   const c = clientById(id); if (!c) return;
+  /* L1：讓左欄那張卡標出「現在看的是誰」。不另外渲染一份清單。 */
+  markCurrentClientCard(id);
   const st = clientStats(id);                       // 與客戶列表同一份統計
   const rs = st.rs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
 
@@ -6902,6 +7024,8 @@ function openClient(id){
   }
   /* M2（2026-08-28）：recap 卡已撤下（與歷史紀錄重複）。容器不在 DOM 裡，這裡不再渲染。
      clientRecapRows()／copyClientRecap() 暫留在相容層，等確認無其他依賴再清死碼。 */
+
+  renderClientCoverage(rs);
 
   /* 客戶資料編輯。2026-08-28（Yi-En 實機回報）：這一整組常駐在詳情頁最下面是噪音。
      但整段刪掉會一起失去三個能力——改代號、改「開始記錄前已談次數」（會談次數自動編號要用它）、
