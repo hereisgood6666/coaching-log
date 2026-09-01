@@ -21,6 +21,13 @@
   --line:      #E0DBD2;
   --line-2:    #ECE7DE;
   --line-3:    #F0ECE5;
+  /* 2026-09-01 Yi-En：「整個版面除了最左欄以外，還分了三個顏色」。
+     三個值全部照抄設計稿靜態版 isHome.html 的 inline style，不是我自己配的：
+       header rgb(250,248,244) / aside rgb(246,242,236) / 兩條分隔線 rgb(228,223,214)
+     中間那欄就是 --bg #EFEBE4（設計稿最外層），已經是現況，不動。 */
+  --head-bg:   #FAF8F4;
+  --side-bg:   #F6F2EC;
+  --zone-line: #E4DFD6;
   --line-dash: #CDC5B8;
   --warm:      #A6604A;
   --warm-2:    #C08A6E;
@@ -572,10 +579,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      margin:0 auto 之後，內容在側欄右側那塊區域裡置中——等同設計稿的
      main{justify-content:center} ＋ 內容 max-width:1180px。
      只掛在 #app：#auth-screen 也吃 .wrap，掛在 body 或 .wrap 會把登入頁一起推開。 */
+  /* --app-pt / --app-px ＝ 這一段斷點的上內距與左右內距。
+     頁首橫條與首頁右欄面板都靠負 margin 撐到內容區邊緣，用的就是這兩個值。
+     **內距與變數必須寫在同一條規則裡**：桌機有三段斷點（≥1180／1100–1179／1024–1099），
+     內距各不相同，先前變數只寫兩段，1100–1179 那段就漏了 20px，整頁橫捲。 */
   #app {
+    --app-pt: 34px; --app-px: var(--content-pad);
     max-width: calc(var(--content-max) + var(--nav-w));
     margin: 0 auto;
-    padding: 34px var(--content-pad) 80px calc(var(--nav-w) + var(--content-pad));
+    padding: var(--app-pt) var(--app-px) 80px calc(var(--nav-w) + var(--app-px));
   }
   .tabs {
     position: fixed; top: 0; bottom: 0; left: 0; width: var(--nav-w); margin: 0;
@@ -612,7 +624,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    少掉的寬度從右欄（268→232）與欄距（34→24）取回，左欄仍吃剩餘空間。
    1100px 實際：1100 − 252（側欄+左內距）− 20（右內距）= 828；828 − 232 − 24 = 572。 */
 @media (min-width: 1100px) and (max-width: 1179.98px) {
-  #app { max-width: none; margin: 0; padding: 24px 20px 60px calc(var(--nav-w) + 20px); }
+  #app { --app-pt: 24px; --app-px: 20px;
+         max-width: none; margin: 0; padding: var(--app-pt) var(--app-px) 60px calc(var(--nav-w) + var(--app-px)); }
   #view-new { grid-template-columns: minmax(0, 1fr) 232px; gap: 0 24px; }
 }
 @media (min-width: 1180px) {
@@ -625,7 +638,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 }
 @media (min-width: 1024px) and (max-width: 1099.98px) {
   /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
-  #app { max-width: none; margin: 0; padding: 24px 20px 60px calc(var(--nav-w-narrow) + 20px); }
+  #app { --app-pt: 24px; --app-px: 20px;
+         max-width: none; margin: 0; padding: var(--app-pt) var(--app-px) 60px calc(var(--nav-w-narrow) + var(--app-px)); }
   .tabs { width: var(--nav-w-narrow); padding: 20px 8px; align-items: stretch; }
   .credcard { margin-top: 0; }
   .tab { text-align: center; padding: 11px 4px; font-size: 12.5px; }
@@ -1386,6 +1400,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .step-eyebrow { height: 19px; line-height: 19px; font-size: 11.5px; letter-spacing: .06em; color: var(--warm); }
 .step-eyebrow-sub, .step-eyebrow-sub.link { font-size: 11.5px; font-weight: 400; letter-spacing: 0; color: var(--ink-4); }
 #page-sub { font-size: 13.5px; color: var(--ink-3); }
+/* 沒有副標的頁面（首頁）必須整塊消失：.sub 帶 margin-bottom:14px，
+   只是文字空的話仍會撐出 14px＋head-main 的 5px gap，h1 與右上按鈕就對不齊。 */
+#page-sub:empty { display: none; }
 @media (min-width: 1024px) {
   /* 26px 只在桌機套用：設計稿只畫 1440px，手機沿用既有 20px，避免窄螢幕標題換行破版 */
   #page-h1 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
@@ -1934,11 +1951,21 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .miss-n { padding: 2px 9px; border-radius: 20px; background: var(--warm);
           color: var(--surface); font-size: 11px; font-weight: 700; }
 .miss-hint { margin-left: auto; font-size: 12px; color: var(--warm-ink); }
-.miss-row { margin-top: 10px; padding: 11px 13px; background: var(--surface);
+/* 一場一列（2026-09-01 Yi-En）。左：頭像＋代號／第 N 場　右：一顆「記這一場」。
+   頭像沿用首頁客戶卡 .hcli-av 的尺寸與圓角，兩張卡在同一欄裡不會看起來像兩套東西。 */
+.miss-row { display: flex; align-items: center; gap: 11px;
+            margin-top: 10px; padding: 11px 13px; background: var(--surface);
             border: 1px solid var(--warm-line); border-radius: 10px; }
-.miss-line { font-size: 14px; color: var(--ink); }
-.miss-dup { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); }
-.miss-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.miss-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+           background: var(--warm-bg); color: var(--warm-ink);
+           display: flex; align-items: center; justify-content: center;
+           font-size: 13px; font-weight: 700; }
+.miss-id { flex: 1 1 0; min-width: 0; display: block; }
+.miss-code { display: block; font-size: 14px; font-weight: 700; color: var(--ink);
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.miss-sub { display: block; margin-top: 1px; font-size: 12.5px; color: var(--ink-3); }
+.miss-go { flex: 0 0 auto; }
+.miss-dup { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
 .btn-sm { padding: 6px 12px; font-size: 12.5px; }
 
 /* H4 客戶 */
@@ -2069,6 +2096,37 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .nav-new .t-full { display: none; }
   .nav-new .t-short { display: inline; }
   .nav-new .nav-wip { display: none; }
+}
+/* ═══ 2026-09-01 Yi-En：桌機三分區底色 ═══════════════════════════════
+   最左欄（側欄）已是深色。剩下的內容區照設計稿分三塊：
+     頂部橫條 --head-bg（幾乎白）／中欄 --bg（頁面底色）／右欄 --side-bg（比中欄淺一階）
+   兩條 1px --zone-line 分隔。
+
+   做法：頁首與右欄各自用負 margin 撐到內容區的邊緣，再把同樣的值加回 padding，
+   **內容的座標一格都沒有移動**——眉標與 h1 仍在原來的 y，只是底下多了一塊底色。
+   #app 的內距在兩個桌機斷點不同（34/40 與 24/20），所以先寫成變數再用，
+   不寫死數字；寫死的話 1024–1099px 那段會露出一條沒有底色的縫。 */
+@media (min-width: 1024px) {
+  .page-head {
+    background: var(--head-bg);
+    border-bottom: 1px solid var(--zone-line);
+    margin: calc(var(--app-pt) * -1) calc(var(--app-px) * -1) 16px;
+    padding: calc(var(--app-pt) + 19px) var(--app-px) 18px;
+  }
+  /* 眉標是 position:absolute top:0 left:0，跟著 padding 一起挪回原位 */
+  .step-eyebrow { top: var(--app-pt); left: var(--app-px); }
+
+  /* 右欄面板。align-items 從 start 改成 stretch，面板才會跟左欄一樣高；
+     .home-side 自己是 align-content:start，卡片仍然靠上，不會被拉開。 */
+  .home-wrap { align-items: stretch; }
+  .home-side {
+    background: var(--side-bg);
+    border-left: 1px solid var(--zone-line);
+    /* 上內距與 .home-main 相同 → 兩欄第一張卡的上緣切齊（她：「視覺上的 alignment 要把關」） */
+    padding: 18px var(--app-px) 22px 18px;
+    margin-right: calc(var(--app-px) * -1);
+  }
+  .home-main { padding-top: 18px; }
 }
 </style>
 </head>
@@ -5164,8 +5222,10 @@ function onClientSearch(){
 const VIEW_HEAD = {
   /* §46 首頁。標題與右上動作照設計稿 header（23px h1 ＋「＋ 記一場」）。
      眉標放今天的日期，不是步驟——見 applyPageHead()。 */
+  /* 2026-09-01 Yi-En：「這句話可以刪掉」。首頁沒有副標。
+     副標一拿掉，h1 與右上「＋ 記一場」就自動對齊了——.head-row 是 align-items:flex-end，
+     副標在的時候按鈕對齊的是副標的下緣，不是 h1 的下緣。這是她圈的 alignment 的成因。 */
   home: { title: '今天想記哪一位？',
-          sub: '會談結束十五分鐘內寫完，記得最清楚。',
           actions: [['＋ 記一場', 'startNewRecord()', 'btn-primary', 'btn-home-new']] },
   new1: { title: '這一場發生了什麼',
           sub: '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。' },
@@ -7943,22 +8003,34 @@ function renderHomeMissing(){
   const total = rows.reduce((t, x) => t + x.miss.length, 0);
   if (badge){ badge.textContent = total ? String(total) : ''; badge.classList.toggle('hidden', !total); }
   const q = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
-  list.innerHTML = rows.map(x => {
+  /* 2026-09-01 Yi-En：「左邊就是好好放名字，然後下標示，如果他有好幾場，你就分別記就好了」。
+     ＝ 一個缺漏場次一列（不是一位客戶一句話），左邊頭像＋代號、下面「第 N 場」、右邊一顆按鈕。
+     設計稿那列的「8/26 · 60 分鐘 · 3 天前」算不出來（缺的那場從來沒被記過，沒有日期也沒有時長），
+     所以下面那行只寫場次號——寧可少一個欄位，也不編一個看起來像真的的時間。 */
+  const av = c => esc(String(c || '?').slice(0, 1));
+  const html = [];
+  rows.forEach(x => {
     const code = x.code || '找不到的客戶';
-    /* 中文代號後面不加空格，英文代號才加（「詩詩的第 1 場」／「Jacquelyn 的第 1 場」） */
+    x.miss.forEach(m => {
+      html.push('<div class="miss-row">'
+        + '<span class="miss-av">' + av(code) + '</span>'
+        + '<span class="miss-id"><span class="miss-code">' + esc(code) + '</span>'
+          + '<span class="miss-sub">第 ' + m + ' 場</span></span>'
+        + '<button type="button" class="btn btn-ghost btn-sm miss-go" onclick="startMakeup('
+          + q(x.clientId) + ',' + m + ')">記這一場</button>'
+        + '</div>');
+    });
+  });
+  /* 重複不是缺漏：不給按鈕、也不算進上面那顆數字，只放一句提醒。
+     語氣照 CLAUDE.md §七-9——「看看是不是」，不是「你記錯了」。 */
+  rows.forEach(x => {
+    if (!x.dup.length) return;
+    const code = x.code || '找不到的客戶';
     const who = esc(code) + (/[\u4e00-\u9fff]$/.test(code) ? '的' : ' 的');
-    const miss = x.miss.length
-      ? '<div class="miss-line">' + who + '第 ' + x.miss.join('、') + ' 場還沒有紀錄</div>' : '';
-    /* 重複只是提醒，不是錯誤——用「看看是不是」而不是「你記錯了」 */
-    const dup = x.dup.length
-      ? '<div class="miss-dup">' + who + '第 ' + x.dup.join('、')
-        + ' 場有兩筆以上，看看是不是同一場記了兩次</div>' : '';
-    const btns = x.miss.map(m =>
-      '<button type="button" class="btn btn-ghost btn-sm" onclick="startMakeup('
-        + q(x.clientId) + ',' + m + ')">補記第 ' + m + ' 場</button>').join('');
-    return '<div class="miss-row">' + miss + dup
-      + (btns ? '<div class="miss-acts">' + btns + '</div>' : '') + '</div>';
-  }).join('');
+    html.push('<div class="miss-dup">' + who + '第 ' + x.dup.join('、')
+      + ' 場有兩筆以上，看看是不是同一場記了兩次</div>');
+  });
+  list.innerHTML = html.join('');
 }
 function renderHomeClients(){
   const box = document.getElementById('home-cli');
