@@ -2337,7 +2337,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       </div>
     </section>
 
-    <!-- 4. 這一場的衡量（§13-C4：四條滑桿） -->
+    <!-- 4. 這一場的衡量（2026-09-01 Yi-En：四條滑桿 → 兩條）
+         撤掉「客戶的投入程度」(feel) 與「我覺得客戶的感受」(clientfeel) 兩條滑桿。
+         **欄位沒有刪**：線上 62 場舊紀錄這兩個值都有，磁碟上原樣保留，
+         編輯舊紀錄時由 saveRecord 原樣帶回（見那裡的註解），只是不再收集、不再進趨勢圖。
+         「我覺得客戶的感受」保留成文字欄位——她要留的是這一件事，不是那個數字。 -->
     <section class="card fold" data-fold="score" id="sec-score">
       <button type="button" class="fold-head" onclick="toggleFold('score')">
         <span class="fold-title">這一場的衡量</span>
@@ -2352,12 +2356,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
                oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
         <span class="score-val" id="perfVal">7</span>
       </div>
-      <label>客戶的投入程度 <span class="hint">他真的在想，還是在應付</span></label>
-      <div class="score-wrap">
-        <input type="range" id="f-feel" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('feelVal').textContent=this.value;markTouched('score')">
-        <span class="score-val" id="feelVal">7</span>
-      </div>
       <label>這一場的推進感 <span class="hint">他離目標更近了嗎</span></label>
       <div class="score-wrap">
         <input type="range" id="f-progress" min="0" max="10" step="0.5" value="7"
@@ -2367,14 +2365,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <span class="score-val" id="progressVal">7</span>
       </div>
       <label>我覺得客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
-      <div class="score-wrap">
-        <input type="range" id="f-clientfeel" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('clientfeelVal').textContent=this.value;markTouched('score');clearScoreUnset('clientfeel')"
-               onpointerup="clearScoreUnset('clientfeel')"
-               onkeyup="clearScoreUnset('clientfeel')">
-        <span class="score-val" id="clientfeelVal">7</span>
-      </div>
-      <label>因為 <span class="hint">為什麼覺得客戶是這個感受</span></label>
       <textarea id="f-because" placeholder="例：客戶談到轉職時聲音變亮、身體往前傾"></textarea>
       </div>
     </section>
@@ -3875,7 +3865,7 @@ function recordMainHTML(r){
     <div class="topic">${topicText(r) ? esc(topicText(r)) : '（沒填議題）'}</div>
     <div class="scorebox">
       ${SCORES.map(([k,n])=>`<div class="score">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
-      ${r.because?`<div class="because"><b>因為</b>　${esc(r.because)}</div>`:''}
+      ${r.because?`<div class="because"><b>我覺得客戶的感受</b>　${esc(r.because)}</div>`:''}
     </div>
     ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
     ${r.prevFocus?`<div class="lbl">上次說要盯</div><div>「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div>`:''}
@@ -3966,7 +3956,10 @@ const PDF_BLOCKS = [
   ['日期與客戶代號',        r => !!(r.date || r.client)],
   ['會談次數',              r => !!r.session],
   ['這一場的議題',          r => !!topicText(r)],
-  ['三個分數與「因為」',    r => r.perf != null || r.feel != null || r.clientfeel != null],
+  /* 2026-09-01：四條滑桿收成兩條，標籤不可以繼續寫「三個分數」。
+     判定把撤下的兩個欄位一起留著——舊紀錄只有 feel／clientfeel 時，這一段仍然算「有內容」。 */
+  ['衡量分數與感受',        r => r.perf != null || r.progress != null
+                                 || r.feel != null || r.clientfeel != null],
   ['馬上掉出來的問題',      r => !!r.instant],
   ['上次說要盯與結果',      r => !!String(r.prevFocus||'').trim()],
   ['下一場只盯這一件事',    r => !!String(r.focus||'').trim()],
@@ -4219,7 +4212,7 @@ function reflectionAnswers(r){
   const q5 = [String(r.insight||'').trim()].filter(Boolean);
   const q6 = [String(r.notCaught||'').trim() ? '當下沒接住的：' + String(r.notCaught).trim() : '']
                .filter(Boolean).concat(String(r.because||'').trim()
-               ? ['客戶感受的依據：' + String(r.because).trim()] : []);
+               ? ['我覺得客戶的感受：' + String(r.because).trim()] : []);
   const q7 = loadQ().filter(q=>!q.answered).slice(0,2).map(q=>String(q.q||'').trim()).filter(Boolean);
   const num = (n, arr) => arr.length ? arr.map(t=>n + '. ' + t) : [n + '. （這一場沒有填）'];
   return {
@@ -4407,17 +4400,21 @@ function renderChart() {
                                         vals: arr.map(r=>scoreNum(r,k)) }));
   document.getElementById('trendChart').innerHTML = svgLineChart(labels, series);
 }
-/* ═══ §14-2 四條滑桿的顯示名稱與取值：只有這一份 ═══
-   欄位名一律不動（perf / feel / clientfeel / progress），只改顯示的字。
+/* ═══ §14-2 兩條滑桿的顯示名稱與取值：只有這一份 ═══
+   欄位名一律不動（perf / progress），只改顯示的字。
    progress 是 2026-08-24 才有的欄位，舊紀錄沒有 → 顯示端一律「—」。
    編輯表單可以給預設 7（那是輸入的起點），但顯示、bar、平均絕對不可以套那個 7，
-   否則就是把「沒填」講成「7 分」——跟「不要把沒有填當成未到位」是同一條線。 */
+   否則就是把「沒填」講成「7 分」——跟「不要把沒有填當成未到位」是同一條線。
+
+   2026-09-01 Yi-En：四條 → 兩條，順序照設計稿圖例（推進感在前、專注在後）。
+   feel／clientfeel 移到 LEGACY_SCORES：**磁碟上的舊值一律保留**，只是不再收集、
+   不再進趨勢圖與客戶卡。要再看到它們，把 key 加回 SCORES 就會回來，資料還在。 */
 const SCORES = [
-  ['perf',       '我的專注程度'],
-  ['feel',       '客戶的投入程度'],
   ['progress',   '推進感'],
-  ['clientfeel', '我覺得客戶的感受']
+  ['perf',       '專注']
 ];
+/* 已撤下但仍存在於舊紀錄裡的衡量欄位。saveRecord 靠這份清單在整筆取代前把舊值帶回。 */
+const LEGACY_SCORES = ['feel', 'clientfeel'];
 function scoreVal(r, k){
   const v = r ? r[k] : null;
   return (v === undefined || v === null || v === '') ? null : v;
@@ -4614,7 +4611,7 @@ function recordToText(r) {
   if(r.mins) lines.push('時長：'+r.mins+' 分鐘');
   if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
   SCORES.forEach(([k,n])=>lines.push(n+'：'+scoreText(r,k)));
-  if(r.because) lines.push('　因為：'+r.because);
+  if(r.because) lines.push('　我覺得客戶的感受：'+r.because);
   if(r.prevFocus) lines.push('上次說要盯：'+r.prevFocus+(r.prevFocusResult?'　→　'+focusResultLabel(r.prevFocusResult):''));
   if(r.focus) lines.push('下一場只盯這一件事：'+r.focus);
   if(r.clientQuote) lines.push('他自己說的一句話：'+r.clientQuote);
@@ -5652,11 +5649,10 @@ function saveRecord(later) {
     clientId: clientId,
     instant: document.getElementById('f-instant').value.trim(),
     perf: document.getElementById('f-perf').value,
-    feel: document.getElementById('f-feel').value,
-    /* §13-C4 第四條滑桿。舊紀錄沒有這個欄位，所有讀取端一律 ?? ''，
+    /* §13-C4。舊紀錄沒有這個欄位，所有讀取端一律 ?? ''，
        畫面上不會出現 undefined，也不必改寫磁碟上的舊資料。 */
     progress: document.getElementById('f-progress').value,
-    clientfeel: document.getElementById('f-clientfeel').value,
+    /* feel／clientfeel 不再收集（2026-09-01）。舊值由下面的 LEGACY_SCORES 帶回，不在這裡產生。 */
     because: document.getElementById('f-because').value.trim(),
     good: getItems('good-list'),
     improve: getItems('improve-list'),
@@ -5681,7 +5677,15 @@ function saveRecord(later) {
   const arr = load();
   if (editId) {
     const idx = arr.findIndex(r=>r.id===editId);
-    if (idx>=0) arr[idx] = rec;
+    if (idx>=0) {
+      /* ⚠ 這一行是整筆取代（arr[idx] = rec），不是欄位合併。
+         2026-09-01 撤掉 feel／clientfeel 兩條滑桿之後，rec 裡不會再有這兩個欄位——
+         線上 62 場舊紀錄**每一場都有值**，只要被編輯一次就會被清空。
+         所以在取代之前把舊值原樣搬進 rec：不再收集、不再顯示在趨勢圖，但絕不刪。
+         同理適用於任何日後撤掉的欄位：加進 LEGACY_SCORES 即可。 */
+      LEGACY_SCORES.forEach(k => { if (arr[idx][k] !== undefined) rec[k] = arr[idx][k]; });
+      arr[idx] = rec;
+    }
   } else {
     arr.push(rec);
   }
@@ -5712,11 +5716,9 @@ function resetForm() {
   document.getElementById('f-client-pre').value = '0';
   document.getElementById('f-instant').value = '';
   document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
-  document.getElementById('f-feel').value = 7; document.getElementById('feelVal').textContent = '7';
   document.getElementById('f-progress').value = 7; document.getElementById('progressVal').textContent = '7';
-  document.getElementById('f-clientfeel').value = 7; document.getElementById('clientfeelVal').textContent = '7';
   _scoreUnset = new Set();
-  ['progressVal','clientfeelVal'].forEach(id => document.getElementById(id).classList.remove('unset'));
+  ['progressVal'].forEach(id => document.getElementById(id).classList.remove('unset'));
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
   document.getElementById('f-topic').value = '';
@@ -6818,7 +6820,7 @@ function openDetail(id, from) {
     ${topicHTML(r)}
     <div class="score-lines">
       ${SCORES.map(([k,n])=>`<div class="score-line">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
-      ${r.because?`<div class="because-note"><span class="bl">因為</span>　${esc(r.because)}</div>`:''}
+      ${r.because?`<div class="because-note"><span class="bl">我覺得客戶的感受</span>　${esc(r.because)}</div>`:''}
     </div>
     ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
     ${r.prevFocus?`<div class="detail-field"><div class="detail-label">上次說要盯</div><div class="detail-val">「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div></div>`:''}
@@ -6870,9 +6872,8 @@ function editCurrent() {
   document.getElementById('f-mins').value = r.mins || '';
   document.getElementById('f-instant').value = r.instant || '';
   document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
-  document.getElementById('f-feel').value = r.feel; document.getElementById('feelVal').textContent = r.feel;
   _scoreUnset = new Set();
-  ['progress','clientfeel'].forEach(k => {
+  ['progress'].forEach(k => {
     const v = r[k];
     if (v === undefined || v === null || v === '') { markScoreUnset(k); }
     else { document.getElementById('f-'+k).value = v; document.getElementById(k+'Val').textContent = v;
@@ -7142,12 +7143,13 @@ function clientStats(id){
     focusDone, focusAns
   };
 }
-/* ═══ §14-2 客戶卡的三條 bar ═══
-   專注＝perf、投入＝feel、推進感＝progress（欄位名不動，只改顯示的字）。
+/* ═══ §14-2 客戶卡的兩條 bar ═══
+   推進感＝progress、專注＝perf（欄位名不動，只改顯示的字）。
+   2026-09-01：「投入」(feel) 跟著滑桿一起撤下，舊資料保留但不再顯示。
    值＝最近一場；變化量＝最近一場 vs 前一場。
    沒有前一場、或任一邊沒有值（progress 是 8/24 才有的欄位，舊紀錄沒有）
    → 一律「—」。不顯示 0，也不套用編輯表單那個預設 7。 */
-const CLIENT_BARS = [['perf','專注'], ['feel','投入'], ['progress','推進感']];
+const CLIENT_BARS = [['progress','推進感'], ['perf','專注']];
 function clientTrend(clientId){
   const rs = clientRecs(clientId).slice()
     .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
@@ -7685,7 +7687,7 @@ function renderReflect(){
     if (sp <= 1)      { tag='高度同頻'; cls='energy-good'; msg='你、你的表現與客戶幾乎在同一個頻率上，臨在狀態很穩，繼續保持。'; }
     else if (sp <= 2) { tag='大致同頻'; cls='energy-good'; msg='多數會談中你和客戶的狀態接近，偶有落差——留意那幾次發生了什麼。'; }
     else if (sp <= 3) { tag='偶有落差'; cls='energy-mid';  msg='你的感受和客戶感受常不同步，會談中可以多做一次狀態核對（「你現在感覺如何？」）。'; }
-    else              { tag='落差偏大'; cls='energy-low';  msg='分數間的落差偏大，建議直接和客戶核對感受，並把觀察到的證據寫進「因為」欄位。'; }
+    else              { tag='落差偏大'; cls='energy-low';  msg='分數間的落差偏大，建議直接和客戶核對感受，並把觀察到的證據寫進「我覺得客戶的感受」欄位。'; }
     energyHtml = '<span class="energy-tag '+cls+'">'+tag+'</span>平均差距 <b>'+sp+'</b> 分。'+msg;
   }
   // 最常勾選的核心職能（前三）
