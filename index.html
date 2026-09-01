@@ -1688,6 +1688,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* S1 站名與次要文字 */
   .nav-brand-name { color: #EFEBE4; }
   .nav-brand-user { color: rgba(239,235,228,.60); }
+  /* §46-R：站名下方的版本行與底部的帳號行是新元素，一定要一起進深色側欄的配色，
+     否則會是 --ink-3 的深字落在 #2C2A28 上（實測對比 ~2.5:1，§41 那條會紅）。 */
+  .nav-brand-sub, .nav-foot-user { color: rgba(239,235,228,.60); }
 
   /* S2 分組標題：字級、字距、顏色、左右內距。 */
   .nav-group {
@@ -1765,6 +1768,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .tabs .nav-group { color: rgba(239,235,228,.55); }
   .tabs .nav-badge { color: rgba(239,235,228,.55); }
   .tabs .nav-foot-ver { color: rgba(239,235,228,.60); }
+  .tabs .nav-brand-sub, .tabs .nav-foot-user { color: rgba(239,235,228,.60); }
   .tabs .nav-foot-links a { color: rgba(239,235,228,.60); }
   .tabs .nav-foot-links a:hover { color: #EFEBE4; }
   /* 關閉鈕原本吃 --ink-3（深灰），在深底上等於看不見 */
@@ -1912,6 +1916,160 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   #cum-card    { grid-column: 2; grid-row: 2; }
   .phrase-card, #data-tools { grid-column: 1 / -1; }
 }
+
+/* ═══ §46 首頁（V3 第 5 批）══════════════════════════════════════
+   覆寫規則一律寫在樣式表結尾（見 CLAUDE.md §十 與 lessons）。
+   桌機專屬規則包在 @media (min-width:1024px)，右欄用 minmax(0, 320px) 不寫死——
+   1100–1179px 那一段側欄會用回完整 232px，寫死的右欄會把內容擠爆。
+   色票全部用既有變數，沒有新增任何一個。 */
+.home-wrap { display: grid; gap: 14px; align-items: start; }
+.home-main { display: grid; gap: 14px; min-width: 0; }
+.home-side { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.home-side .card { margin: 0; }
+
+/* H1 還沒記的場 */
+.miss-card { background: var(--warm-bg); border-color: var(--warm-line); }
+.miss-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.miss-head label { color: var(--warm-ink); font-size: 15px; font-weight: 700; }
+.miss-n { padding: 2px 9px; border-radius: 20px; background: var(--warm);
+          color: var(--surface); font-size: 11px; font-weight: 700; }
+.miss-hint { margin-left: auto; font-size: 12px; color: var(--warm-ink); }
+.miss-row { margin-top: 10px; padding: 11px 13px; background: var(--surface);
+            border: 1px solid var(--warm-line); border-radius: 10px; }
+.miss-line { font-size: 14px; color: var(--ink); }
+.miss-dup { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); }
+.miss-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+/* H4 客戶 */
+.home-sect-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.home-sect-head label { font-size: 15px; font-weight: 700; }
+.home-sect-head .hint { font-size: 12.5px; color: var(--ink-3); }
+.home-sect-head .btn { margin-left: auto; }
+.home-cli { display: grid; gap: 12px; margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.hcli { display: block; width: 100%; text-align: left; cursor: pointer;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+        padding: 13px 14px; font: inherit; color: inherit; }
+.hcli:hover { border-color: var(--warm-2); }
+.hcli-top { display: flex; align-items: center; gap: 9px; }
+.hcli-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+           background: var(--warm-bg); color: var(--warm-ink);
+           display: flex; align-items: center; justify-content: center;
+           font-size: 13px; font-weight: 700; }
+.hcli-id { flex: 1 1 0; min-width: 0; display: block; }
+.hcli-code { display: block; font-size: 14px; font-weight: 700; }
+.hcli-meta { display: block; font-size: 11.5px; color: var(--ink-3); }
+.hcli .ccard-paid { margin: 0; }
+.hcli-topic { display: block; margin-top: 9px; padding: 7px 9px; border-radius: 8px;
+              background: var(--warm-bg); color: var(--warm-ink); font-size: 12.5px;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hcli-foot { display: flex; align-items: flex-end; gap: 10px; margin-top: 11px; }
+.hbars { display: flex; align-items: flex-end; gap: 3px; height: 34px; }
+.hbar { width: 9px; border-radius: 3px 3px 0 0; background: var(--cool-2); display: inline-block; }
+.hcli-num { flex: 1 1 0; min-width: 0; text-align: right; font-size: 11.5px; color: var(--ink-2); }
+.hcli-more { grid-column: 1 / -1; }
+/* 既有的 .actions .btn 是 flex:1 1 0（整列平分），首頁這兩處要維持按鈕原寸，
+   否則「客戶列表 →」會被拉到一半寬、「補記第 N 場」會撐成三條大長條。 */
+.home-sect-head .btn, .miss-acts .btn { flex: 0 0 auto; }
+.hbar[data-v="na"] { height: 3px; background: var(--line-dash); }
+
+/* H2 三個統計 */
+.home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hstat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+         padding: 13px 14px; min-width: 0; }
+.hstat-l { font-size: 11.5px; color: var(--ink-2); }
+.hstat-b { margin-top: 2px; font-size: 25px; font-weight: 700; line-height: 1.15; }
+.hstat-f { font-size: 11px; color: var(--ink-3); }
+
+/* H3／H5／H6 三張右欄卡 */
+.hcard { padding: 14px 15px; }
+.hcard-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hcard-head label { font-size: 14px; font-weight: 700; }
+.hcard-head .mini-link { margin-left: auto; }
+.hpct { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        background: var(--warm-bg); color: var(--warm-ink); }
+.hq { margin-top: 8px; padding: 9px 11px; background: var(--surface-2);
+      border: 1px solid var(--line-2); border-radius: 9px; }
+.hq-t { font-size: 13px; color: var(--ink); }
+.hq-c { margin-top: 3px; font-size: 11.5px; color: var(--ink-3); }
+.htodo { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+.htodo-n { flex: 1 1 0; min-width: 0; font-size: 13px;
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.htodo-v { font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+.htodo-v .todo-den { margin-left: 5px; font-weight: 400; color: var(--ink-3); }
+
+@media (min-width: 1024px) {
+  .home-wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 0 18px; }
+  /* 2026-09-01 Yi-En：「視覺上的 alignment 要把關」。
+     原本右欄畫了一塊淺色面板，14px 的內距讓右欄第一張卡比左欄低 14px。
+     面板不是設計稿的必要元素（設計稿那塊是整條貼齊視窗邊緣的側欄，本站做不到），
+     對齊比較重要，所以不畫面板，兩欄上緣直接切齊。 */
+  .home-side { padding: 0; }
+}
+
+/* ═══ §46-R 側欄照設計稿重排 ＋ ACC 門檻卡搬到首頁（2026-09-01 Yi-En review）══════
+   舊的 .credcard / .cc-* 樣式**刻意留著沒有刪**：現在沒有任何元素帶那些 class
+   （首頁那張卡用 hc-*，只沿用 id），所以它們是死樣式，等第 8 批收尾一起清。
+   刪一大段 CSS 的風險比留著高——留著不會生效，刪錯會靜靜地壞掉一片。 */
+
+/* 站名下方那一行（設計稿：「v5.1 · 本機模式」）。
+   **顏色一定要在這裡寫成深底用的淺色**：側欄不論桌機或手機抽屜都是深色 #2C2A28，
+   而這個區塊在樣式表結尾，會蓋掉前面深色側欄那一段的同名規則。
+   第一版在這裡寫 var(--ink-3)，實測對比只有 3.11:1（§41 那條當場紅）。 */
+.nav-brand-sub { font-size: 11.5px; margin-top: 2px; color: rgba(239,235,228,.60); }
+/* 底部那一份預設不顯示，只有 1024–1099 的窄側欄（站名整塊被藏起來）才拿出來 */
+.nav-foot-ver { display: none; }
+.nav-foot-user { font-size: 11px; word-break: break-all; color: rgba(239,235,228,.60); }
+.nav-foot-user:empty { display: none; }
+
+/* 「＋ 新增紀錄」主鈕：設計稿把它放在最上面，不是導覽項 */
+.nav-new {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  margin: 14px 0 4px; padding: 11px 12px; border: none; border-radius: 9px;
+  background: var(--warm); color: var(--surface);
+  font-family: inherit; font-size: 13.5px; font-weight: 700; text-align: left; cursor: pointer;
+}
+.nav-new:hover { background: var(--warm-d); }
+.nav-new .t-short { display: none; }
+.nav-new .nav-wip { background: rgba(255,252,248,.22); color: var(--surface); }
+
+/* ACC 門檻卡（從側欄搬到首頁右欄）。class 全部是 hc-*，跟側欄那套 cc-* 沒有交集。
+   四段 tone 用既有的 --segN-*，沒有新增色票。 */
+#credcard { --hc-ink: var(--ink-2); --hc-bar: var(--cool); }
+#credcard[data-seg="1"] { --hc-ink: var(--seg1-ink); --hc-bar: var(--seg1-bar); }
+#credcard[data-seg="2"] { --hc-ink: var(--seg2-ink); --hc-bar: var(--seg2-bar); }
+#credcard[data-seg="3"] { --hc-ink: var(--seg3-ink); --hc-bar: var(--seg3-bar); }
+#credcard[data-seg="4"] { --hc-ink: var(--seg4-ink); --hc-bar: var(--seg4-bar); }
+.hc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hc-title { font-size: 14px; font-weight: 700; }
+.hc-pct { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+          background: var(--warm-bg); color: var(--hc-ink); font-variant-numeric: tabular-nums; }
+.hc-more { margin-left: auto; }
+.hc-switch { display: flex; gap: 3px; }
+.hc-switch button {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700;
+  font-family: inherit; cursor: pointer; min-height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.hc-switch button.on { background: var(--hc-bar); border-color: var(--hc-bar); color: var(--surface); }
+.hc-sum { display: flex; align-items: center; gap: 8px; margin-top: 3px;
+          font-size: 11.5px; color: var(--ink-3); }
+.hc-sum .hc-switch { margin-left: auto; }
+.hc-foot { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
+.hc-tier { font-size: 10.5px; font-weight: 700; white-space: nowrap; padding: 2px 8px;
+           border-radius: 20px; background: var(--surface-2); color: var(--hc-ink); }
+.hc-miss { flex: 1 1 0; min-width: 0; font-size: 11px; color: var(--hc-bar); line-height: 1.55; }
+
+@media (min-width: 1024px) and (max-width: 1099.98px) {
+  /* 76px 的窄側欄：站名整塊是隱藏的，版本與同步狀態改由底部那一份負責 */
+  .nav-foot-ver { display: flex; flex-direction: column; line-height: 1.5; }
+  .nav-new { padding: 9px 4px; justify-content: center; font-size: 11px; }
+  .nav-new .t-full { display: none; }
+  .nav-new .t-short { display: inline; }
+  .nav-new .nav-wip { display: none; }
+}
 </style>
 </head>
 <body>
@@ -1945,49 +2103,79 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     </div>
   </header>
 
+  <!-- §46-R（2026-09-01 Yi-En review）側欄照設計稿重排：
+       站名＋版本 → 「＋ 新增紀錄」主鈕 → 日常／累積／系統三組。
+       ・ACC 認證卡不再放這裡（她：「我不要顯示在左上角那裡了…我想放在首頁」），
+         整張卡連同 cc-* 的 id 搬到首頁右欄，由同一個 renderCredCard() 算繪。
+       ・「職能標記」設計稿沒有這一項（它在三步驟流程裡是步驟 3，不是導覽項），
+         這裡跟著拿掉；步驟 2 仍可從步驟 1 的「下一步」與底部固定列進入。
+       ・分組從四組（記錄／回顧／手邊／資料）變三組（日常／累積／系統）。 -->
   <nav class="tabs" id="tabs-nav">
     <button type="button" class="drawer-close" id="drawer-close"
             aria-label="關閉選單" onclick="closeDrawer()">×</button>
-    <!-- §13-E 側欄標題區：站名搬到這裡，內容區的 h1 讓給當頁標題 -->
+    <!-- §13-E 側欄標題區：站名 ＋ 版本與同步狀態（設計稿第二行就是「v5.1 · 本機模式」） -->
     <div class="nav-brand">
       <div class="nav-brand-name">會談後快速記錄</div>
-      <div class="nav-brand-user" id="acct-email"></div>
+      <div class="nav-brand-sub"><span class="js-side-ver" id="side-ver"></span><span class="nav-foot-dot"> · </span><span class="js-side-sync">本機模式</span></div>
     </div>
-    <!-- §7 ACC 認證卡：側欄最上方，可點進認證進度頁；切換鈕跟卡片本體分開，點切換不會誤觸導頁 -->
-    <div class="credcard" id="credcard">
-      <div class="cc-head">
-        <span class="cc-title" id="cc-title"></span>
-        <span class="cc-switch" id="cc-switch">
-          <button type="button" data-lv="acc" onclick="setCredLevel('acc', event)">ACC</button>
-          <button type="button" data-lv="pcc" onclick="setCredLevel('pcc', event)">PCC</button>
-        </span>
-      </div>
-      <button type="button" class="cc-body" onclick="showView('cred')">
-        <div class="cc-hours"><b id="cc-h"></b><span id="cc-goal"></span></div>
-        <div class="cc-track"><div class="cc-fill" id="cc-fill"></div></div>
-        <div class="cc-foot"><span class="cc-tier" id="cc-pace"></span><span class="cc-pct" id="cc-pct"></span></div>
-        <div class="cc-miss" id="cc-miss"></div>
-      </button>
-    </div>
-    <span class="nav-group">記錄</span>
-    <button class="tab active" id="tabNew" onclick="goStep(1)"><span class="t-full">新增紀錄</span><span class="t-short">新增</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
-    <button class="tab" id="tabMark" onclick="goStep(2)"><span class="t-full">職能標記</span><span class="t-short">職能</span> <span class="nav-badge" id="markCnt"></span></button>
-    <span class="nav-group">回顧</span>
+    <!-- 設計稿把「新增紀錄」做成最上面的陶土色主鈕，不是導覽項。id 沿用 tabNew，行為不變。 -->
+    <button type="button" class="nav-new" id="tabNew" onclick="goStep(1)"><span class="t-full">＋ 新增紀錄</span><span class="t-short">＋ 記</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
+    <span class="nav-group">日常</span>
+    <button class="tab" id="tabHome" onclick="showView('home')"><span class="t-full">首頁</span><span class="t-short">首頁</span></button>
     <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
     <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span class="nav-badge" id="cnt"></span></button>
+    <span class="nav-group">累積</span>
     <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span> <span class="nav-badge" id="credCnt"></span></button>
     <button class="tab" id="tabAsk" onclick="showView('ask')"><span class="t-full">導師提問</span><span class="t-short">導師</span> <span class="nav-badge" id="askCnt"></span></button>
-    <span class="nav-group">手邊</span>
     <button class="tab" id="tabJournal" onclick="showView('journal')"><span class="t-full">覺察手帳</span><span class="t-short">手帳</span> <span class="nav-badge" id="jCnt"></span></button>
-    <!-- §13-E 側欄底部：版本、同步狀態、兩個連結 -->
+    <span class="nav-group">系統</span>
     <!-- M1：備份／還原是資料安全功能，不能刪，只能移位。手機從這裡進。 -->
-    <span class="nav-group">資料</span>
     <button class="tab" id="tabData" onclick="openDataTools()"><span class="t-full">資料與備份</span><span class="t-short">資料</span></button>
+    <!-- S7 是第 8 批。設計稿自己把這一項標成「本稿未涵蓋」，那是它的佔位標記，不照抄那五個字。
+         這裡先放進去並停用，讓順序與設計稿一致，做完再接上。 -->
+    <button class="tab tab-soon" id="tabAcct" disabled title="這一頁還沒做"><span class="t-full">帳號與權限</span><span class="t-short">帳號</span></button>
     <div class="nav-foot" id="nav-foot">
-      <div class="nav-foot-ver"><span id="side-ver"></span><span class="nav-foot-dot"> · </span><span id="side-sync">本機模式</span></div>
+      <!-- 這一份只在 1024–1099 的窄側欄出現（那個寬度站名整塊是隱藏的）。
+           內容與站名下方那一份完全相同，由 updateSideFoot() 一次寫兩處。 -->
+      <div class="nav-foot-ver"><span class="js-side-ver"></span><span class="nav-foot-dot"> · </span><span class="js-side-sync" id="side-sync">本機模式</span></div>
+      <div class="nav-foot-user" id="acct-email"></div>
       <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"><a onclick="doLogout()">登出</a></span></div>
     </div>
   </nav>
+
+  <!-- ===== HOME（§46 V3 第 5 批）=====
+       左欄：還沒記的場（H1）＋ 客戶（H4）；右欄：統計（H2）／門檻（H3）／待問導師（H5）／待補（H6）。
+       所有數字由 renderHome() 從既有函式取得，HTML 裡不寫死任何一個數量。 -->
+  <div id="view-home" class="hidden">
+    <div class="home-wrap">
+      <div class="home-main">
+        <section class="card miss-card hidden" id="miss-card">
+          <div class="miss-head">
+            <label style="margin:0">還沒記的場</label>
+            <span class="miss-n hidden" id="miss-n"></span>
+            <span class="miss-hint">越早記越記得回來</span>
+          </div>
+          <div id="miss-list"></div>
+        </section>
+        <section class="home-sect">
+          <div class="home-sect-head">
+            <label style="margin:0">客戶</label>
+            <span class="hint" id="home-cli-sub"></span>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="showView('clients')">客戶列表 →</button>
+          </div>
+          <div class="home-cli" id="home-cli"></div>
+        </section>
+      </div>
+      <aside class="home-side">
+        <div class="home-stats" id="home-stats"></div>
+        <!-- §46-R：ACC 門檻卡從側欄搬到這裡。id 與 cc-* 全部沿用，
+             算繪仍由 renderCredCard() 一手包辦（同一份計算、同一個算繪點）。 -->
+        <div class="card hcard" id="credcard"></div>
+        <div class="card hcard" id="home-ask"></div>
+        <div class="card hcard" id="home-todo"></div>
+      </aside>
+    </div>
+  </div>
 
   <!-- ===== NEW / EDIT FORM ===== -->
   <!-- §13-B 兩步驟：步驟 1 只有會談本身，步驟 2 才是 ICF 八大職能。
@@ -3050,7 +3238,7 @@ async function onLogin(user){
   /* §0B 機制一：遷移／同步之前，先在雲端留一份未遷移的原樣。寫不成功就不往下走。 */
   const okSnap = await ensureCloudSnapshot(SCHEMA_VER);
   if (okSnap) await syncPull();
-  showView('new');
+  showView('home');          /* §46：登入後也落在首頁 */
   maybeOnboard();
 }
 async function doLogout(){
@@ -3556,9 +3744,11 @@ function numToCh(n){
   return String(i);
 }
 function chToNum(s){
-  const m = {'零':0,'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+  /* §46（V3 第 5 批）：加上「兩」。真實資料裡有人寫「兩次」，
+     原本會解析失敗、在「還沒記的場」被當成沒有場次號。 */
+  const m = {'零':0,'一':1,'兩':2,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
   if (/^\d+$/.test(s)) return parseInt(s,10);
-  if (!/^[零一二三四五六七八九十]+$/.test(s)) return null;
+  if (!/^[零兩一二三四五六七八九十]+$/.test(s)) return null;
   if (s === '十') return 10;
   const i = s.indexOf('十');
   if (i < 0) return s.length===1 ? m[s] : null;
@@ -3567,15 +3757,23 @@ function chToNum(s){
   if (tens==null || ones==null) return null;
   return tens*10 + ones;
 }
-/* 從會談次數欄位解析出數字：'第三次'、'第3次會談'、'三'、'3' → 3；解析不了回 null */
-function parseSessionNum(s){
-  s = (s||'').trim();
+/* §46（V3 第 5 批）會談次數解析：'第三次'、'第3次會談'、'第一場'、'三回'、'三'、'3' → 3。
+   **這是全站唯一一份解析器**（CLAUDE.md §七-10）。`sessionNum()` 是規格上的名字，
+   `parseSessionNum()` 是既有呼叫點（autoSessionFill）在用的舊名——同一個實作，不是兩份。
+   規格：去掉前綴「第」與後綴「次／場／回」；阿拉伯數字 1–999；
+   中文數字 一~九十九（含「十」「十一」「二十」「兩」）；其他一律 null。
+   2026-09-01 行為變更：原本 '0'／'零' 回 0，現在回 null（規格下界是 1）。
+   受影響的只有 autoSessionFill 的推算基準，那個 case 會退回「預設場次 + 已記場數 + 1」。 */
+function sessionNum(v){
+  const s = String(v == null ? '' : v).trim();
   if (!s) return null;
-  const m = s.match(/^第\s*([0-9零一二三四五六七八九十]+)\s*次/);
-  if (m) return chToNum(m[1]);
-  if (/^[0-9]+$/.test(s) || /^[零一二三四五六七八九十]+$/.test(s)) return chToNum(s);
-  return null;
+  let d = null, m;
+  if ((m = s.match(/^第\s*([0-9零兩一二三四五六七八九十]+)\s*(?:次|場|回)/)))   d = chToNum(m[1]);
+  else if (/^[0-9]+$/.test(s) || /^[零兩一二三四五六七八九十]+$/.test(s))       d = chToNum(s);
+  else if ((m = s.match(/^([0-9零兩一二三四五六七八九十]+)\s*(?:次|場|回)$/)))   d = chToNum(m[1]);
+  return (d != null && d >= 1 && d <= 999) ? d : null;
 }
+function parseSessionNum(s){ return sessionNum(s); }
 function formatSession(s){
   s = (s||'').trim();
   if (!s) return '';
@@ -4893,8 +5091,8 @@ function goStep(n){
   const wasHidden = document.getElementById('view-new').classList.contains('hidden');
   if (wasHidden) showView('new');
   else { applyPageHead('new');
-         document.getElementById('tabNew').classList.toggle('active', formStep===1);
-         document.getElementById('tabMark').classList.toggle('active', formStep===2); }
+         /* §46-R：側欄不再有「職能標記」。步驟 1、2 都讓「＋ 新增紀錄」亮著。 */
+         document.getElementById('tabNew').classList.add('active'); }
   window.scrollTo(0, 0);
   updateSegbar();
   /* 步驟 1 ↔ 2 也是一次移動：從職能標記按上一頁應該回到會談記錄，不是離站。
@@ -4964,6 +5162,11 @@ function onClientSearch(){
   if (el2 && document.activeElement !== el2) el2.value = clientQuery;
 }
 const VIEW_HEAD = {
+  /* §46 首頁。標題與右上動作照設計稿 header（23px h1 ＋「＋ 記一場」）。
+     眉標放今天的日期，不是步驟——見 applyPageHead()。 */
+  home: { title: '今天想記哪一位？',
+          sub: '會談結束十五分鐘內寫完，記得最清楚。',
+          actions: [['＋ 記一場', 'startNewRecord()', 'btn-primary', 'btn-home-new']] },
   new1: { title: '這一場發生了什麼',
           sub: '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。' },
   /* 副標暫時不寫設計稿的「一次只看一項」——那是第 3 批 master–detail 才會成立的行為，
@@ -5067,7 +5270,12 @@ function applyPageHead(v){
   }
   const n = document.getElementById('step-eyebrow-n');
   const es = document.getElementById('step-eyebrow-sub');
-  if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL) : '';
+  /* §46：首頁的眉標是今天的日期（設計稿 header 上面那一行），不是步驟 */
+  if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL)
+                         : (v === 'home' ? todayLongStr() : '');
+  /* 眉標的 tooltip 是講兩步驟的，首頁的眉標是日期，不可以沿用 */
+  const eb = document.getElementById('step-eyebrow');
+  if (eb) eb.title = (v === 'new') ? '先填內容，再標職能' : '';
   if (es){
     /* 步驟 2 的第二格是可以點的返回連結（設計稿 304–316） */
     const step2 = (v === 'new' && formStep === 2);
@@ -5107,7 +5315,7 @@ function toggleCompose(){
       代價是網址列不會反映目前頁面，也就沒有深連結——她要的是「上一頁能用」，不是分享網址。
    ② 還原時不可以再推（`_navRestoring`），否則每按一次上一頁就多一筆，永遠回不去。
    ③ 抽屜開著時按上一頁＝關抽屜，這是手機的標準行為。 */
-let currentView = 'new';
+let currentView = 'home';   /* §46：預設畫面改成首頁。初值一起改，showView('home') 才不會多推一格歷史 */
 let _navRestoring = false;
 function navSnapshot(){
   return { app:1, v: currentView, id: currentId, cid: currentClientId,
@@ -5146,6 +5354,7 @@ function showView(v) {
      用屬性而不是另寫一套渲染——同一份 DOM，兩種版面。 */
   document.body.dataset.view = v;
   applyPageHead(v);
+  document.getElementById('view-home').classList.toggle('hidden', v!=='home');
   document.getElementById('view-new').classList.toggle('hidden', v!=='new');
   document.getElementById('view-hist').classList.toggle('hidden', v!=='hist');
   document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
@@ -5154,13 +5363,15 @@ function showView(v) {
   document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
   document.getElementById('view-cred').classList.toggle('hidden', v!=='cred');
   document.getElementById('view-journal').classList.toggle('hidden', v!=='journal');
-  document.getElementById('tabNew').classList.toggle('active', v==='new' && formStep===1);
-  document.getElementById('tabMark').classList.toggle('active', v==='new' && formStep===2);
+  document.getElementById('tabHome').classList.toggle('active', v==='home');
+  /* §46-R：「＋ 新增紀錄」在步驟 1 與步驟 2 都算「正在這一頁」 */
+  document.getElementById('tabNew').classList.toggle('active', v==='new');
   document.getElementById('tabHist').classList.toggle('active', v==='hist' || (v==='detail' && detailFrom==='hist'));
   document.getElementById('tabClients').classList.toggle('active', v==='clients' || v==='clientdetail' || (v==='detail' && detailFrom==='client'));
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
   document.getElementById('tabCred').classList.toggle('active', v==='cred');
   document.getElementById('tabJournal').classList.toggle('active', v==='journal');
+  if (v==='home') renderHome();
   if (v==='hist') renderHistPage();
   if (v==='ask') renderAsk();
   if (v==='clients') renderClients();
@@ -5482,6 +5693,7 @@ function updateCount() {
   const cEl = document.getElementById('clientCnt');
   if (cEl) cEl.textContent = cc ? String(cc) : '';
   renderCredCard();
+  if (currentView === 'home') renderHome();   /* §46：紀錄數變了，首頁六張卡要跟著更新 */
 }
 /* 累積統計（首頁小字） */
 /* 教練時數破關儀表板（客戶頁）：原生 CSS 進度條 */
@@ -5810,32 +6022,49 @@ function setCredLevel(lv, ev){
   renderCredCard();
 }
 function renderCredCard(){
-  const card = document.getElementById('credcard');
-  if (!card) return;
-  const p = credProgress(credLevel);
-  const pace = credPace(credLevel);
-  document.getElementById('cc-title').textContent = p.c.name + ' 認證';
-  document.getElementById('cc-h').textContent = p.st.totalH;
-  document.getElementById('cc-goal').textContent = ' / ' + p.c.hours + ' 小時';
-  const fill = document.getElementById('cc-fill');
-  fill.style.width = p.pct + '%';
-  fill.dataset.seg = String(p.seg);
-  card.querySelector('.cc-track').dataset.seg = String(p.seg);
-  /* §14-B tier：pct 是四項需求裡最落後那一項（不是平均，也不是只看時數）。
-     達標由 pct 判定；其餘兩個分支沿用 credPace()，不另寫第二份計算。 */
-  document.getElementById('cc-pace').textContent = (p.pct >= 100) ? '達標' : pace.text;
-  document.getElementById('cc-pct').textContent = p.pct + '%';
-  /* tone 四段：門檻與色票都是既有的 credSeg / --segN-*，沒有新增色票 */
-  card.dataset.seg = String(p.seg);
-  /* 側欄「認證進度」的徽章跟卡上的百分比同一個值 */
+  /* §46-R（2026-09-01 Yi-En review）：這張卡從側欄搬到首頁右欄，版面照設計稿的
+     「ACC 門檻 ＋ 百分比 ＋ 看全部 → ＋ 三條進度」。
+     **算繪點仍然只有這一個函式**——首頁不自己算也不自己畫（CLAUDE.md §七-10）。
+     搬家時保留的：ACC／PCC 切換、步調（credPace）、還差什麼（p.missing）。
+     這三樣原本只有側欄那張卡在顯示，卡拿掉就會整個消失，所以跟著搬過來。
+     不再有的：30px 的大時數與它自己的那條進度條——設計稿的卡用「總時數」那一列
+     表達同一件事，留著等於同一個數字在同一張卡上出現兩次。 */
+  const recs = load();
+  const p = credProgress(credLevel, recs);
+  /* 側欄「認證進度」徽章跟卡上的百分比同一個值。卡片還沒渲染時徽章也要更新，所以放在前面。 */
   const cb = document.getElementById('credCnt');
   if (cb) cb.textContent = p.pct + '%';
-  document.getElementById('cc-miss').textContent = p.missing.length
-    ? p.missing.filter(x=>x.key !== 'hours')
-        .map(x=>x.name + '還差 ' + x.gap + ' ' + x.unit).join(' · ')
+  const card = document.getElementById('credcard');
+  if (!card) return;
+  const pace = credPace(credLevel, recs);
+  /* tone 四段：門檻與色票都是既有的 credSeg / --segN-*，沒有新增色票 */
+  card.dataset.seg = String(p.seg);
+  const miss = p.missing.length
+    ? p.missing.filter(x => x.key !== 'hours').map(x => x.name + '還差 ' + x.gap + ' ' + x.unit).join(' · ')
     : '門檻都到了';
-  card.querySelectorAll('.cc-switch button').forEach(b=>
-    b.classList.toggle('on', b.dataset.lv === credLevel));
+  /* §14-B tier：pct 是四項需求裡最落後那一項（不是平均，也不是只看時數）。
+     達標由 pct 判定；其餘兩個分支沿用 credPace()，不另寫第二份計算。 */
+  const tier = (p.pct >= 100) ? '達標' : pace.text;
+  card.innerHTML =
+    '<div class="hc-head">'
+      + '<span class="hc-title" id="cc-title">' + esc(p.c.name) + ' 門檻</span>'
+      + '<span class="hc-pct" id="cc-pct">' + p.pct + '%</span>'
+      + '<button type="button" class="mini-link hc-more" onclick="showView(\'cred\')">看全部 →</button>'
+    + '</div>'
+    /* 卡頭三個元素跟右欄另外兩張卡對齊（標題 ／ 數字 ／ 看全部 →）。
+       ACC／PCC 切換擠在同一行會換行，移到第二行跟「累計…」同一列靠右。 */
+    + '<div class="hc-sum">累計 ' + p.st.totalH + ' 小時 · ' + recs.length + ' 場'
+      + '<span class="hc-switch" id="cc-switch">'
+        + ['acc','pcc'].map(k => '<button type="button" data-lv="' + k + '"'
+            + (k === credLevel ? ' class="on"' : '')
+            + ' onclick="setCredLevel(\'' + k + '\', event)">' + CRED[k].name + '</button>').join('')
+      + '</span></div>'
+    + p.items.map(x => credBar(x.name, x.val, x.goal, x.unit)).join('')
+    + '<div class="hc-foot"><span class="hc-tier" id="cc-pace">' + esc(tier) + '</span>'
+      + '<span class="hc-miss" id="cc-miss">' + esc(miss) + '</span></div>';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.querySelectorAll('.pb-fill').forEach(el => { el.style.width = el.dataset.w + '%'; });
+  }));
 }
 function renderCred(){
   const recs = load();
@@ -6087,6 +6316,37 @@ function renderHistPage(){
   buildHistFilter(); renderAccCum(); renderHist(); renderPractice();
   renderChart(); renderReflect(); renderAdminBackup();
 }
+/* §46（V3 第 5 批）「下一場可以補這幾條」的挑選邏輯。
+   原本寫在 renderAccCum() 裡面，首頁 H6 也要用同一份——抽出來共用，
+   **不是複製一份到首頁**（CLAUDE.md §七-10：同一份資料只能有一個計算來源）。
+   輸入是 markerHitStats() 的回傳值；回傳 { five, todoAll }，排序與門檻一個字都沒改。 */
+function todoFive(hs){
+  const todo = [];
+  hs.forEach(x=>{
+    if (!x.basis) return;      /* 2026-08-29：沒有逐條勾過的職能不列——那是沒資料，不是做不好 */
+    x.markers.forEach(m=>{
+      const def = (MK[x.i]||[]).find(y=>y.c === m.c) || {};
+      /* 2026-08-29（Yi-En 實機回報）：「如果我做了 10 場，其中一個點只做到 2 場，
+         另一個點 10 場都做滿了，那當然是只做到 2 場的那個要放上來。」
+         她說得對——舊版排的是**絕對次數**（a.hits - b.hits），
+         但熱力圖改成各職能各自的分母之後，絕對次數已經不能互相比：
+         1.1 是 2／2 場（100%，每次都做到）卻因為「只有 2 次」排在很前面，
+         6.4 是 2／7 場（29%）反而排後面。完全反了。 */
+      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i,
+                  hits: m.hits, basis: x.assessed, rate: m.rate });
+    });
+  });
+  /* 每次都做到的不必「補」——100% 直接不列，不然像 1.1／2.1 這種
+     「你逐條勾過的每一場都有做到」會出現在「做到最少」的清單上，自相矛盾。 */
+  const todoAll = todo.length;
+  const todoPool = todo.filter(x => x.rate < 1);
+  todoPool.sort((a,b)=> a.rate - b.rate            /* 比例低的先補 */
+                 || b.basis - a.basis              /* 同比例時，場次多的比較可信 */
+                 || (b.m.acc?1:0) - (a.m.acc?1:0)  /* 再來是 ACC 必評優先 */
+                 || a.m.c.localeCompare(b.m.c));
+  const five = todoPool.slice(0, 5);
+  return { five, todoAll };
+}
 function renderAccCum(){
   const card = document.getElementById('cum-card');
   if (!card) return;
@@ -6175,30 +6435,7 @@ function renderAccCum(){
      這也符合「同一份資料只能有一個計算來源」。
      尚未評估過的職能（assessed === 0）不列——那是還沒開始練的東西，不是做不好。
      同分時 ACC 必評優先，再照編號。最多五條——超過就不是待辦而是壓力。 */
-  const todo = [];
-  hs.forEach(x=>{
-    if (!x.basis) return;      /* 2026-08-29：沒有逐條勾過的職能不列——那是沒資料，不是做不好 */
-    x.markers.forEach(m=>{
-      const def = (MK[x.i]||[]).find(y=>y.c === m.c) || {};
-      /* 2026-08-29（Yi-En 實機回報）：「如果我做了 10 場，其中一個點只做到 2 場，
-         另一個點 10 場都做滿了，那當然是只做到 2 場的那個要放上來。」
-         她說得對——舊版排的是**絕對次數**（a.hits - b.hits），
-         但熱力圖改成各職能各自的分母之後，絕對次數已經不能互相比：
-         1.1 是 2／2 場（100%，每次都做到）卻因為「只有 2 次」排在很前面，
-         6.4 是 2／7 場（29%）反而排後面。完全反了。 */
-      todo.push({ m: { c: m.c, acc: !!def.acc }, i: x.i,
-                  hits: m.hits, basis: x.assessed, rate: m.rate });
-    });
-  });
-  /* 每次都做到的不必「補」——100% 直接不列，不然像 1.1／2.1 這種
-     「你逐條勾過的每一場都有做到」會出現在「做到最少」的清單上，自相矛盾。 */
-  const todoAll = todo.length;
-  const todoPool = todo.filter(x => x.rate < 1);
-  todoPool.sort((a,b)=> a.rate - b.rate            /* 比例低的先補 */
-                 || b.basis - a.basis              /* 同比例時，場次多的比較可信 */
-                 || (b.m.acc?1:0) - (a.m.acc?1:0)  /* 再來是 ACC 必評優先 */
-                 || a.m.c.localeCompare(b.m.c));
-  const five = todoPool.slice(0, 5);
+  const { five, todoAll } = todoFive(hs);
   const box = document.getElementById('cum-todo-list');
   if (!five.length){
     /* 兩種空法意思完全不同，不可以用同一句話帶過 */
@@ -7593,12 +7830,243 @@ function openDataTools(){
 
 function updateSideFoot(){
   updateAppbarAuth();
-  const v = document.getElementById('side-ver');
-  if (v) v.textContent = APP_VER;
-  const st = document.getElementById('side-sync');
-  if (st) st.textContent = currentUser ? '已同步' : '本機模式';
+  /* §46-R：版本與同步狀態渲染在兩個地方（站名下方＝設計稿；底部＝1024–1099 窄側欄）。
+     照 lessons 的判準用 class ＋ querySelectorAll 一次改兩份——
+     寫死 id 只會更新到第一份，另一份永遠停在初始值。 */
+  document.querySelectorAll('.js-side-ver').forEach(el => { el.textContent = APP_VER; });
+  document.querySelectorAll('.js-side-sync').forEach(el => {
+    el.textContent = currentUser ? '已同步' : '本機模式'; });
 }
 
+/* ═══ §46 首頁（V3 第 5 批）═══════════════════════════════════════
+   全新畫面，六張卡。**首頁不自己算任何數字**——每一張卡都呼叫既有函式
+   （CLAUDE.md §七-10：同一份資料只能有一個計算來源）：
+     H1 還沒記的場   → sessionNum() ＋ missingSessions()
+     H2 這個月／累計 → credStats()（時數）、avgProgress()（推進感）
+     H3 門檻進度     → credProgress()（跟側欄認證卡與徽章同一個值，
+                        所以設計稿寫死的 30% 不照抄——那是它假資料的產物）
+     H4 客戶         → clientCount()、clientStats()、clientTrend()、paidChip()
+     H5 待問導師     → qState()（跟側欄徽章與導師提問頁同一個判定）
+     H6 待補五條     → todoFive()（跟歷史頁同一個函式，五條不是設計稿的三條）
+   語氣（CLAUDE.md §七-9）：不指認失敗。沒有的東西一律寫「還沒有…」。
+   設計稿那張「還沒記的場」列的是日期＋時長＋幾天前，那需要行事曆這種本工具沒有的資料源；
+   決策紀錄定案的 H1 只知道客戶與場次號，所以**不寫任何算不出來的時間感**。 */
+
+/* H1：依 clientId 分組（沒有客戶的自成一組），在 1…max 之間找沒出現的號碼。
+   號碼重複也回報。解析不出來的（'Meet and Greet'）不計入，也不算缺漏。
+   不做「忽略」機制——那要新增 localStorage 鍵並升 SCHEMA_VER，這一版不碰。 */
+function missingSessions(recs){
+  const g = new Map();
+  (recs || []).forEach(r => {
+    const n = sessionNum(r.session);
+    if (n == null) return;
+    const key = r.clientId || '';
+    if (!g.has(key)) g.set(key, { nums: [], name: '' });
+    const e = g.get(key);
+    e.nums.push(n);
+    if (!e.name && r.client) e.name = String(r.client);
+  });
+  const out = [];
+  g.forEach((e, key) => {
+    const c = key ? clientById(key) : null;
+    const code = (c && c.code) || e.name || (key ? '' : '沒有指定客戶的紀錄');
+    const seen = new Set(e.nums);
+    const max = e.nums.reduce((a, b) => b > a ? b : a, 0);
+    const miss = [];
+    for (let i = 1; i <= max; i++) if (!seen.has(i)) miss.push(i);
+    const cnt = {};
+    e.nums.forEach(n => { cnt[n] = (cnt[n] || 0) + 1; });
+    const dup = Object.keys(cnt).filter(k => cnt[k] > 1).map(Number).sort((a, b) => a - b);
+    if (miss.length || dup.length) out.push({ clientId: key, code: code, miss: miss, dup: dup, max: max });
+  });
+  out.sort((a, b) => (b.miss.length + b.dup.length) - (a.miss.length + a.dup.length)
+                  || String(a.code).localeCompare(String(b.code), 'zh-Hant'));
+  return out;
+}
+/* H2：推進感平均。取值走既有的 scoreNum()（沒填回 null），不另外解析欄位。
+   一場都沒填過回 null——0 分跟「沒填」是兩件事（CLAUDE.md §七-1）。 */
+function avgProgress(recs){
+  const vs = (recs || []).map(r => scoreNum(r, 'progress')).filter(v => v !== null);
+  if (!vs.length) return null;
+  return Math.round(vs.reduce((a, b) => a + b, 0) / vs.length * 10) / 10;
+}
+/* H2：這個月（back=0）／上個月（back=1）的紀錄。只負責篩，時數一律再交給 credStats()。 */
+function monthRecs(recs, back){
+  const now = new Date();
+  const t = new Date(now.getFullYear(), now.getMonth() - (back || 0), 1);
+  const k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0');
+  return (recs || []).filter(r => String(r.date || '').slice(0, 7) === k);
+}
+/* H1 的捷徑：帶入客戶與場次號跳到新增紀錄。只填這兩格，其餘照 resetForm() 的預設。
+   順序不能換：resetForm() 最後會 buildClientSel('') ＋ goStep(1)，
+   所以客戶要在它之後再設一次；場次號要在 buildClientSel 之後設，
+   否則會被 autoSessionFill() 用「上一場＋1」蓋掉。 */
+function startMakeup(clientId, n){
+  resetForm();
+  if (clientId) buildClientSel(clientId);
+  const sess = document.getElementById('f-session');
+  if (sess && n){
+    sess.value = '第' + numToCh(n) + '次';
+    lastAutoSession = '';        /* 使用者指定的號碼，不是自動填的，不可以被覆寫 */
+  }
+  goStep(1);
+  const d = document.getElementById('f-date');
+  if (d) d.focus();
+  toast('已帶入' + (clientId ? '客戶與' : '') + '第 ' + n + ' 場，日期記得改成當時那一天');
+}
+/* 首頁眉標的日期（設計稿 header 第一行：「2026 年 8 月 28 日 · 星期五」）。
+   只是顯示，不參與任何計算。 */
+function todayLongStr(){
+  const d = new Date();
+  const w = ['日','一','二','三','四','五','六'][d.getDay()];
+  return d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · 星期' + w;
+}
+/* 首頁右上「＋ 記一場」。**刻意只切頁、不 resetForm()**——
+   側欄「新增紀錄」也是這個語意（goStep(1)），打到一半的草稿不可以被一顆按鈕清掉。 */
+function startNewRecord(){ goStep(1); }
+const HOME_CLIENT_N = 6;      /* 首頁只放前 6 位（設計稿就是 6 張）；看全部走客戶頁 */
+const HOME_BAR_N    = 6;      /* 每張客戶卡的迷你長條：最近 6 場的推進感 */
+function homeStatCard(label, big, foot){
+  return '<div class="hstat"><div class="hstat-l">' + esc(label) + '</div>'
+    + '<div class="hstat-b">' + esc(big) + '</div>'
+    + '<div class="hstat-f">' + esc(foot) + '</div></div>';
+}
+function renderHomeMissing(){
+  const card = document.getElementById('miss-card');
+  const list = document.getElementById('miss-list');
+  const badge = document.getElementById('miss-n');
+  if (!card || !list) return;
+  const rows = missingSessions(load());
+  /* 一場都不缺就整張卡收起來——空卡等於在說「這裡本來應該有東西」。 */
+  card.classList.toggle('hidden', rows.length === 0);
+  if (!rows.length) { list.innerHTML = ''; return; }
+  const total = rows.reduce((t, x) => t + x.miss.length, 0);
+  if (badge){ badge.textContent = total ? String(total) : ''; badge.classList.toggle('hidden', !total); }
+  const q = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  list.innerHTML = rows.map(x => {
+    const code = x.code || '找不到的客戶';
+    /* 中文代號後面不加空格，英文代號才加（「詩詩的第 1 場」／「Jacquelyn 的第 1 場」） */
+    const who = esc(code) + (/[\u4e00-\u9fff]$/.test(code) ? '的' : ' 的');
+    const miss = x.miss.length
+      ? '<div class="miss-line">' + who + '第 ' + x.miss.join('、') + ' 場還沒有紀錄</div>' : '';
+    /* 重複只是提醒，不是錯誤——用「看看是不是」而不是「你記錯了」 */
+    const dup = x.dup.length
+      ? '<div class="miss-dup">' + who + '第 ' + x.dup.join('、')
+        + ' 場有兩筆以上，看看是不是同一場記了兩次</div>' : '';
+    const btns = x.miss.map(m =>
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="startMakeup('
+        + q(x.clientId) + ',' + m + ')">補記第 ' + m + ' 場</button>').join('');
+    return '<div class="miss-row">' + miss + dup
+      + (btns ? '<div class="miss-acts">' + btns + '</div>' : '') + '</div>';
+  }).join('');
+}
+function renderHomeClients(){
+  const box = document.getElementById('home-cli');
+  const sub = document.getElementById('home-cli-sub');
+  if (!box) return;
+  const cs = loadC();
+  if (sub) sub.textContent = cs.length
+    ? clientCount() + ' 位 · 點一位進去看他的所有場次' : '';
+  if (!cs.length){
+    box.innerHTML = '<div class="acc-none">還沒有客戶。記下第一場的時候可以順手建一位（用代號就好）。</div>';
+    return;
+  }
+  /* 排序跟客戶頁一致（進行中在前、最近一場新的在前），不另訂一套 */
+  const info = cs.map(c => ({ c: c, st: clientStats(c.id) })).sort((a, b) =>
+    ((a.c.status === 'closed') ? 1 : 0) - ((b.c.status === 'closed') ? 1 : 0)
+    || (b.st.last || '').localeCompare(a.st.last || ''));
+  const more = info.length - Math.min(info.length, HOME_CLIENT_N);
+  box.innerHTML = info.slice(0, HOME_CLIENT_N).map(x => {
+    const rs = x.st.rs;                     /* clientStats 已經照日期新到舊排好 */
+    const last = rs[0] || null;
+    const sn = last ? sessionNum(last.session) : null;
+    const meta = [
+      x.st.last ? '最近 ' + x.st.last.slice(5).replace('-', '/').replace(/^0/, '') : '還沒有紀錄',
+      sn != null ? '第 ' + sn + ' 次' : ''
+    ].filter(Boolean).join(' · ');
+    const topic = last && String(last.topic || '').trim();
+    /* 迷你長條＝最近幾場的推進感。沒填推進感的那幾場不畫，不用 0 頂替。 */
+    const bars = rs.slice(0, HOME_BAR_N).reverse().map(r => {
+      const v = scoreNum(r, 'progress');
+      /* 沒填推進感的那一場畫成灰色短樁＋tooltip，**不是 0，也不是不畫**——
+         全部濾掉的話「6 場只剩 1 根」看起來像壞掉；畫成 0 高又等於替她說「這場沒推進」。 */
+      return v === null
+        ? '<span class="hbar" data-v="na" title="這一場沒有填推進感"></span>'
+        : '<span class="hbar" title="推進感 ' + v + '" style="height:'
+          + Math.max(4, Math.round(v / 10 * 34)) + 'px"></span>';
+    }).join('');
+    const ap = avgProgress(rs);
+    return '<button type="button" class="hcli" onclick="openClient(' + "'" + x.c.id + "'" + ')">'
+      + '<span class="hcli-top">'
+        + '<span class="hcli-av">' + esc(String(x.c.code || '?').slice(0, 1)) + '</span>'
+        + '<span class="hcli-id"><span class="hcli-code">' + esc(x.c.code) + '</span>'
+          + '<span class="hcli-meta">' + esc(meta) + '</span></span>'
+        + paidChip(x.c.paid)
+      + '</span>'
+      + (topic ? '<span class="hcli-topic">' + esc(topic) + '</span>' : '')
+      + '<span class="hcli-foot">'
+        + '<span class="hbars">' + bars + '</span>'
+        + '<span class="hcli-num">' + x.st.hours + ' 小時'
+          + (ap === null ? '' : ' · 推進感 ' + ap.toFixed(1)) + '</span>'
+      + '</span>'
+    + '</button>';
+  }).join('')
+  + (more > 0 ? '<div class="hcli-more"><button type="button" class="btn btn-ghost btn-sm" '
+      + 'onclick="showView(\'clients\')">還有 ' + more + ' 位，看客戶列表 →</button></div>' : '');
+}
+function renderHomeSide(){
+  const recs = load();
+  const stats = document.getElementById('home-stats');
+  if (stats){
+    const cur = monthRecs(recs, 0), prev = monthRecs(recs, 1);
+    const ap = avgProgress(recs);
+    stats.innerHTML =
+      homeStatCard('這個月場次', String(cur.length), '上個月 ' + prev.length + ' 場')
+      + homeStatCard('這個月時數', String(credStats(cur).totalH), '累計 ' + credStats(recs).totalH + ' 小時')
+      + homeStatCard('平均推進感', ap === null ? '—' : ap.toFixed(1),
+                     ap === null ? '還沒有填過推進感' : '0–10');
+  }
+  /* H3 門檻：整張卡由 renderCredCard() 畫（它從側欄搬過來，是唯一的算繪點）。
+     首頁這裡只負責在對的時機叫它，不自己組任何一個數字。 */
+  renderCredCard();
+  const askBox = document.getElementById('home-ask');
+  if (askBox){
+    /* 待問的判定沿用 qState()，跟側欄徽章與導師提問頁同一個來源 */
+    const pend = loadQ().filter(x => qState(x) === 'pending').sort((a, b) => b.id - a.id);
+    askBox.innerHTML =
+      '<div class="hcard-head"><label style="margin:0">待問導師</label>'
+        + (pend.length ? '<span class="hpct" data-seg="0">' + pend.length + '</span>' : '')
+        + '<button type="button" class="mini-link" onclick="showView(\'ask\')">看全部 →</button></div>'
+      + (pend.length
+          ? pend.slice(0, 2).map(x => '<div class="hq"><div class="hq-t">' + esc(x.q) + '</div>'
+              + (x.ctx ? '<div class="hq-c">' + esc(x.ctx) + '</div>' : '') + '</div>').join('')
+          : '<div class="acc-none">還沒有要問導師的問題。會談當下冒出來的疑問，記在這裡下次一起問。</div>');
+  }
+  const todoBox = document.getElementById('home-todo');
+  if (todoBox){
+    const t = todoFive(markerHitStats(recs));
+    todoBox.innerHTML =
+      '<div class="hcard-head"><label style="margin:0">下一場可以補這幾條</label>'
+        + '<button type="button" class="mini-link" onclick="showView(\'hist\')">看全部 →</button></div>'
+      + (t.five.length
+          ? t.five.map(x => '<div class="htodo">'
+              + '<span class="mk-code">' + esc(x.m.c) + '</span>'
+              + '<span class="htodo-n">' + esc(MK_SHORT[x.m.c] || x.m.c) + '</span>'
+              + '<span class="htodo-v">' + Math.round(x.rate * 100) + '%'
+                + '<span class="todo-den">' + x.hits + '／' + x.basis + ' 場</span></span>'
+            + '</div>').join('')
+          : '<div class="acc-none">' + (t.todoAll
+              ? '你逐條勾過的每一條，在有勾的那些場次裡都做到了——這裡先空著。'
+              : '還沒有逐條勾過任何一條標記，這裡先空著。') + '</div>');
+  }
+}
+/* 首頁的唯一算繪入口。四塊各自獨立，任何一塊沒資料都不會擋住其他塊。 */
+function renderHome(){
+  if (!document.getElementById('view-home')) return;
+  renderHomeMissing();
+  renderHomeClients();
+  renderHomeSide();
+}
 /* init */
 const _ver = document.getElementById('app-ver');
 if (_ver) _ver.textContent = APP_VER;
@@ -7607,6 +8075,7 @@ runMigrations();
 resetForm();
 updateCount();
 updateAskCount();
+showView('home');            /* §46：首頁是預設畫面。currentView 初值也是 'home'，這一步不推歷史 */
 initSync();
 </script>
 </body>
