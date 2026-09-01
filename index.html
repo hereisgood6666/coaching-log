@@ -1869,6 +1869,49 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     border-color: var(--warm); box-shadow: inset 3px 0 0 var(--warm);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   §45 第 3 批：歷史紀錄兩欄（T1）＋ 單場八格改小方格
+   Yi-En 2026-09-01 定案（SPEC 用選擇題確認過兩次）：
+     方案 B ＋ 6×6px 無數字格子。右欄維持設計值 372px，列維持單行。
+
+   ── 為什麼是這個組合（實測，不是選美）──
+   照設計稿把右欄設成 372px、列維持單行，議題在五個桌機寬度全部 <200px，
+   連 1440 都只有 163px，過不了 §30「議題任何寬度都 ≥200px」。
+   根因是列裡那排八格：設計稿是 6px 小方格（整組 69px），產品是 20px 號碼籤（整組 181px）。
+   把格子改成設計稿的尺寸，議題就從 163px 回到 275px，截斷 5/7 → 3/7。
+
+   ── 代價（Yi-En 知情後選的）──
+   6px 塞不下數字，所以 1–8 消失。辨識靠既有的 title tooltip
+   （`核心職能 1 · 提問和探詢：1／1 條（100%）`，比數字資訊更多）與點進單場詳情。
+   **桌機有 hover，手機沒有**——手機失去數字是順帶影響，不是必要，見 WORKLOG。
+
+   ── 斷點為什麼是 1440 ──
+   實測門檻是 **1340px**（議題 203px），但那只多 3px 餘裕——
+   方案 B 原本 205px「剛好過」就是這樣失敗的，不重蹈。
+   1440 是 Yi-En 看過並同意的那張圖的寬度。1360 也可行（議題 223px），
+   要放寬只需要改這一個數字。 */
+.scell {
+  width: 6px; height: 6px; flex: 0 0 6px; border-radius: 2px;
+  font-size: 0; color: transparent;
+}
+/* 格線欄寬跟著走：8×6 ＋ 7×3 ＝ 69px。標題列與資料列共用同一份欄寬，
+   不跟著改的話 §14-4 會紅（那條在守兩列對齊）。 */
+.sess-cols { grid-template-columns: 64px 70px minmax(0,1fr) 69px 104px 20px; }
+@media (min-width: 561px) and (max-width: 1099.98px) {
+  .sess-cols { grid-template-columns: 64px 70px minmax(0,1fr) 104px 20px; }
+}
+@media (max-width: 560px) { .sess-cols { grid-template-columns: minmax(0,1fr) auto 20px; } }
+@media (min-width: 1440px) {
+  #view-hist {
+    display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 372px);
+    gap: 0 18px; align-items: start;
+  }
+  #expbox-hist { grid-column: 1 / -1; }
+  #hist-card   { grid-column: 1; grid-row: 2; }
+  #cum-card    { grid-column: 2; grid-row: 2; }
+  .phrase-card, #data-tools { grid-column: 1 / -1; }
+}
 </style>
 </head>
 <body>
@@ -2225,7 +2268,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     </div>
 
     <!-- ② 每一場（§2-3） -->
-    <div class="card">
+    <div class="card" id="hist-card">
       <div class="hist-head">
         <label style="margin:0">每一場 <span class="hint" id="hist-count"></span></label>
         <!-- M4：清單改成緊湊摘要，八個職能格子不再常駐，對應的圖例一併撤下。
