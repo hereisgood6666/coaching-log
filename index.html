@@ -7108,7 +7108,16 @@ function detailBackLabel(r){
 function buildClientSel(selId){
   const sel = document.getElementById('f-client-sel');
   if (!sel) return;
-  const cs = loadC().slice().sort((a,b)=>
+  /* 2026-09-02 Yi-En：「已經結案的客戶，就不需要再放在新增記錄的選擇客戶欄位裡了」。
+     ⚠ 但不能直接濾掉——**要選起來的那一位一定要留著**：
+     編輯一筆已結案客戶的舊紀錄時，如果清單裡沒有他，下面的 `sel.value = selId` 會落空、
+     退回空字串，存檔就把那筆紀錄的客戶清掉了（saveRecord 是整筆取代）。
+     從「＋ 新增這位的紀錄」進來的也一樣（她可能正站在已結案客戶的頁面上）。
+     所以規則是：**排除已結案，但保留 selId 指定的那一位**；被保留的仍標「（已結案）」。 */
+  const keep = selId || '';
+  const cs = loadC().slice()
+    .filter(c => c.status !== 'closed' || c.id === keep)
+    .sort((a,b)=>
     ((a.status==='closed')?1:0)-((b.status==='closed')?1:0) || (a.code||'').localeCompare(b.code||'','zh-Hant'));
   sel.innerHTML = '<option value="">— 選擇客戶 —</option>' +
     cs.map(c=>'<option value="'+c.id+'">'+esc(c.code)+(c.status==='closed'?'（已結案）':'')+'</option>').join('') +
@@ -7198,12 +7207,22 @@ function autoSessionFill(){
   const d = document.getElementById('f-date').value || todayStr();
   const rs = clientRecs(sel.value).filter(r=>(r.date||'') <= d)
     .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  /* 2026-09-02 修正：解析不出來的場次不佔號碼。
+     成因——原本是「基準編號 ＋ 基準之後的紀錄數 ＋ 1」，而基準取的是**最後一筆
+     解析得出來的**紀錄，所以「基準之後的紀錄」依定義全都是解析不出來的那些。
+     等於每有一筆寫成非數字的場次（例如契合會議寫「Meet and Greet」），
+     後面的號碼就被推掉一格：
+       [第一次, Meet and Greet] → 自動填「第三次」（第二次憑空消失）
+       [Meet and Greet]        → 自動填「第二次」（第一次憑空消失）
+     這也跟 missingSessions() 的世界觀不一致——那邊早就把解析不出來的整筆略過
+     （`if (n == null) return;`），兩邊對同一份資料給出不同的場次觀。
+     改法：基準編號 ＋ 1；完全沒有基準時就是「開始記錄前已談次數 ＋ 1」。 */
   let n = null;
   for (let i = rs.length-1; i >= 0; i--){
     const p = parseSessionNum(rs[i].session);
-    if (p != null){ n = p + (rs.length-1-i) + 1; break; }   // 基準編號 + 基準之後的紀錄數 + 1
+    if (p != null){ n = p + 1; break; }
   }
-  if (n == null) n = (parseInt(c.preSessions,10)||0) + rs.length + 1;
+  if (n == null) n = (parseInt(c.preSessions,10)||0) + 1;
   sess.value = '第' + numToCh(n) + '次';
   lastAutoSession = sess.value;
 }
