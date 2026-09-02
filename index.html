@@ -2291,15 +2291,39 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <!-- M3（2026-08-28）：撤下送審錄音勾選。教練學院已處理，本工具不再要使用者記錄。
              舊紀錄的 submitCandidate 欄位保留相容，載入不壞；新存檔不再產生它。 -->
       </div>
-      <div class="fld-div"></div>
-      <label>這一場的議題</label>
-      <div class="hint">他帶來想談的事</div>
-      <input type="text" id="f-topic" placeholder="例：想清楚要不要離職">
       </div>
     </section>
 
     <!-- 2. 上一場留下的（§2B / §13-C2）：不符合條件整張卡不渲染 -->
     <div id="focus-review"></div>
+
+    <!-- 2.5 這一場的協議（2026-09-01 Yi-En）
+         她要記「合約包含的議題、成果與重要性和阻礙」，還有「客戶接下來的一小步」。
+         問過她「合約包含的議題」與現有的「這一場的議題」是不是同一件事 → **同一件，不要再加**，
+         所以 f-topic **原地不動地搬過來**（id 與 topic 鍵名都沒改），跟三個新欄位放同一張卡。
+         對應 ICF 職能 3「共創明確的協議」：談什麼／要什麼成果與為什麼重要／擋在中間的是什麼。
+         全部是選填，沒填就是沒填 —— 不預設值、不視為 0（CLAUDE.md §七-1）。 -->
+    <section class="card fold" data-fold="agree" id="sec-agree">
+      <button type="button" class="fold-head" onclick="toggleFold('agree')">
+        <span class="fold-title">這一場的協議</span>
+        <span class="fold-state" data-state="agree"></span>
+        <span class="fold-act">收起 ▴</span>
+      </button>
+      <div class="fold-body">
+      <label>這一場的議題 <span class="hint">他帶來想談的事</span></label>
+      <input type="text" id="f-topic" placeholder="例：想清楚要不要離職"
+             oninput="markTouched('agree')">
+      <label>成果與重要性 <span class="hint">他想帶走什麼，為什麼這件事對他重要</span></label>
+      <textarea id="f-outcome" placeholder="例：想決定要不要遞辭呈。他說卡住半年了，每天上班都在耗自己"
+                oninput="markTouched('agree')"></textarea>
+      <label>阻礙 <span class="hint">擋在他和那個成果中間的是什麼</span></label>
+      <textarea id="f-obstacle" placeholder="例：怕讓爸媽失望，也怕自己只是在逃避"
+                oninput="markTouched('agree')"></textarea>
+      <label>客戶接下來的一小步 <span class="hint">他自己說要做的那一件事</span></label>
+      <textarea id="f-nextstep" placeholder="例：這週找一天，把留下來的三個理由寫下來"
+                oninput="markTouched('agree')"></textarea>
+      </div>
+    </section>
 
     <!-- 3. 這一場（§13-C3：第一個念頭與客戶那一半合成一段） -->
     <section class="card fold" data-fold="this" id="sec-this">
@@ -2365,7 +2389,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <span class="score-val" id="progressVal">7</span>
       </div>
       <label>我覺得客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
-      <textarea id="f-because" placeholder="例：客戶談到轉職時聲音變亮、身體往前傾"></textarea>
+      <!-- markTouched('score')：C 批之前這一格沒有掛，只填感受文字而不碰滑桿時，
+           右欄導覽的「衡量」會一直顯示「未填」。撤掉兩條滑桿之後這格變成卡裡唯一的文字欄，
+           踩到的機會大很多，所以一併補上。（2026-09-01 AUDIT 附帶發現） -->
+      <textarea id="f-because" placeholder="例：客戶談到轉職時聲音變亮、身體往前傾"
+                oninput="markTouched('score')"></textarea>
       </div>
     </section>
 
@@ -3017,7 +3045,10 @@ function markDeleted(kind, id){ const d = loadDel(); if (!d[kind].includes(id)) 
    為什麼不做欄位級合併：一場會談的紀錄是教練一次寫完的一段敘述，
    把 A 的「做得好」跟 B 的「可改進」縫在一起，會產生一份她從來沒寫過的紀錄。
    單筆整份取代雖然會丟掉較舊那一邊的修改，但結果是可預測、可解釋的。 */
-function mergeArr(localArr, cloudArr, delList){
+/* carry（選填）：雲端那份較新、要整筆取代本機那份時，先讓呼叫端把「本機有、雲端沒有」的
+   欄位搬過去。只有紀錄那一路會傳（carryLegacyScores），提問／客戶／手帳都不傳——
+   那是紀錄專屬的欄位，寫進這個通用函式裡會污染另外三種集合。 */
+function mergeArr(localArr, cloudArr, delList, carry){
   const out = [], seen = new Map();
   (localArr || []).forEach(x=>{
     if (!x) return;
@@ -3031,7 +3062,9 @@ function mergeArr(localArr, cloudArr, delList){
     if (!c || c.id == null || delList.includes(c.id)) return;
     if (!seen.has(c.id)){ seen.set(c.id, out.length); out.push(c); return; }
     const i = seen.get(c.id);
-    if (itemTime(c) > itemTime(out[i])) out[i] = c;      // 雲端那份比較新才取代
+    if (itemTime(c) > itemTime(out[i])){
+      out[i] = carry ? carry(out[i], c) : c;                // 雲端那份比較新才取代
+    }
   });
   return out;
 }
@@ -3043,7 +3076,7 @@ function mergeCloud(p){
   const del = loadDel();
   if (p.deleted) { ['r','q','c','j'].forEach(k=>{ if (!Array.isArray(del[k])) del[k] = [];
     (p.deleted[k]||[]).forEach(id=>{ if (!del[k].includes(id)) del[k].push(id); }); }); storeDel(del); }
-  localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r)));
+  localStorage.setItem(KEY,  JSON.stringify(mergeArr(load(),  p.records,   del.r, carryLegacyScores)));
   localStorage.setItem(QKEY, JSON.stringify(mergeArr(loadQ(), p.questions, del.q)));
   localStorage.setItem(CKEY, JSON.stringify(mergeArr(loadC(), p.clients,   del.c)));
   localStorage.setItem(JKEY, JSON.stringify(mergeArr(loadJ(), p.journal,   del.j)));
@@ -3165,6 +3198,15 @@ function migrateJournal(){
 }
 /* 顯示用：沒填時給灰字，永遠不會是 undefined */
 function topicText(r){ return String((r && r.topic) || '').trim(); }
+/* v11 協議三欄的顯示名稱與取值：**只有這一份**，詳情頁／PDF／匯出文字／督導包都讀它。
+   舊紀錄沒有這幾個欄位 → 一律回 ''，呼叫端自己決定「沒填就不印」。 */
+const AGREE_FIELDS = [
+  ['成果與重要性',     'outcome'],
+  ['阻礙',             'obstacle'],
+  ['客戶接下來的一小步', 'nextStep']
+];
+function agreeText(r, k){ return String((r && r[k]) || '').trim(); }
+function agreeRows(r){ return AGREE_FIELDS.map(([n,k]) => [n, agreeText(r,k)]).filter(x => x[1]); }
 function topicHTML(r){
   const t = topicText(r);
   return t ? '<div class="topic">' + esc(t) + '</div>'
@@ -3462,7 +3504,13 @@ let pushFailed = false;
    使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 10;  /* v10（2026-08-28）：客戶多一個可選欄位 paid（''｜'paid'｜'probono'），
+const SCHEMA_VER = 11;  /* v11（2026-09-01）：紀錄多三個可選欄位 outcome／obstacle／nextStep
+                              （ICF 職能 3 的成果與重要性／阻礙／客戶接下來的一小步）。
+                              同一批把 feel／clientfeel 兩個衡量值停止收集——**欄位沒有刪**，
+                              舊紀錄的值一律保留，由 saveRecord 的 LEGACY_SCORES 在整筆取代前帶回。
+                              不需要遷移：三個新欄位讀取端一律 r.x || ''，沒有任何既有資料被改寫；
+                              只靠 ensureCloudSnapshot(11) 先留 payload_pre_v11。
+                            v10（2026-08-28）：客戶多一個可選欄位 paid（''｜'paid'｜'probono'），
                               對應 ICF 時數表的 Paid／Pro Bono 兩欄。舊客戶沒有這個欄位＝還沒選，
                               匯出時那兩欄留空讓她自己填，不猜。
                               不需要遷移：讀取端一律 c.paid || ''，沒有任何既有資料被改寫。
@@ -3867,6 +3915,7 @@ function recordMainHTML(r){
       ${SCORES.map(([k,n])=>`<div class="score">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
       ${r.because?`<div class="because"><b>我覺得客戶的感受</b>　${esc(r.because)}</div>`:''}
     </div>
+    ${agreeRows(r).map(([n2,v])=>`<div class="lbl">${n2}</div><div>${esc(v)}</div>`).join('')}
     ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
     ${r.prevFocus?`<div class="lbl">上次說要盯</div><div>「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div>`:''}
     ${r.focus?`<div class="lbl">下一場只盯這一件事</div><div>${esc(r.focus)}</div>`:''}
@@ -3956,6 +4005,7 @@ const PDF_BLOCKS = [
   ['日期與客戶代號',        r => !!(r.date || r.client)],
   ['會談次數',              r => !!r.session],
   ['這一場的議題',          r => !!topicText(r)],
+  ['協議：成果／阻礙／一小步', r => agreeRows(r).length > 0],
   /* 2026-09-01：四條滑桿收成兩條，標籤不可以繼續寫「三個分數」。
      判定把撤下的兩個欄位一起留著——舊紀錄只有 feel／clientfeel 時，這一段仍然算「有內容」。 */
   ['衡量分數與感受',        r => r.perf != null || r.progress != null
@@ -4413,8 +4463,17 @@ const SCORES = [
   ['progress',   '推進感'],
   ['perf',       '專注']
 ];
-/* 已撤下但仍存在於舊紀錄裡的衡量欄位。saveRecord 靠這份清單在整筆取代前把舊值帶回。 */
+/* 已撤下但仍存在於舊紀錄裡的衡量欄位。**任何會整筆取代一筆紀錄的地方**都要先呼叫
+   carryLegacyScores(舊, 新)，否則那些值會被靜靜清掉（線上 62 場每一場都有值）。
+   目前有兩處整筆取代：saveRecord（編輯存檔）與 mergeArr（雲端同步較新者勝）。
+   2026-09-01 AUDIT 指出保護原本只長在 saveRecord 一邊 —— 雖然目前沒有任何路徑會產生
+   「較新卻缺這兩個欄位」的雲端紀錄，但把它抽成共用函式、兩邊都用，比依賴那個前提安全。 */
 const LEGACY_SCORES = ['feel', 'clientfeel'];
+function carryLegacyScores(from, to){
+  if (!from || !to) return to;
+  LEGACY_SCORES.forEach(k => { if (from[k] !== undefined && to[k] === undefined) to[k] = from[k]; });
+  return to;
+}
 function scoreVal(r, k){
   const v = r ? r[k] : null;
   return (v === undefined || v === null || v === '') ? null : v;
@@ -4609,6 +4668,7 @@ function recordToText(r) {
   lines.push('會談次數：'+(r.session||''));
   lines.push('這一場的議題：'+(topicText(r) || '（沒填議題）'));
   if(r.mins) lines.push('時長：'+r.mins+' 分鐘');
+  agreeRows(r).forEach(([n2,v])=>lines.push(n2+'：'+v));
   if(r.instant) lines.push('馬上掉出來的問題：'+r.instant);
   SCORES.forEach(([k,n])=>lines.push(n+'：'+scoreText(r,k)));
   if(r.because) lines.push('　我覺得客戶的感受：'+r.because);
@@ -5517,6 +5577,9 @@ function refreshFocusReview(){
 const SEGS = [
   ['basic',  '會談基本資料',     '基本資料'],
   ['review', '上一場留下的',     '上一場'],
+  /* 2026-09-01 Yi-En：新增「這一場的協議」（議題／成果與重要性／阻礙／一小步）。
+     議題不是新欄位——它從基本資料卡搬過來，f-topic 與 topic 鍵名都沒動。 */
+  ['agree',  '這一場的協議',     '協議'],
   ['this',   '這一場',           '這一場'],
   ['score',  '這一場的衡量',     '衡量'],
   ['focus',  '下一場只盯這一件事','焦點'],
@@ -5533,6 +5596,10 @@ function segFilled(k){
   switch(k){
     case 'basic':   return !!(fv('f-date') && document.getElementById('f-client-sel').value);
     case 'review':  return _prevFocusText ? !!_prevFocusResult : null;
+    /* 四格任一有字就算已填。議題以前算在 basic 裡（跟日期、客戶綁在一起），
+       搬到協議之後 basic 只看日期與客戶——這是刻意的：沒選客戶就是基本資料沒填完，
+       跟他今天想談什麼是兩件事。 */
+    case 'agree':   return !!(fv('f-topic') || fv('f-outcome') || fv('f-obstacle') || fv('f-nextstep'));
     case 'this':    return !!(fv('f-instant') || fv('f-clientquote') || fv('f-notcaught')
                               || getItemsLen('good-list') || getItemsLen('improve-list'));
     case 'score':   return _scoreTouched;
@@ -5664,6 +5731,12 @@ function saveRecord(later) {
     prevFocus: _prevFocusText,
     prevFocusResult: _prevFocusResult,
     topic: fv('f-topic'),
+    /* v11（2026-09-01）ICF 職能 3「共創明確的協議」的三個新欄位。全部選填。
+       跟 v9 的 progress、v10 的 paid 同一套做法：**不寫遷移、不 backfill**——
+       舊紀錄缺這幾個欄位就是沒填，讀取端一律 || ''，不會拿到 undefined。 */
+    outcome: fv('f-outcome'),
+    obstacle: fv('f-obstacle'),
+    nextStep: fv('f-nextstep'),
     clientQuote: fv('f-clientquote'),
     notCaught: fv('f-notcaught'),
     /* M3（2026-08-28）：送審勾選已撤下，新存檔不再產生 submitCandidate。
@@ -5683,7 +5756,7 @@ function saveRecord(later) {
          線上 62 場舊紀錄**每一場都有值**，只要被編輯一次就會被清空。
          所以在取代之前把舊值原樣搬進 rec：不再收集、不再顯示在趨勢圖，但絕不刪。
          同理適用於任何日後撤掉的欄位：加進 LEGACY_SCORES 即可。 */
-      LEGACY_SCORES.forEach(k => { if (arr[idx][k] !== undefined) rec[k] = arr[idx][k]; });
+      carryLegacyScores(arr[idx], rec);
       arr[idx] = rec;
     }
   } else {
@@ -5722,6 +5795,7 @@ function resetForm() {
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
   document.getElementById('f-topic').value = '';
+  ['f-outcome','f-obstacle','f-nextstep'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-clientquote').value = '';
   document.getElementById('f-notcaught').value = '';
   /* M3：送審勾選已撤下，這裡不再重設它 */
@@ -6822,6 +6896,7 @@ function openDetail(id, from) {
       ${SCORES.map(([k,n])=>`<div class="score-line">${n}：<b>${scoreText(r,k)}</b></div>`).join('')}
       ${r.because?`<div class="because-note"><span class="bl">我覺得客戶的感受</span>　${esc(r.because)}</div>`:''}
     </div>
+    ${agreeRows(r).map(([n2,v])=>`<div class="detail-field"><div class="detail-label">${n2}</div><div class="detail-val">${esc(v)}</div></div>`).join('')}
     ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
     ${r.prevFocus?`<div class="detail-field"><div class="detail-label">上次說要盯</div><div class="detail-val">「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div></div>`:''}
     ${r.focus?`<div class="detail-field"><div class="detail-label">下一場只盯這一件事</div><div class="detail-val">${esc(r.focus)}</div></div>`:''}
@@ -6882,6 +6957,10 @@ function editCurrent() {
   document.getElementById('f-because').value = r.because || '';
   document.getElementById('f-focus').value = r.focus || '';
   document.getElementById('f-topic').value = r.topic || '';
+  /* 舊紀錄沒有這三個欄位 → || '' 讓畫面空著，不顯示 undefined，也不寫回磁碟 */
+  document.getElementById('f-outcome').value = r.outcome || '';
+  document.getElementById('f-obstacle').value = r.obstacle || '';
+  document.getElementById('f-nextstep').value = r.nextStep || '';
   document.getElementById('f-clientquote').value = r.clientQuote || '';
   document.getElementById('f-notcaught').value = r.notCaught || '';
   /* M3：送審勾選已撤下。舊紀錄的 r.submitCandidate 仍然讀得到、不會被清掉，只是不再有對應的控制項。 */
@@ -7273,6 +7352,13 @@ function scaleText(txt){
   if (nums.length >= 2) return '現在 ' + nums[0] + '／期待 ' + nums[1];
   return t;
 }
+/* 2026-09-01：v11 新增了明確的協議欄位，但**這五欄刻意一個字都沒改**。
+   試過把「成果」與「重要性」併成一格（表單上她要的是一格），實測會弄丟資料：
+   clientRecapRows 是「每一欄各自往回找最近一場有填的」，併格之後只要有一場填了成果，
+   搜尋就停在那一場，更早那一場寫的重要性再也撈不出來。
+   這五欄是**從 PCC 標記實例推導**的協議快照，新欄位是**這一場自己填的**，
+   兩者是不同的資料，不是同一份資料的兩套算法——新欄位走 agreeRows()，
+   出現在詳情頁／PDF／匯出文字／督導包第五節，不擠進這裡。 */
 const RECAP_FIELDS = [
   ['議題',   r => topicText(r)],
   ['成果',   r => mkExample(r, '3.1')],
@@ -7741,6 +7827,18 @@ function buildMentorPack(){
   if (insts.length) insts.forEach(r=>L.push('- '+(r.date||'')+'（'+ctx(r)+'）：'+r.instant));
   else L.push('（無）');
   L.push('');
+  /* v11（2026-09-01）：協議欄位是她自己填的，跟第四節的標記證據是兩回事，各自成節。
+     沒填的場次不列——沒填不等於沒談（CLAUDE.md §七-1）。 */
+  const ags = recs.filter(r => agreeRows(r).length);
+  if (ags.length){
+    L.push('## 二之一、這一場的協議（成果與重要性／阻礙／一小步）');
+    L.push('');
+    ags.forEach(r => {
+      L.push('- '+(r.date||'')+'（'+ctx(r)+'）'+(topicText(r) ? '　議題：'+topicText(r) : ''));
+      agreeRows(r).forEach(([n3,v]) => L.push('  · '+n3+'：'+v));
+    });
+    L.push('');
+  }
   L.push('## 三、我覺得可以改進的部分');
   L.push('');
   const imps = [];
