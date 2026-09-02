@@ -2310,11 +2310,22 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>這一場的議題 <span class="hint">他帶來想談的事</span></label>
-      <input type="text" id="f-topic" placeholder="例：想清楚要不要離職"
-             oninput="markTouched('agree')">
-      <label>成果與重要性 <span class="hint">他想帶走什麼，為什麼這件事對他重要</span></label>
-      <textarea id="f-outcome" placeholder="例：想決定要不要遞辭呈。他說卡住半年了，每天上班都在耗自己"
+      <!-- 2026-09-02 Yi-En：標題縮成「議題」兩個字；輸入框改成與底下幾格一樣的多行框。
+           理由是她的：「議題一句話其實也蠻長的，或者如果這次是 chemistry meeting，
+           他有可能一次就帶來兩個議題」。單行 input 裝不下也看不到全文。
+           id 與 topic 鍵名都沒動，只換元素種類（讀寫端一律 .value，兩種都通）。 -->
+      <label>議題 <span class="hint">他帶來想談的事</span></label>
+      <textarea id="f-topic" placeholder="例：想清楚要不要離職"
+                oninput="markTouched('agree')"></textarea>
+      <!-- 2026-09-02 Yi-En：「成果和重要性要分開」。原本一格，拆成兩格。
+           `outcome` 鍵名不動（v11 已上線，可能已有人填了），語意縮小成「成果」；
+           `importance` 是新的可選欄位。舊紀錄若在 outcome 裡寫了合併文字，
+           原樣留在「成果」欄——不搬、不切、不猜哪一段是重要性（不替使用者決定語意）。 -->
+      <label>成果 <span class="hint">他想帶走什麼</span></label>
+      <textarea id="f-outcome" placeholder="例：想決定要不要遞辭呈"
+                oninput="markTouched('agree')"></textarea>
+      <label>重要性 <span class="hint">為什麼這件事對他重要</span></label>
+      <textarea id="f-importance" placeholder="例：他說卡住半年了，每天上班都在耗自己"
                 oninput="markTouched('agree')"></textarea>
       <label>阻礙 <span class="hint">擋在他和那個成果中間的是什麼</span></label>
       <textarea id="f-obstacle" placeholder="例：怕讓爸媽失望，也怕自己只是在逃避"
@@ -3201,7 +3212,8 @@ function topicText(r){ return String((r && r.topic) || '').trim(); }
 /* v11 協議三欄的顯示名稱與取值：**只有這一份**，詳情頁／PDF／匯出文字／督導包都讀它。
    舊紀錄沒有這幾個欄位 → 一律回 ''，呼叫端自己決定「沒填就不印」。 */
 const AGREE_FIELDS = [
-  ['成果與重要性',     'outcome'],
+  ['成果',             'outcome'],
+  ['重要性',           'importance'],
   ['阻礙',             'obstacle'],
   ['客戶接下來的一小步', 'nextStep']
 ];
@@ -3504,7 +3516,10 @@ let pushFailed = false;
    使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 11;  /* v11（2026-09-01）：紀錄多三個可選欄位 outcome／obstacle／nextStep
+const SCHEMA_VER = 12;  /* v12（2026-09-02）：協議卡的「成果與重要性」拆成兩欄。
+                              `outcome` 鍵名不動（v11 已上線），語意縮小成「成果」；新增可選 `importance`。
+                              不需要遷移：讀取端一律 r.importance || ''，既有 outcome 的內容原樣保留。
+                            v11（2026-09-01）：紀錄多三個可選欄位 outcome／obstacle／nextStep
                               （ICF 職能 3 的成果與重要性／阻礙／客戶接下來的一小步）。
                               同一批把 feel／clientfeel 兩個衡量值停止收集——**欄位沒有刪**，
                               舊紀錄的值一律保留，由 saveRecord 的 LEGACY_SCORES 在整筆取代前帶回。
@@ -5322,7 +5337,15 @@ const VIEW_HEAD = {
                                return [rs.length + ' 場',
                                        mins ? (Math.round(mins/60*10)/10) + ' 小時' : '',
                                        last ? '最近一場 ' + last : ''].filter(Boolean).join(' · '); },
-                  back: '← 回客戶列表', backAction: "showView('clients')" },
+                  back: '← 回客戶列表', backAction: "showView('clients')",
+                  /* 使用者回饋（2026-09-02，Yi-En 轉達）：
+                     「我到這一頁 通常會想要幫這個客戶新增一場會議 it'll be very helpful to have that button too」
+                     「想要記錄 A 客戶的東西，但不小心點到 left column，就跳到另一個客戶的頁面」
+                     兩件事是同一個成因：這一頁**一個動作出口都沒有**（actions 是空的），
+                     想記一場只能自己想辦法，於是在左欄那份客戶清單上點來點去、點到別人。
+                     設計稿 isClient.html 本來就有這顆「＋ 新增這位的紀錄」，第 4 批漏掉了。
+                     按鈕放在頁首右上（.page-head 在這一頁是跨兩欄的），離左欄清單最遠。 */
+                  actions: [['＋ 新增這位的紀錄', 'startClientRecord()', 'btn-primary', 'btn-cd-new']] },
   cred: { title: '認證進度',
           sub: 'ACC 與 PCC 是同一條路上的兩個門檻，不是兩個產品。',
           actions: [['匯出 ICF 時數表', 'exportICFLogXLSX()', 'btn-primary', 'btn-exp-icf'],
@@ -5599,7 +5622,8 @@ function segFilled(k){
     /* 四格任一有字就算已填。議題以前算在 basic 裡（跟日期、客戶綁在一起），
        搬到協議之後 basic 只看日期與客戶——這是刻意的：沒選客戶就是基本資料沒填完，
        跟他今天想談什麼是兩件事。 */
-    case 'agree':   return !!(fv('f-topic') || fv('f-outcome') || fv('f-obstacle') || fv('f-nextstep'));
+    case 'agree':   return !!(fv('f-topic') || fv('f-outcome') || fv('f-importance')
+                              || fv('f-obstacle') || fv('f-nextstep'));
     case 'this':    return !!(fv('f-instant') || fv('f-clientquote') || fv('f-notcaught')
                               || getItemsLen('good-list') || getItemsLen('improve-list'));
     case 'score':   return _scoreTouched;
@@ -5735,6 +5759,7 @@ function saveRecord(later) {
        跟 v9 的 progress、v10 的 paid 同一套做法：**不寫遷移、不 backfill**——
        舊紀錄缺這幾個欄位就是沒填，讀取端一律 || ''，不會拿到 undefined。 */
     outcome: fv('f-outcome'),
+    importance: fv('f-importance'),
     obstacle: fv('f-obstacle'),
     nextStep: fv('f-nextstep'),
     clientQuote: fv('f-clientquote'),
@@ -5795,7 +5820,7 @@ function resetForm() {
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
   document.getElementById('f-topic').value = '';
-  ['f-outcome','f-obstacle','f-nextstep'].forEach(id => { document.getElementById(id).value = ''; });
+  ['f-outcome','f-importance','f-obstacle','f-nextstep'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-clientquote').value = '';
   document.getElementById('f-notcaught').value = '';
   /* M3：送審勾選已撤下，這裡不再重設它 */
@@ -6959,6 +6984,7 @@ function editCurrent() {
   document.getElementById('f-topic').value = r.topic || '';
   /* 舊紀錄沒有這三個欄位 → || '' 讓畫面空著，不顯示 undefined，也不寫回磁碟 */
   document.getElementById('f-outcome').value = r.outcome || '';
+  document.getElementById('f-importance').value = r.importance || '';
   document.getElementById('f-obstacle').value = r.obstacle || '';
   document.getElementById('f-nextstep').value = r.nextStep || '';
   document.getElementById('f-clientquote').value = r.clientQuote || '';
@@ -7396,10 +7422,12 @@ function openClient(id){
   /* M2：狀態改放最上方。這裡與底部編輯區共用同一份 c.status，資料欄位不變。
      兩邊都在時會互相覆蓋，所以底部那一份已改成唯讀提示（見下方 client-info）。 */
   const stTop = document.getElementById('cd-status-top');
+  /* 2026-09-02 Yi-En：「選項跟狀態放在一起非常的冗」。
+     原本同時畫一顆唯讀狀態籤**和**一個顯示同一個值的下拉，兩個並排寫著一樣的字。
+     下拉本身就看得出現在是什麼狀態，所以拿掉那顆籤，只留下拉。
+     設計稿是把狀態籤放在客戶代號旁邊（規格 S2-1），那要等客戶頁重排標題列時一起做。 */
   if (stTop) stTop.innerHTML =
-    '<span class="ccard-st" data-s="' + (c.status==='closed' ? 'closed' : 'active') + '">'
-      + (c.status==='closed' ? '已結案' : '進行中') + '</span>'
-    + '<select id="cd-status-sel" onchange="setClientStatusTop(\'' + c.id + '\', this.value)">'
+    '<select id="cd-status-sel" onchange="setClientStatusTop(\'' + c.id + '\', this.value)">'
       + '<option value="active"' + (c.status!=='closed' ? ' selected' : '') + '>進行中</option>'
       + '<option value="closed"' + (c.status==='closed' ? ' selected' : '') + '>已結案</option>'
     + '</select>';
@@ -8084,6 +8112,19 @@ function todayLongStr(){
 /* 首頁右上「＋ 記一場」。**刻意只切頁、不 resetForm()**——
    側欄「新增紀錄」也是這個語意（goStep(1)），打到一半的草稿不可以被一顆按鈕清掉。 */
 function startNewRecord(){ goStep(1); }
+/* 從客戶詳情頁直接記這一位的一場。帶入客戶之後走的是**既有的** buildClientSel()，
+   它會接著呼叫 onClientSelChange() → autoSessionFill()／refreshFocusReview()，
+   所以場次號自動接續上一場、上一場的焦點也照常帶出來——這裡不另外算任何東西。
+   （對照 startMakeup()：那個是補記缺號，會指定場次號並鎖住自動填號；這裡不指定。） */
+function startClientRecord(cid){
+  const c = clientById(cid || currentClientId);
+  resetForm();
+  if (c) buildClientSel(c.id);
+  goStep(1);
+  const d = document.getElementById('f-date');
+  if (d) d.focus();
+  if (c) toast('已帶入 ' + c.code + '，日期與場次先填好了');
+}
 const HOME_CLIENT_N = 6;      /* 首頁只放前 6 位（設計稿就是 6 張）；看全部走客戶頁 */
 const HOME_BAR_N    = 6;      /* 每張客戶卡的迷你長條：最近 6 場的推進感 */
 function homeStatCard(label, big, foot){
