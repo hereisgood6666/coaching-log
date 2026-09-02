@@ -2128,6 +2128,185 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   }
   .home-main { padding-top: 18px; }
 }
+
+/* ═══ S1（2026-09-02）客戶頁四張統計卡：照設計稿 isClient.html 的 inline style ═══
+   覆寫寫在樣式表結尾（硬限制 6）。取值全部來自靜態版，不是自己配的：
+     卡片   padding 14px 15px／radius 12px／grid gap 12px／margin-top 20px
+     標題   11.5px  rgb(95,88,80)
+     大數字 27px/700 tabular-nums letter-spacing -0.02em，margin-top 3px
+     副標   11.5px  rgb(95,88,80)
+     一般卡 底 rgb(250,248,244) 框 rgb(228,223,214) 字 rgb(44,42,40)
+     冷色卡 底 rgb(231,241,244) 框 rgb(192,218,226) 字 rgb(15,90,109)（只有「累計時數」）
+   560px 以下維持既有的兩欄（.stat4 前面那條 @media 不動），四張卡在手機上排成 2×2。 */
+.stat4 { gap: 12px; margin-top: 20px; }
+.stat1 {
+  background: #FAF8F4; border: 1px solid #E4DFD6; border-radius: 12px;
+  padding: 14px 15px; color: #2C2A28; text-align: left;
+}
+.stat1 .stat-name { font-size: 11.5px; color: #5F5850; margin-top: 0; }
+.stat1 .stat-n {
+  margin-top: 3px; font-size: 27px; font-weight: 700; color: inherit;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1.2;
+}
+.stat1 .stat-note { font-size: 11.5px; color: #5F5850; margin-top: 3px; }
+.stat1.cool { background: #E7F1F4; border-color: #C0DAE2; color: #0F5A6D; }
+
+/* ═══ S2（2026-09-02）客戶詳情標題列：照設計稿 isClient.html 的 inline style ═══
+     整列   flex／align-items:flex-start／gap 14px
+     頭像   54×54／radius 18px／23px 700／底 rgb(231,241,244)／字 rgb(15,90,109)
+     代號   h2 23px 700 letter-spacing -0.015em margin 0
+     名稱列 flex／align-items:center／gap 9px
+     付費籤 padding 3px 9px／radius 20px／11px 700／nowrap
+     第二行 margin-top 4px／12.5px／rgb(95,88,80)
+   付費籤的三態配色沿用 .ccard-paid 的同一組變數，只換形狀（設計稿是圓角膠囊）——
+   同一個欄位在客戶卡與標題列不該長出兩套顏色語言。 */
+.cd-idrow { display: flex; align-items: flex-start; gap: 14px; min-width: 0; flex: 1 1 0; }
+.cd-av {
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 54px; height: 54px; border-radius: 18px;
+  font-size: 23px; font-weight: 700; background: #E7F1F4; color: #0F5A6D;
+}
+.cd-idmain { flex: 1 1 0; min-width: 0; }
+.cd-nameline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-width: 0; }
+.cd-name { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -0.015em; }
+.cd-paid {
+  padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  white-space: nowrap; background: var(--line-3); color: var(--ink-3);
+}
+.cd-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-d); }
+.cd-paid[data-p="probono"] { background: var(--ok-bg);    color: var(--ok); }
+.cd-paid[data-p=""]        { background: var(--amber-bg); color: var(--amber-ink); }
+/* 沒有紀錄時 innerHTML 是空字串，:empty 讓那一行連同上邊距一起消失（S2-4） */
+.cd-sub { margin-top: 4px; font-size: 12.5px; color: #5F5850; }
+.cd-sub:empty { display: none; }
+
+/* ═══ S5（2026-09-02）「每一場」一列四格：照設計稿 isClient.html 的 inline style ═══
+     列    flex／align-items:center／gap 14px／padding 12px 18px／上緣分隔線 rgb(239,234,226)
+     日期  flex 0 0 52px／12px／rgb(95,88,80)／tabular-nums
+     次數  flex 0 0 52px／12px／rgb(95,88,80)
+     議題  flex 1 1 0／13.5px／單行省略號
+     標記  flex 0 0 auto／padding 2px 9px／radius 20px／11.5px 700／冷色籤
+   設計稿的第五格（沒有標籤的數字）Yi-En 已裁決刪掉，寬度也不預留。
+   卡片本身左右各有 padding，所以列的 18px 用負邊距拉到卡片邊緣，分隔線才會通到底。 */
+#client-sess-card #client-recs { margin: 0 -14px -14px; }
+.cdrow {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px; border-top: 1px solid #EFEAE2; cursor: pointer;
+}
+.cdrow:hover { background: var(--line-4, #F6F2EC); }
+.cdrow-date { flex: 0 0 52px; font-size: 12px; color: #5F5850; font-variant-numeric: tabular-nums; }
+.cdrow-n    { flex: 0 0 52px; font-size: 12px; color: #5F5850; }
+.cdrow-topic {
+  flex: 1 1 0; min-width: 0; font-size: 13.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cdrow-topic.none { color: var(--ink-4); }
+.cdrow-mk:empty { padding: 0; background: none; border: 0; }
+.cdrow-mk {
+  flex: 0 0 auto; padding: 2px 9px; border-radius: 20px;
+  background: #E7F1F4; color: #0F5A6D;
+  font-size: 11.5px; font-weight: 700; white-space: nowrap;
+}
+/* 手機：52px 兩格 ＋ 14px 間距會把議題壓到剩沒幾個字，所以次數與標記籤讓位，
+   議題永遠是這一列的主角（跟 2026-08-28 那次改兩層是同一個判斷）。 */
+@media (max-width: 560px) {
+  .cdrow { gap: 10px; padding: 12px 14px; flex-wrap: wrap; }
+  .cdrow-topic { flex: 1 1 100%; order: 3; }
+  .cdrow-mk { order: 2; margin-left: auto; }
+}
+
+/* ═══ S7（2026-09-02）客戶詳情頁首 ═══
+   桌機（≥1024，＝左欄清單存在的那個斷點）：眉標「客戶」、h1「客戶與進展」，
+     沒有「← 回客戶列表」（左欄本身就是列表），副標也不重複（S7-3：那串已經在 S2 標題列）。
+   手機（<1024）：**維持現況**——h1 是客戶代號、返回連結在、副標在。
+     這一條是硬要求：手機沒有左欄，拿掉返回連結會讓人出不去。
+   斷點刻意跟 L1 master-detail 那段（min-width:1024）用同一個值：
+     左欄在不在，決定的就是「還需不需要返回連結」。 */
+.ph-wide { display: none; }
+@media (min-width: 1024px) {
+  body[data-view="clientdetail"] .ph-narrow { display: none; }
+  body[data-view="clientdetail"] .ph-wide   { display: inline; }
+  body[data-view="clientdetail"] #page-back { display: none; }
+  body[data-view="clientdetail"] #page-sub  { display: none; }
+}
+@media (max-width: 1023px) {
+  /* 手機的眉標「客戶」不顯示：h1 已經是客戶代號，再寫一行「客戶」是重複的 */
+  body[data-view="clientdetail"] .step-eyebrow { display: none; }
+}
+
+/* ═══ S6（2026-09-02）兩欄模式的左欄清單 ═══
+   **只在 body[data-view="clientdetail"] 且 ≥1024 生效**（S6-3）。
+   卡牆那一頁（沒選人時）是第 4 批做的，這一段一個選擇器都碰不到它——
+   多渲染的 .ccard-av／.ccard-meta-side／.clist-side 預設就是 display:none。
+   設計稿值：頭像 32×32 radius 11px 13px/700；代號 14px/700；meta 11px rgb(95,88,80)；
+             付費籤 3px 9px／radius 20px／11px 700；列 gap 10px padding 9px 10px radius 9px；
+             標題 10.5px 700 letter-spacing 0.09em；＋新增 5px 11px radius 8px 12px rgb(138,70,48)。 */
+.ccard-av, .ccard-meta-side, .clist-side { display: none; }
+.clist-head { display: flex; align-items: center; gap: 8px; }
+.clist-head .clist-new { display: none; }
+@media (min-width: 1024px) {
+  body[data-view="clientdetail"] .clist-wall { display: none; }
+  body[data-view="clientdetail"] .clist-side {
+    display: block; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.09em; color: #5F5850;
+  }
+  body[data-view="clientdetail"] .clist-head { padding: 0 0 12px; }
+  body[data-view="clientdetail"] .clist-head .clist-new {
+    display: inline-block; margin-left: auto; padding: 5px 11px;
+    border: 1px solid #E0DBD2; background: #FAF8F4; border-radius: 8px;
+    color: #8A4630; font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  /* 卡片精簡（S6-2）：頭像與短 meta 出場，卡牆用的長 meta、目標、兩條 bar 收起來。
+     「目標」全文正是使用者回饋裡把 280px 撐爆的那一段。 */
+  /* 卡片本身變成一列：[.ccard-top 撐開] [付費籤]。
+     .ccard-goal 與 .ctrend 已收起，所以這一列就是設計稿那三樣東西。 */
+  body[data-view="clientdetail"] .ccard {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 9px;
+  }
+  /* 代號與 meta 要**上下疊**、頭像在左邊跨兩列（設計稿 tpl 558 就是這個結構）。
+     它們在 HTML 裡是平行的兄弟節點，所以用 grid template areas 排，不能用 flex：
+     實測過 flex 版本會壞——`.ccard-id` 和 `.ccard-meta-side` 在同一條 flex 線上搶寬度，
+     代號那格被壓成 width:0（「B 先生」直接消失成一條直線），而且要不要換行不穩定，
+     同一份 CSS 有的卡片換行、有的不換。grid 指定格子就沒有這個問題。 */
+  body[data-view="clientdetail"] .ccard-top {
+    flex: 1 1 0; min-width: 0;
+    display: grid; grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "av id" "av meta";
+    column-gap: 10px; row-gap: 2px; align-items: center;
+  }
+  body[data-view="clientdetail"] .ccard-av {
+    grid-area: av; align-self: center;
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 11px;
+    font-size: 13px; font-weight: 700; background: #E7F1F4; color: #0F5A6D;
+  }
+  /* 代號與「已結案」同一列；代號長就用省略號，不換行也不把卡片撐開 */
+  body[data-view="clientdetail"] .ccard-id {
+    grid-area: id; min-width: 0;
+    display: flex; align-items: center; gap: 6px; text-align: left;
+  }
+  body[data-view="clientdetail"] .ccard-code {
+    flex: 0 1 auto; min-width: 0; font-size: 14px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  body[data-view="clientdetail"] .ccard-st { flex: 0 0 auto; }
+  body[data-view="clientdetail"] .ccard-meta      { display: none; }
+  body[data-view="clientdetail"] .ccard-meta-side {
+    grid-area: meta; display: block; font-size: 11px; color: #5F5850;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  body[data-view="clientdetail"] .ccard-goal,
+  body[data-view="clientdetail"] .ctrend { display: none; }
+  /* 付費籤變成這一列最右邊的膠囊（設計稿的形狀），三態配色沿用既有變數 */
+  body[data-view="clientdetail"] .ccard-paid {
+    flex: 0 0 auto; margin-top: 0;
+    padding: 3px 9px; border-radius: 20px; font-size: 11px; white-space: nowrap;
+  }
+  /* 「進行中」是預設狀態，在 280px 裡是噪音；「已結案」是真的要知道的事，留著。
+     設計稿的精簡卡兩個都沒有，但把「已結案」也藏起來等於讓她看不出這位已經結案了。 */
+  body[data-view="clientdetail"] .ccard-st[data-s="active"] { display: none; }
+}
 </style>
 </head>
 <body>
@@ -2618,8 +2797,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     </div>
     <!-- ① 客戶列表在最上面 -->
     <div class="card">
-      <label style="margin-top:0">點一位客戶進去 <span class="hint" id="client-count"></span></label>
-      <div class="sub-note">裡面有他的儀表板跟每一場紀錄。</div>
+      <!-- S6-1（2026-09-02）：兩欄模式左欄的標題是「N 位客戶」＋一顆「＋ 新增」。
+           卡牆那一頁**維持現況**（「點一位客戶進去」＋說明句），所以兩份都放進 DOM，
+           由 §S6 那段 CSS 切——兩欄模式只是同一份 HTML 換個樣子，不重新渲染一份。 -->
+      <div class="clist-head">
+        <label style="margin-top:0" class="clist-wall">點一位客戶進去 <span class="hint" id="client-count"></span></label>
+        <label style="margin-top:0" class="clist-side" id="client-count-side"></label>
+        <button type="button" class="clist-new" onclick="newClientFromSide()">＋ 新增</button>
+      </div>
+      <div class="sub-note clist-wall">裡面有他的儀表板跟每一場紀錄。</div>
       <div id="client-list"></div>
     </div>
     <!-- M2（2026-08-28）：撤下「你一直在練同一件事」——與歷史頁的「你在練的事」重複。
@@ -2650,18 +2836,29 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <!-- 1. 客戶標題 ＋ 狀態（M2 2026-08-28：狀態從最下方搬到最上方，底部不再重複）
          ＋ 兩張統計卡（場次、小時） -->
     <div class="card">
+      <!-- S2（2026-09-02）標題列照設計稿 isClient.html：
+           [頭像 54px] 代號(h2 23px) [付費籤] ／ 下一行「最近一場 M/D · 目前議題「…」」。
+           狀態下拉（S2-5）留著，設計稿右上也有。#cd-title 的 id 不動——測試用它定位。 -->
       <div class="cd-head">
-        <label style="margin-top:0" id="cd-title"></label>
+        <div class="cd-idrow">
+          <span class="cd-av" id="cd-av"></span>
+          <div class="cd-idmain">
+            <div class="cd-nameline">
+              <h2 class="cd-name" id="cd-title"></h2>
+              <span class="cd-paid" id="cd-paid"></span>
+            </div>
+            <div class="cd-sub" id="cd-sub"></div>
+          </div>
+        </div>
         <div class="cd-status" id="cd-status-top"></div>
       </div>
       <div class="stat4" id="client-stats"></div>
     </div>
-    <!-- 2. 每一場的議題（整列，每列可點進單場詳情） -->
-    <div class="card">
-      <label style="margin-top:0">每一場的議題 <span class="hint" id="cd-sess-count"></span></label>
-      <div id="client-recs"></div>
-    </div>
-    <!-- 3. 自評趨勢（M2 2026-08-28：原本與 recap 卡並排兩欄，recap 撤下後改為整欄，
+    <!-- S4（2026-09-02）區塊順序照設計稿：統計卡 → 自評趨勢＋職能覆蓋（兩欄）→ 每一場。
+         「每一場」原本排在統計卡後面，現在移到兩欄那組的下面（見本檔後段）。
+         桌機兩欄是既有的 `#view-client-detail` grid（1.35fr / 1fr）在排，
+         這裡**只動 DOM 順序**，那段 CSS 一個字都沒改。 -->
+    <!-- 2. 自評趨勢（M2 2026-08-28：原本與 recap 卡並排兩欄，recap 撤下後改為整欄，
          否則第二欄會留一塊空白——跟 #acc-list 同一種殘留） -->
     <div class="card" id="client-chart-card">
       <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
@@ -2674,6 +2871,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <label style="margin-top:0">這位客戶的職能覆蓋</label>
       <div class="sub-note" id="cov-sub"></div>
       <div id="cov-rows"></div>
+    </div>
+    <!-- 4. 每一場（S4：搬到兩欄那組下面。S5：一列四格，每列可點進單場詳情） -->
+    <div class="card" id="client-sess-card">
+      <label style="margin-top:0">每一場 <span class="hint" id="cd-sess-count"></span></label>
+      <div id="client-recs"></div>
     </div>
     <div class="card" id="client-info"></div>
     <div class="actions">
@@ -3209,6 +3411,12 @@ function migrateJournal(){
 }
 /* 顯示用：沒填時給灰字，永遠不會是 undefined */
 function topicText(r){ return String((r && r.topic) || '').trim(); }
+/* 設計稿的日期短寫是「8/22」（沒有補零、用斜線），不是本檔各處慣用的 `.slice(5)`＝「08-22」。
+   S2 的標題列與 S6 的左欄卡都用它，只有這一份。認不出格式就原樣回傳，不硬湊。 */
+function mdStr(d){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || ''));
+  return m ? (Number(m[2]) + '/' + Number(m[3])) : String(d || '');
+}
 /* v11 協議三欄的顯示名稱與取值：**只有這一份**，詳情頁／PDF／匯出文字／督導包都讀它。
    舊紀錄沒有這幾個欄位 → 一律回 ''，呼叫端自己決定「沒填就不印」。 */
 const AGREE_FIELDS = [
@@ -3973,6 +4181,17 @@ function exportRecordPDF(id){
   const name = '會談後快速紀錄_'+(r.client||'')+'_'+(r.date||todayStr());
   printRecordsPDF([r], name);
 }
+/* S3-2（2026-09-02）「匯出這位客戶」：走的是**同一支** printRecordsPDF()，
+   只把輸入限縮成這位客戶的紀錄——沒有第二套排版，格式永遠跟歷史頁的匯出一致
+   （CLAUDE.md §七-10）。排序與檔名都沿用 exportPDF() 的做法（新→舊）。 */
+function exportClientPDF(cid){
+  const id = cid || currentClientId;
+  const c = clientById(id); if (!c) return;
+  const arr = clientRecs(id).slice()
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  if (!arr.length) { toast('這位客戶還沒有紀錄'); return; }
+  printRecordsPDF(arr, '會談後快速紀錄_' + (c.code || '') + '_' + todayStr());
+}
 const PRINT_CSS = `
 #print-root{ display:none; }
 @media print {
@@ -4335,23 +4554,56 @@ const ICF_COLS = ['No', 'Client (First Name Last Name)', 'Email(self or sponsor)
                   'Individual/  Group ', 'Number in Group', ' Start Date ', 'End Date',
                   'hours', ' Paid ', 'Pro Bono'];
 const ICF_WIDTHS = [4.56, 34.11, 27.22, 9.67, 9.67, 15.44, 10.33, 10, 10, 10];
+/* R0（2026-09-02）：這個函式原本只逐客戶跑，所以 clientId 對不到任何一位客戶的紀錄
+   **整筆進不了時數表**——而 saveRecord() 的 clientId 預設就是 ''，只填了問題、沒選客戶
+   就存檔會產生這種紀錄，走的是正常 UI，不是壞掉的資料。
+   認證進度頁的 credStats() 是逐筆加總，會算到它們，於是兩份數字對不起來
+   （實測：三筆共 210 分鐘，認證進度頁 3.5 小時、ICF 送審表 2.5 小時，差 28.6%）。
+   ICF 時數表是拿去申請認證的對外文件，少一分鐘都不行。
+
+   判斷用「clientId 不在現有客戶清單裡」，不是「!r.clientId」——這樣同時涵蓋
+   clientId 指向已不存在的客戶那種情形（deleteClient 擋得住，但同步合併可能產生），
+   否則那會是同一個漏洞的第二個入口。
+   不替她編一個客戶代號出來：沒指定客戶是資料的事實，程式不可以代替她決定那是誰。 */
+const ICF_NO_CLIENT = '（未指定客戶）';
+/* 一列的算法只有這一份，逐客戶與「未指定客戶」共用，不長出第二套加總邏輯。
+   mins 是原始分鐘數，給 credStats() 對帳用（見 tests §50）；表格本身只寫 hours。 */
+function icfRow(client, paid, rs){
+  const sorted = rs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const dated = sorted.filter(r=>r.date);
+  const mins = sorted.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
+  return {
+    client: client,
+    start: dated.length ? dated[0].date : '',
+    end:   dated.length ? dated[dated.length-1].date : '',
+    mins:  mins,
+    /* 2026-09-02 Yi-En 裁決：送審表每列改成**兩位**小數。
+       原本一位（0.83 → 0.8），而且每列各自進位、之後才加總，所以列數越多少報越多：
+       實測 10 位客戶各 50 分鐘 → 進度頁 8.3、送審表 0.8×10 ＝ 8.0，少 0.3 小時。
+       這不只是兩個數字不一樣，是**送審表把她真的做過的時數算少了**，而且是系統性的
+       （PCC 要 25 位客戶，理論上可差一小時以上）。
+       只改這一格的精度：欄位順序、欄名、欄寬都沒動（那是 ICF 的範本格式）。
+       clientStats() 那個 hours 是客戶頁的顯示值，維持一位小數，不受這裡影響。 */
+    hours: Math.round(mins / 60 * 100) / 100,
+    paid:  paid
+  };
+}
 function icfLogRows(){
   const cs = loadC().slice().sort((a,b)=>(a.created||'').localeCompare(b.created||'')
                                        || String(a.code||'').localeCompare(String(b.code||'')));
   const out = [];
   cs.forEach(c=>{
-    const rs = clientRecs(c.id).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    const rs = clientRecs(c.id);
     if (!rs.length) return;                       /* 沒有任何會談的客戶不列進時數表 */
-    const dated = rs.filter(r=>r.date);
-    const mins = rs.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
-    out.push({
-      client: c.code || '',
-      start: dated.length ? dated[0].date : '',
-      end:   dated.length ? dated[dated.length-1].date : '',
-      hours: Math.round(mins / 60 * 10) / 10,
-      paid:  c.paid || ''
-    });
+    out.push(icfRow(c.code || '', c.paid || '', rs));
   });
+  /* 沒有落在任何一位客戶底下的紀錄，補成獨立一列排在最後。
+     只有真的有時長才列：沒時長的那些在送審表上是一列 0，對外文件不需要那個噪音，
+     而且它們對兩邊的加總都是 0，不影響 R0-2 的相等。
+     她不會因此不知道有這些場——認證進度頁會寫「有 N 場還沒指定客戶」（R0-3）。 */
+  const ids = new Set(cs.map(c=>c.id));
+  const loose = load().filter(r=>!ids.has(r.clientId));
+  if (loose.some(r=>(parseInt(r.mins,10) || 0) > 0)) out.push(icfRow(ICF_NO_CLIENT, '', loose));
   return out;
 }
 /* 範本的日期是 M/D/YYYY（例：10/25/2026），工具內部是 YYYY-MM-DD */
@@ -5329,6 +5581,11 @@ const VIEW_HEAD = {
              sub: () => clientCount() + ' 位 · 一律使用代號，不存真實姓名',
              actions: [['＋ 新增客戶', 'toggleNewClient()', 'btn-primary', 'btn-new-client']] },
   clientdetail: { title: () => { const c = clientById(currentClientId); return c ? c.code : '客戶'; },
+                  /* S7-1／S7-2：桌機「客戶與進展」（設計稿），手機維持客戶代號。
+                     兩份都在 DOM 裡，由 §S7 那段 CSS 切；`title` 保留給不看 HTML 的地方用。 */
+                  titleHtml: () => { const c = clientById(currentClientId);
+                                     return '<span class="ph-narrow">' + esc(c ? c.code : '客戶') + '</span>'
+                                          + '<span class="ph-wide">客戶與進展</span>'; },
                   sub: () => { const c = clientById(currentClientId);
                                if (!c) return '';
                                const rs = clientRecs(c.id);
@@ -5344,8 +5601,12 @@ const VIEW_HEAD = {
                      兩件事是同一個成因：這一頁**一個動作出口都沒有**（actions 是空的），
                      想記一場只能自己想辦法，於是在左欄那份客戶清單上點來點去、點到別人。
                      設計稿 isClient.html 本來就有這顆「＋ 新增這位的紀錄」，第 4 批漏掉了。
-                     按鈕放在頁首右上（.page-head 在這一頁是跨兩欄的），離左欄清單最遠。 */
-                  actions: [['＋ 新增這位的紀錄', 'startClientRecord()', 'btn-primary', 'btn-cd-new']] },
+                     按鈕放在頁首右上（.page-head 在這一頁是跨兩欄的），離左欄清單最遠。
+
+                     S3-3：順序照設計稿——「匯出這位客戶」在左（次要），
+                     「＋ 新增這位的紀錄」在右（主要動作放最右）。 */
+                  actions: [['匯出這位客戶', 'exportClientPDF()', 'btn-ghost', 'btn-cd-export'],
+                            ['＋ 新增這位的紀錄', 'startClientRecord()', 'btn-primary', 'btn-cd-new']] },
   cred: { title: '認證進度',
           sub: 'ACC 與 PCC 是同一條路上的兩個門檻，不是兩個產品。',
           actions: [['匯出 ICF 時數表', 'exportICFLogXLSX()', 'btn-primary', 'btn-exp-icf'],
@@ -5376,7 +5637,14 @@ function applyPageHead(v){
   const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
   const h1 = document.getElementById('page-h1');
   const sb = document.getElementById('page-sub');
-  if (h1) h1.textContent = headVal(cfg.title);
+  /* S7（2026-09-02）：clientdetail 的 h1 桌機與手機不一樣（設計稿桌機是「客戶與進展」，
+     手機必須維持客戶代號＋返回連結，否則沒有左欄的手機使用者出不去）。
+     兩份都渲染進 DOM、用 media query 切，**不用 JS 判斷寬度**——
+     JS 判斷要自己聽 resize 與轉向，漏一個就會停在錯的那一份。 */
+  if (h1){
+    if (cfg.titleHtml) h1.innerHTML = headVal(cfg.titleHtml);
+    else h1.textContent = headVal(cfg.title);
+  }
   if (sb) sb.textContent = headVal(cfg.sub);
   /* 返回連結：只有從別頁鑽進來的兩頁有 */
   const bk = document.getElementById('page-back');
@@ -5411,8 +5679,11 @@ function applyPageHead(v){
   const n = document.getElementById('step-eyebrow-n');
   const es = document.getElementById('step-eyebrow-sub');
   /* §46：首頁的眉標是今天的日期（設計稿 header 上面那一行），不是步驟 */
+  /* S7-1：客戶詳情的眉標是「客戶」（設計稿 header）。手機不顯示——那裡的 h1 是客戶代號，
+     上面再加一行「客戶」是重複的，而且手機頁首本來就要省空間（見 §S7 的 CSS）。 */
   if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL)
-                         : (v === 'home' ? todayLongStr() : '');
+                         : (v === 'home' ? todayLongStr()
+                         : (v === 'clientdetail' ? '客戶' : ''));
   /* 眉標的 tooltip 是講兩步驟的，首頁的眉標是日期，不可以沿用 */
   const eb = document.getElementById('step-eyebrow');
   if (eb) eb.title = (v === 'new') ? '先填內容，再標職能' : '';
@@ -5439,6 +5710,17 @@ function toggleHeadBox(boxId, focusId, btnId, openLabel, closeLabel){
 }
 function toggleNewClient(){
   toggleHeadBox('new-client-box', 'new-client-code', 'btn-new-client', '＋ 新增客戶', '收起');
+}
+/* S6-1：兩欄模式左欄那顆「＋ 新增」。
+   新增客戶的輸入卡（#new-client-box）在兩欄模式底下是 display:none
+   （L1 那段 CSS：「新增客戶在卡牆那頁做」），所以這裡**先切回客戶列表再展開**——
+   直接呼叫 toggleNewClient() 的話，卡片會展開但看不見，按了等於沒反應。 */
+function newClientFromSide(){
+  showView('clients');
+  const box = document.getElementById('new-client-box');
+  if (box && box.classList.contains('hidden')) toggleNewClient();
+  const f = document.getElementById('new-client-code');
+  if (f) f.focus();
 }
 function toggleCompose(){
   toggleHeadBox('ask-compose-box', 'ask-q', 'btn-new-ask', '＋ 新增問題', '收起');
@@ -5887,6 +6169,11 @@ function credStats(recs){
     recentH: h(withMins.filter(r=>(r.date||'') >= cutStr).reduce((s,r)=>s+parseInt(r.mins,10), 0)),
     clients: new Set((recs||[]).map(r=>r.clientId).filter(Boolean)).size,
     noMins:  (recs||[]).length - withMins.length,
+    /* R0-3（2026-09-02）：沒有落在任何一位客戶底下的場次數。
+       ICF 時數表是逐客戶列的，這些場會被併成「（未指定客戶）」一列（有時長時），
+       所以要讓她在匯出前就看得到有幾場。判斷方式與 icfLogRows() 同一套
+       （clientById 找不到＝不在客戶清單裡），不是另寫一個 !r.clientId。 */
+    noClient: (recs||[]).filter(r=>!clientById(r.clientId)).length,
     cands:   (recs||[]).filter(r=>r.submitCandidate)
   };
 }
@@ -6244,7 +6531,11 @@ function renderCred(){
     + '<div class="cred-line">目前累積 <b>' + st.totalH + '</b> 小時、<b>' + st.clients + '</b> 位不重複客戶。</div>'
     /* M3（2026-08-28）：移除 ACC／PCC 上方那段冗長的缺口小字。
        同樣的資訊在下方門檻卡已用大標籤、數字與進度條表達，這裡重複而且難掃讀。 */
-    + (st.noMins ? '<div class="pb-note">有 ' + st.noMins + ' 筆未填時長，未計入時數</div>' : '');
+    + (st.noMins ? '<div class="pb-note">有 ' + st.noMins + ' 筆未填時長，未計入時數</div>' : '')
+    /* R0-3（2026-09-02）：ICF 時數表是逐客戶列的，沒指定客戶的場會被併成一列。
+       匯出鈕就在這一頁的右上，所以提示放在這裡她匯出前一定看得到。
+       語氣照 CLAUDE.md §七-9：陳述事實，不寫「你漏填了」。數字從 credStats() 來，不手寫。 */
+    + (st.noClient ? '<div class="pb-note">有 ' + st.noClient + ' 場還沒指定客戶</div>' : '');
 
   /* 18 個月近期性視窗：這條規則跟總時數無關，累積多年的人最容易在這裡被卡 */
   document.getElementById('cred-warn').innerHTML = st.recentH < CRED.acc.recent
@@ -6383,8 +6674,10 @@ function markerHitStats(recs){
       if (st === 1) return;                    /* 部分到位、沒說是哪幾條 ＝ 無資訊，不進分母 */
       assessed++;                              /* 未到位、沒逐條勾 → 進分母，一條都不算 */
     });
+    /* acc 旗標一起帶出來：客戶頁的「職能已點到 N／20 條 ACC」要能只數 ACC 必備那 20 條，
+       在這裡帶出來就不必到別處再翻一次 MK（同一份資料只能有一個計算來源）。 */
     return { i, assessed, basis, markers: g.map(m => ({
-      c: m.c, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
+      c: m.c, acc: !!m.acc, hits: hits[m.c], rate: assessed ? hits[m.c] / assessed : 0
     })) };
   });
 }
@@ -6416,6 +6709,10 @@ function clientCoverage(recs){
     const touched = g.markers.filter(m => m.hits > 0).length;
     return { i: g.i, label: ACC[g.i][0], assessed: g.assessed,
              touched: touched, total: total,
+             /* S1（2026-09-02）：ACC 必備那一子集，給客戶頁的「職能已點到 N／20 條 ACC」用。
+                分母不在這裡加總——全站的 20 是 ACC_MK_N，這裡只提供各職能的份額。 */
+             accTouched: g.markers.filter(m => m.acc && m.hits > 0).length,
+             accTotal:   g.markers.filter(m => m.acc).length,
              rate: total ? touched / total : 0,
              lv: hitLevel(touched, total ? touched / total : 0) };
   });
@@ -7241,10 +7538,15 @@ function addClient(){
 /* 付費／公益：ICF 時數表的 Paid 與 Pro Bono 是兩個獨立欄位，這裡存成三態。
    '' 代表「還沒選」——匯出時那兩欄都留空，不替她猜。
    「還沒選」在畫面上要看得見，不是靜靜地不顯示：ICF 送審時漏掉一位就是漏掉一位。 */
+/* 付費別的顯示字只有這一份：客戶卡的 .ccard-paid 與 S2 標題列的付費籤共用，
+   免得同一個欄位在兩個地方長出兩套說法。 */
+function paidLabel(v){
+  const p = v || '';
+  return p === 'paid' ? '付費' : p === 'probono' ? '公益' : '還沒選付費別';
+}
 function paidChip(v){
   const p = v || '';
-  const t = p === 'paid' ? '付費' : p === 'probono' ? '公益' : '還沒選付費別';
-  return '<div class="ccard-paid" data-p="' + p + '">' + t + '</div>';
+  return '<div class="ccard-paid" data-p="' + p + '">' + paidLabel(p) + '</div>';
 }
 let _newClientPaid = '';
 function setNewClientPaid(v){
@@ -7294,6 +7596,10 @@ function renderClients(){
   const cs = loadC();
   const cnt = document.getElementById('client-count');
   if (cnt) cnt.textContent = clientCount() + ' 位';   // 與側欄徽章同一個來源
+  /* S6-1：兩欄模式的標題「N 位客戶」。數字走的是**同一個** clientCount()，
+     不是另外數一次（CLAUDE.md §七-10）。 */
+  const cntSide = document.getElementById('client-count-side');
+  if (cntSide) cntSide.textContent = clientCount() + ' 位客戶';
   if (!cs.length) { list.innerHTML = '<div class="empty">還沒有客戶。<br>在下面新增第一位（記得用代號就好）</div>'; return; }
   /* 2026-08-28（Yi-En）：搜尋 ＋ 預設只顯示最近幾位。
      「如果之後客戶變成 100 位、200 位、300 位，難道要讓使用者一直往下滑嗎？」
@@ -7324,10 +7630,21 @@ function renderClients(){
           + '" style="width:' + (t.v === null ? 0 : t.v * 10) + '%"></div></div>'
         + '<span class="ct-val" data-lv="' + t.lv + '">' + t.valText + ' ' + t.dText + '</span>'
       + '</div>').join('');
+    /* S6-2（2026-09-02）：兩欄模式的左欄只有 280px，卡片精簡成
+       「[頭像] 代號 ／ N 場 · N 小時 · 最近 M/D ／ 付費籤」。
+       頭像與這一份 meta 是**多渲染出來的兩個元素**，預設 display:none，
+       只在 body[data-view="clientdetail"] 底下才顯示——這樣沒選人的那面卡牆
+       （第 4 批做的）渲染結果一個像素都沒變（S6-3）。
+       不改既有的 .ccard-meta 文案，就是為了不動卡牆。 */
+    const avatar = Array.from(String(x.c.code || '').trim())[0] || '';
+    const metaSide = [x.st.n + ' 場', x.st.hours + ' 小時',
+                      x.st.last ? '最近 ' + mdStr(x.st.last) : '還沒有紀錄'].join(' · ');
     return `<div class="ccard" data-cid="${x.c.id}" onclick="openClient('${x.c.id}')">
     <div class="ccard-top">
+      <span class="ccard-av">${esc(avatar)}</span>
       <span class="ccard-id"><span class="ccard-code">${esc(x.c.code)}</span><span class="ccard-st" data-s="${x.c.status==='closed'?'closed':'active'}">${x.c.status==='closed'?'已結案':'進行中'}</span></span>
       <span class="ccard-meta">${meta}</span>
+      <span class="ccard-meta-side">${esc(metaSide)}</span>
     </div>
     ${paidChip(x.c.paid)}
     ${x.c.goal?`<div class="ccard-goal">目標：${esc(x.c.goal)}</div>`:''}
@@ -7438,6 +7755,25 @@ function openClient(id){
 
   /* 1. 四張統計卡（數字全部從資料推導） */
   document.getElementById('cd-title').textContent = c.code;
+  /* S2-1：頭像是代號首字（跟代號同一份資料，不另存）。用 Array.from 取，
+     免得代號開頭是 emoji 或組合字時 charAt(0) 切半個字元出來。 */
+  const avEl = document.getElementById('cd-av');
+  if (avEl) avEl.textContent = (Array.from(String(c.code || '').trim())[0] || '');
+  const paidEl = document.getElementById('cd-paid');
+  if (paidEl){ paidEl.textContent = paidLabel(c.paid); paidEl.dataset.p = c.paid || ''; }
+  /* S2-2／S2-3／S2-4：第二行「最近一場 M/D · 目前議題「…」」。
+     沒有紀錄 → 整行不顯示（S2-4）；最近一場沒填議題 → 只留前半段，
+     **不印「（沒填議題）」**（S2-3；那是清單裡的寫法，標題列不適用）。
+     st.rs 是日期新→舊，[0] 就是最近一場，與統計卡同一份資料。 */
+  const subEl = document.getElementById('cd-sub');
+  if (subEl){
+    const lastRec = st.rs.length ? st.rs[0] : null;
+    const lastD = lastRec ? mdStr(lastRec.date) : '';
+    const lastT = lastRec ? topicText(lastRec) : '';
+    subEl.innerHTML = !lastRec ? ''
+      : ('最近一場 ' + esc(lastD || '—')
+         + (lastT ? ' · 目前議題「' + esc(lastT) + '」' : ''));
+  }
   /* M2：狀態改放最上方。這裡與底部編輯區共用同一份 c.status，資料欄位不變。
      兩邊都在時會互相覆蓋，所以底部那一份已改成唯讀提示（見下方 client-info）。 */
   const stTop = document.getElementById('cd-status-top');
@@ -7451,35 +7787,65 @@ function openClient(id){
       + '<option value="closed"' + (c.status==='closed' ? ' selected' : '') + '>已結案</option>'
     + '</select>';
   const pre = parseInt(c.preSessions,10) || 0;
-  const stat = (n, name, note) => '<div class="stat1"><div class="stat-n">' + n + '</div>'
+  /* S1（2026-09-02）：統計卡兩張 → 四張，照設計稿 isClient.html。
+     卡片內部順序是**標題 → 大數字 → 副標**（設計稿 inline style：11.5px 標題、
+     27px/700 大數字、11.5px 副標），跟改版前「大數字在最上面」相反。
+     class 名稱刻意沒動（.stat1/.stat-n/.stat-name/.stat-note），只換順序與樣式——
+     既有測試是用這幾個 class 取值的，改名等於平白讓一批守衛失效。
+     第二張「累計時數」在設計稿是冷色卡（rgb(231,241,244)），用 .stat1.cool 表示。 */
+  const stat = (name, n, note, tone) => '<div class="stat1' + (tone ? ' ' + tone : '') + '">'
     + '<div class="stat-name">' + name + '</div>'
+    + '<div class="stat-n">' + n + '</div>'
     + (note ? '<div class="stat-note">' + note + '</div>' : '') + '</div>';
+  /* S1-3：「第 N 次已記」的 N 走既有的 parseSessionNum()，取最近一場的場次字串。
+     解析不出來（例如「Meet and Greet」）就整行副標不顯示——退回顯示筆數會讓
+     「第 N 次」變成一個她沒寫過的號碼，那是冒充。st.rs 是日期新→舊排序，[0] 就是最近一場。 */
+  const lastNum = st.rs.length ? parseSessionNum(st.rs[0].session) : null;
+  /* S1-2：四個數字全部呼叫既有函式。
+     場次／時數＝clientStats()；平均推進感＝首頁那顆同一個 avgProgress()，只是把輸入
+     限縮成這位客戶的紀錄；職能已點到＝clientCoverage() 的 accTouched 加總，
+     分母是既有常數 ACC_MK_N（＝20，由 MK 的 acc 旗標推導），一個數字都沒有手寫。 */
+  const avgP = avgProgress(st.rs);
+  const accTouched = clientCoverage(st.rs).reduce((s,x)=>s + x.accTouched, 0);
   document.getElementById('client-stats').innerHTML =
-      stat(st.n, '場次', pre ? '另有工具前 ' + pre + ' 場' : '')
-    + stat(st.hours, '小時', '');
+      stat('場次', st.n, lastNum ? '第 ' + lastNum + ' 次已記'
+                                 : (pre ? '另有工具前 ' + pre + ' 場' : ''))
+    /* S1-4：沒有紀錄時時數是 0（0 小時是事實），但平均推進感沒有資料時是「—」，
+       不是 0——沒填不等於 0（CLAUDE.md §七-1）。 */
+    + stat('累計時數', st.hours, '進 ICF 時數表', 'cool')
+    + stat('平均推進感', avgP === null ? '—' : avgP.toFixed(1), '0–10')
+    + stat('職能已點到', accTouched, '／ ' + ACC_MK_N + ' 條 ACC');
   /* M2（2026-08-28）：撤下「焦點達成」「平均到位」兩張卡。
      只撤渲染入口——clientStats() 仍然算 focusAns／focusDone／doneAvg，
      舊資料與其他頁面的計算不受影響，也不做 schema 變更。 */
 
-  /* 2. 每一場的議題：整列，每列可點進單場詳情 */
+  /* 2. 每一場：一列四格，每列可點進單場詳情（S5，照設計稿 isClient.html）
+     日期 52px ｜ 第 N 次 52px ｜ 議題 1fr 單行省略號 ｜ N 條標記（籤）
+     設計稿最右邊本來還有第五格（一個沒有標籤的數字），**Yi-En 2026-09-02 裁決刪掉**，
+     連那 34px 都不預留——所以一列就是四格。
+     改版前是兩層（上層日期／第幾次／時長・到位／›，議題自己一層）：那是 2026-08-28 為了
+     「五個東西擠一列，第四次會談被壓成『第…』」做的補救。現在一列只剩四格、
+     議題吃掉所有剩餘寬度，擠壓的成因不在了。時長與「到位 N 項」照 S5-2 拿掉（設計稿沒有）。 */
   const rl = rs.slice().reverse();
   document.getElementById('cd-sess-count').textContent = rl.length ? rl.length + ' 場' : '';
   document.getElementById('client-recs').innerHTML = rl.length
     ? rl.map(r=>{
+        /* S5-4：標記數走既有的 sessionMkCounts()，不手寫也不另算一份 */
         const mk = sessionMkCounts(r);
-        /* 2026-08-28（Yi-En 實機回報）：五個東西擠同一列，「第四次會談」被壓成「第…」。
-           議題是這一列最重要的資訊，不能為了塞下別的而截短，「第幾次」也不該消失。
-           改成兩層：上層 日期｜第幾次｜時長・到位｜›，議題自己佔滿第二層。
-           這跟歷史頁那張表當初改兩層是同一個原因——句子欄跟短欄擠同一列，句子永遠輸。 */
-        return '<div class="sess cd-sess" onclick="openDetail(' + r.id + ',\'client\')">'
-          + '<div class="sess-top">'
-            + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
-            + '<span class="sess-client">' + (esc(formatSession(r.session)) || '會談') + '</span>'
-            + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 ' + mk.done + ' 項</span>'
-            + '<span class="sess-arrow">›</span>'
-          + '</div>'
-          + '<div class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
-            + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</div>'
+        /* 第二格照設計稿是「第 13 次」——阿拉伯數字，與 S1-3 同一個 parseSessionNum()。
+           解析不出來（例如「Meet and Greet」）就原樣顯示她寫的字，不硬套「第 N 次」。 */
+        const num = parseSessionNum(r.session);
+        const numTxt = num ? '第 ' + num + ' 次' : (String(r.session || '').trim());
+        const tp = topicText(r);
+        return '<div class="cdrow" onclick="openDetail(' + r.id + ',\'client\')">'
+          + '<span class="cdrow-date">' + esc(mdStr(r.date) || '—') + '</span>'
+          + '<span class="cdrow-n">' + esc(numTxt) + '</span>'
+          + '<span class="cdrow-topic' + (tp ? '' : ' none') + '">'
+            + (tp ? esc(tp) : '（沒填議題）') + '</span>'
+          /* 這一格**一定要在**，一列永遠是四格：少一格的話 flex 會重新分配寬度，
+             有標記與沒標記的兩列議題欄寬度不一樣，看起來像壞掉。
+             沒有標記時留空（由 .cdrow-mk:empty 收起來），不寫「0 條標記」。 */
+          + '<span class="cdrow-mk">' + (mk.total ? mk.total + ' 條標記' : '') + '</span>'
         + '</div>';
       }).join('')
     : '<div class="acc-none">這位客戶還沒有紀錄。</div>';
