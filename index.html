@@ -1946,7 +1946,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* H1 還沒記的場 */
 .miss-card { background: var(--warm-bg); border-color: var(--warm-line); }
-.miss-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.miss-head:not(.hidden) { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 .miss-head label { color: var(--warm-ink); font-size: 15px; font-weight: 700; }
 .miss-n { padding: 2px 9px; border-radius: 20px; background: var(--warm);
           color: var(--surface); font-size: 11px; font-weight: 700; }
@@ -2147,7 +2147,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     padding: 18px var(--app-px) 22px 18px;
     margin-right: calc(var(--app-px) * -1);
   }
-  .home-main { padding-top: 18px; }
+  .home-main { padding-top: 18px;
+    /* 2026-09-03 Yi-En：「為什麼下面要空一大格？」
+       成因是 2026-09-01 A 批做三分區底色時加的 `.home-wrap{align-items:stretch}`
+       （那是為了讓右欄的底色面板跟左欄一樣高）。副作用：.home-main 被拉滿高度之後，
+       它自己的格線列也跟著平分空間，於是「還沒記的場」那張卡被撐出 196px 的空白。
+       align-content:start 讓它的列靠上、各自只佔內容高；右欄面板照樣滿高（那是 .home-side）。 */
+    align-content: start; }
 }
 
 /* ═══ S1（2026-09-02）客戶頁四張統計卡：照設計稿 isClient.html 的 inline style ═══
@@ -2329,6 +2335,42 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .ccard-st[data-s="active"] { display: none; }
 }
 
+/* ═══ R2-1／R2-3（2026-09-03）：把磚紅還給主要動作 ══════════════════
+   設計稿裡 rgb(166,96,74)（--warm）是**稀缺**的：整個側欄只有「＋ 新增紀錄」一顆，
+   內容區只有當頁的主要動作一顆。現況把它也花在「側欄選中項」上，兩者互相搶，
+   於是真正的主要動作（首頁的「記這一場」、標職能頁的「儲存這一場」）只好退成灰色。
+
+   數值取自設計稿 isHome.html 第 84 行那顆選中項的 inline style：
+     background: rgba(239, 235, 228, 0.13);  color: rgb(255, 252, 248);  font-weight: 700;
+
+   ⚠ 交接包 R2-1 寫的是「文字顏色維持（設計稿寫 currentcolor）」——
+   那句話對到的是同一段 inline style 裡的 `border-color: currentcolor`，
+   `color` 本身寫的是 rgb(255,252,248)。這裡以**設計稿的實際值**為準
+   （交接包 §R2 開頭也寫「數值全部取自設計稿 inline style」），並已回報 SPEC。
+   順帶：維持 .72 淺字的話，選中項在這個半透明底上只有 4.8:1，
+   換成 rgb(255,252,248) 是 9.6:1，§41 的對比守衛也才守得住。
+
+   寫在樣式表結尾（硬限制 2）：上面有三處 .tab.active 的定義（基礎、桌機深色側欄、
+   手機抽屜），同特異性時後者勝，寫在別的地方會被其中一條蓋掉。
+   選擇器用 .tabs .tab.active（0-3-0）跟深色側欄那兩條同級，靠位置勝出。 */
+.tabs .tab.active,
+.tabs .tab.active:hover {
+  background: rgba(239, 235, 228, .13);
+  color: rgb(255, 252, 248);
+  font-weight: 700;
+}
+/* R2-3 側欄底部兩行摘要（設計稿 isHome.html 第 142 行）。
+   設計稿的字色是 rgba(239,235,228,.5)，在 #2C2A28 上只有 4.19:1，**低於本專案 §41 的 4.5 硬門檻**；
+   改用跟旁邊 .nav-foot-ver 相同的 .60（5.34:1）。差別肉眼幾乎看不出來，但守衛守得住。
+   這件事已回報 SPEC，決定權在 Yi-En。 */
+.nav-foot-sum { font-size: 11px; line-height: 1.7; color: rgba(239, 235, 228, .60); }
+/* 1024–1099 是「窄軌」側欄（只放短標籤，站名整塊也是隱藏的）。
+   那個寬度只有 60px 可用，這兩行會斷成六行，變成一團噪音而不是摘要。
+   跟 .nav-brand 同一個處置：那個寬度不顯示。實測 1100 起才放得下。 */
+@media (min-width: 1024px) and (max-width: 1099.98px) {
+  .nav-foot-sum { display: none; }
+}
+
 /* ═══ P2 略過：觸控目標（2026-09-03）═════════════════════════════
    「略過」與「已略過 N 場」是無框文字鈕，看起來小，觸控區照樣要滿 44px。
    **一定要寫在樣式表結尾**：上面那個 max-width:1023.98px 的觸控區塊位置在 §46 樣式之前，
@@ -2355,7 +2397,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .pick-card:hover { border-color: var(--warm-2); }
 /* flex-wrap：付費籤放不下時掉到第二行，而不是把代號與 meta 擠成兩行。
    「還沒選付費別」是三種籤裡最長的，240px 的卡片剛好裝不下（實測 R 那張）。
-   籤的文字不縮寫——paidLabel() 是全站共用的，為了這裡改它會影響客戶列表。 */
+   2026-09-03 R1-2：那個字串已經改成設計稿的「未設定」（三個字），寬度剩不到一半，
+   這一段的 flex-wrap 因此不再是為了它而存在——**但仍然保留**：
+   代號可以很長，換行防禦跟付費籤的字數無關。 */
 .pick-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pick-av { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
            background: var(--warm-bg); color: var(--warm-ink);
@@ -2464,6 +2508,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <!-- 這一份只在 1024–1099 的窄側欄出現（那個寬度站名整塊是隱藏的）。
            內容與站名下方那一份完全相同，由 updateSideFoot() 一次寫兩處。 -->
       <div class="nav-foot-ver"><span class="js-side-ver"></span><span class="nav-foot-dot"> · </span><span class="js-side-sync" id="side-sync">本機模式</span></div>
+      <!-- R2-3（2026-09-03）：設計稿 isHome.html 側欄底部那兩行。
+           兩個數字都由 updateSideFoot() 從既有函式取得，HTML 裡不寫死任何一個。 -->
+      <div class="nav-foot-sum" id="nav-foot-sum"></div>
       <div class="nav-foot-user" id="acct-email"></div>
       <div class="nav-foot-links"><a onclick="openHelp()">使用說明</a><span id="nav-foot-sep" class="hidden"><a onclick="doLogout()">登出</a></span></div>
     </div>
@@ -2476,7 +2523,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <div class="home-wrap">
       <div class="home-main">
         <section class="card miss-card hidden" id="miss-card">
-          <div class="miss-head">
+          <!-- 2026-09-03 Yi-En：「略過之後，這一格如果是空的要收起來」。
+               全部略過時整張卡收掉的話，「還原」就永遠按不到了——那不是收起來，是把出口關掉。
+               所以收的是**卡頭**：沒有待記的場時，標題與「越早記越記得回來」一起隱藏，
+               只留下一行「已略過 N 場 ▸」。那一行是唯一的還原入口，必須留著。 -->
+          <div class="miss-head" id="miss-head">
             <label style="margin:0">還沒記的場</label>
             <span class="miss-n hidden" id="miss-n"></span>
             <span class="miss-hint">越早記越記得回來</span>
@@ -5752,7 +5803,13 @@ const VIEW_HEAD = {
                 + '<span class="hd-count" data-lv="pcc"><b>PCC</b><span class="js-hd-pcc">'
                 + c.pccOn + ' / ' + c.pccTotal + '</span></span>', '', 'raw', ''];
             },
-            ['✓ 儲存這一場', 'saveRecord()', 'btn-save-top', 'saveBtnTop']
+            /* R1-1（2026-09-03）：`.btn-save-top` **全檔沒有任何一條 CSS**，
+               所以這顆鈕一直落在瀏覽器預設的 rgb(239,239,239) 灰底黑字，
+               同一頁底部那顆 .btn-primary 才是赭色——頁首的主要動作看起來最不重要。
+               修法選「補上 btn-primary」而不是「另寫一條 .btn-save-top 的 CSS」：
+               另寫一條就有兩個地方定義同一個外觀，之後改主色會漏掉一邊。
+               `btn-save-top` 保留當掛鉤（沒有 CSS，只是給查找用），id 也沒動。 */
+            ['✓ 儲存這一場', 'saveRecord()', 'btn-primary btn-save-top', 'saveBtnTop']
           ] },
   hist: { title: '我進步了嗎', sub: histHeadSub,
           actions: [['匯出 PDF', "exportTwoStep('hist')", 'btn-primary', 'btn-exp-hist'],
@@ -5980,6 +6037,10 @@ function showView(v) {
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
   document.getElementById('tabCred').classList.toggle('active', v==='cred');
   document.getElementById('tabJournal').classList.toggle('active', v==='journal');
+  /* R1-3（2026-09-03）：「資料與備份」不是獨立畫面（它是 showView('hist') ＋ 捲到底部那張卡），
+     所以這裡一律先熄掉它，只有 openDataTools() 會在 showView 之後把它點亮。
+     少了這一行，點過一次「資料與備份」之後它會永遠亮著。 */
+  document.getElementById('tabData').classList.remove('active');
   if (v==='home') renderHome();
   if (v==='hist') renderHistPage();
   if (v==='ask') renderAsk();
@@ -6344,6 +6405,9 @@ function updateCount() {
   const cEl = document.getElementById('clientCnt');
   if (cEl) cEl.textContent = cc ? String(cc) : '';
   renderCredCard();
+  /* R2-3（2026-09-03）：側欄底部那兩行也是從紀錄算出來的，紀錄數一變就要跟著更新。
+     不加這一行的話，存完一場之後側欄還停在舊數字，要重整才會對。 */
+  updateSideFoot();
   if (currentView === 'home') renderHome();   /* §46：紀錄數變了，首頁六張卡要跟著更新 */
 }
 /* 累積統計（首頁小字） */
@@ -7785,7 +7849,12 @@ function addClient(){
    免得同一個欄位在兩個地方長出兩套說法。 */
 function paidLabel(v){
   const p = v || '';
-  return p === 'paid' ? '付費' : p === 'probono' ? '公益' : '還沒選付費別';
+  /* R1-2（2026-09-03）：空值的文字從「還沒選付費別」改成設計稿的「未設定」。
+     六個字的籤比三個字寬一倍，那是首頁客戶卡 meta 掉成兩行的成因
+     （先前兩次都選擇繞過：步驟 0 讓它掉第二行、客戶頁不動）。
+     `paid`／`probono` 兩個**不動**——設計稿就是「付費」「公益」。
+     這個函式是全站共用的（首頁客戶卡／客戶列表／客戶詳情／步驟 0 的卡四處都吃它）。 */
+  return p === 'paid' ? '付費' : p === 'probono' ? '公益' : '未設定';
 }
 function paidChip(v){
   const p = v || '';
@@ -8095,7 +8164,12 @@ function openClient(id){
 
   /* 3. 左：自評趨勢；右：recap。兩張卡是 grid 的直接項目，靠 align-items:stretch 底部對齊 */
   const cc = document.getElementById('client-chart-card');
-  if (rs.length >= 2) {
+  /* 2026-09-03 Yi-En：「即使客戶只有一場，但至少圖表上面還是會有兩個點吧？還是要有圖啊」——
+     「兩個點」指的是兩條線各一個點（推進感與專注），不是兩場。
+     原本 >= 2 才畫，只有一場的客戶會看到一塊空白（右邊的職能覆蓋還在，左邊是洞）。
+     改成只要有紀錄就畫。一個資料點的折線圖畫不出線，但畫得出點，
+     而且比一塊空白誠實——那一場的分數確實存在。 */
+  if (rs.length >= 1) {
     cc.classList.remove('hidden');
     const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
     const series = [
@@ -8640,6 +8714,13 @@ function appbarAuth(){
 function openDataTools(){
   closeDrawer();
   showView('hist');
+  /* R1-3（2026-09-03）：她按「資料與備份」，側欄卻反白「歷史紀錄」、標題也寫「我進步了嗎」。
+     這一批**只修反白與標題**，不把它做成獨立畫面（那是第 8 批 S6-2，等她決定）。
+     順序很重要：showView() 會把 tabHist 點亮、把 tabData 熄掉，所以這兩行一定要在它之後。 */
+  document.getElementById('tabHist').classList.remove('active');
+  document.getElementById('tabData').classList.add('active');
+  const h1 = document.getElementById('page-h1');
+  if (h1) h1.textContent = '資料與備份';
   const card = document.getElementById('data-tools');
   if (card && card.scrollIntoView) card.scrollIntoView({ block: 'start' });
 }
@@ -8652,6 +8733,26 @@ function updateSideFoot(){
   document.querySelectorAll('.js-side-ver').forEach(el => { el.textContent = APP_VER; });
   document.querySelectorAll('.js-side-sync').forEach(el => {
     el.textContent = currentUser ? '已同步' : '本機模式'; });
+  /* R2-3（2026-09-03）：設計稿側欄底部的兩行摘要。
+     **兩個數字一個都不手寫**（CLAUDE.md §七-10）：
+       累計時數 → credStats(load()).totalH，跟首頁 ACC 卡的「累計 N 小時」同一個來源
+       場數     → load().length，跟那張卡的「· N 場」同一個來源
+       已點到   → clientCoverage(load()) 的 accTouched 加總，跟客戶頁那張「職能已點到」同一套
+       分母     → 既有常數 ACC_MK_N（由 MK 的 acc 旗標推導出來的 20）
+     一場都沒有時不寫「0 / 20 條已點到」——那會被讀成「做過但一條都沒點到」。
+     那種情況只說一句「還沒有紀錄」，這是事實而且不指認失敗（§七-9）。 */
+  const sum = document.getElementById('nav-foot-sum');
+  if (sum){
+    const recs = load();
+    if (!recs.length){
+      sum.textContent = '還沒有紀錄';
+    } else {
+      const touched = clientCoverage(recs).reduce((t, x) => t + x.accTouched, 0);
+      sum.innerHTML = '<span class="js-side-hours">累計 ' + esc(String(credStats(recs).totalH))
+        + ' 小時 · ' + recs.length + ' 場</span><br>'
+        + '<span class="js-side-acc">ACC 進度 ' + touched + ' / ' + ACC_MK_N + ' 條已點到</span>';
+    }
+  }
 }
 
 /* ═══ §46 首頁（V3 第 5 批）═══════════════════════════════════════
@@ -8881,7 +8982,11 @@ function renderHomeMissing(){
            不跟主鈕平起平坐——她要的是少一點雜訊，不是多一顆一樣顯眼的按鈕。 */
         + '<button type="button" class="miss-skip" onclick="skipSession('
           + q(x.clientId) + ',' + m + ')">略過</button>'
-        + '<button type="button" class="btn btn-ghost btn-sm miss-go" onclick="startMakeup('
+        /* R2-2（2026-09-03）：這一列的主要動作是「記這一場」，它本來是 btn-ghost（灰底），
+           因為磚紅被側欄選中項佔走了。磚紅還回來之後，這裡改回 btn-primary。
+           「略過」維持無框文字鈕——一列只能有一顆主要動作。
+           `.miss-go` 這個 class 保留：<1024px 的 44px 觸控覆寫掛在它身上（§55）。 */
+        + '<button type="button" class="btn btn-primary btn-sm miss-go" onclick="startMakeup('
           + q(x.clientId) + ',' + m + ')">記這一場</button>'
         + '</div>');
     });
@@ -8920,6 +9025,11 @@ function renderHomeMissing(){
      真正該收的是「三種內容都沒有」。空卡等於在說「這裡本來應該有東西」。 */
   const has = total > 0 || dupN > 0 || skipped.length > 0;
   card.classList.toggle('hidden', !has);
+  /* 卡頭只有在真的有待記的場時才顯示（見 HTML 那裡的註解）。
+     **不可以用 html.length 判斷**——「已略過 N 場」那一塊自己也在 html 裡，
+     全部略過時它是 1 不是 0。要看的是「還有沒有待記的場或重號提醒」。 */
+  const head = document.getElementById('miss-head');
+  if (head) head.classList.toggle('hidden', total === 0 && dupN === 0);
   if (badge){ badge.textContent = total ? String(total) : ''; badge.classList.toggle('hidden', !total); }
   list.innerHTML = has ? html.join('') : '';
 }
