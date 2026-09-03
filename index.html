@@ -1966,6 +1966,27 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .miss-sub { display: block; margin-top: 1px; font-size: 12.5px; color: var(--ink-3); }
 .miss-go { flex: 0 0 auto; }
 .miss-dup { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+/* P2-6 「略過」是次要動作：無底無框的文字鈕，跟主鈕「記這一場」明顯不同階。
+   刻意不重用 .btn——.btn 的 flex:1 會讓它跟主鈕平分寬度，那就是平起平坐了。 */
+.miss-skip { flex: 0 0 auto; padding: 6px 8px; border: none; background: none;
+             color: var(--ink-3); font: inherit; font-size: 12.5px; cursor: pointer;
+             border-radius: 8px; }
+.miss-skip:hover { color: var(--ink-2); background: var(--line-3); }
+/* P2-8 還原入口：卡片最下面一行，預設收起來，展開後逐筆還原。 */
+.miss-skipped { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--warm-line); }
+.miss-skipped-tog { display: inline-flex; align-items: center; gap: 6px;
+                    padding: 4px 0; border: none; background: none; cursor: pointer;
+                    font: inherit; font-size: 12.5px; color: var(--warm-ink); }
+.miss-caret { font-size: 10px; }
+.miss-slist { margin-top: 8px; display: grid; gap: 8px; }
+.miss-srow { display: flex; align-items: center; gap: 11px;
+             padding: 9px 13px; background: var(--surface);
+             border: 1px dashed var(--warm-line); border-radius: 10px; }
+.miss-sid { flex: 1 1 0; min-width: 0; display: block; }
+.miss-scode { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink-2);
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.miss-ssub { display: block; margin-top: 1px; font-size: 12px; color: var(--ink-3); }
+.miss-restore { flex: 0 0 auto; }
 .btn-sm { padding: 6px 12px; font-size: 12.5px; }
 
 /* H4 客戶 */
@@ -2307,6 +2328,74 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      設計稿的精簡卡兩個都沒有，但把「已結案」也藏起來等於讓她看不出這位已經結案了。 */
   body[data-view="clientdetail"] .ccard-st[data-s="active"] { display: none; }
 }
+
+/* ═══ P2 略過：觸控目標（2026-09-03）═════════════════════════════
+   「略過」與「已略過 N 場」是無框文字鈕，看起來小，觸控區照樣要滿 44px。
+   **一定要寫在樣式表結尾**：上面那個 max-width:1023.98px 的觸控區塊位置在 §46 樣式之前，
+   寫在那裡的 padding 會被後面 .miss-skip 的 padding 簡寫原地蓋掉（同特異性、後者勝），
+   結果是 min-height 生效、padding 沒生效——這正是 lessons 記過的那個坑。
+   只在 <1024px 套用：桌機是滑鼠，44px 會讓這一列鬆散。 */
+@media (max-width: 1023.98px) {
+  .miss-skip { min-height: 44px; padding: 0 10px; }
+  .miss-skipped-tog { min-height: 44px; padding: 0; }
+  /* 2026-09-03：AUDIT 量到「還原」只有 29px。順帶發現**「記這一場」也是 29px**——
+     那是 2026-09-01 A 批把「還沒記的場」改成一場一列時就有的，一直沒人量到：
+     §26 的觸控掃描只涵蓋 .fold-head／.mini-link／.pchip／.recap-copy，
+     沒有涵蓋 .btn-sm，所以這張卡的主要動作在手機上一直低於觸控下限。
+     兩顆一起補。守衛見 tests §55（掃這張卡裡**每一顆**按鈕，不是列舉幾個 class）。 */
+  .miss-go { min-height: 44px; padding: 0 12px; }
+  .miss-restore { min-height: 44px; padding: 0 10px; }
+}
+/* ═══ 第 6 批：步驟 0「選客戶」與步驟 1 的已選客戶摘要 ═══════════════ */
+.pick-grid { display: grid; gap: 12px; margin-top: 4px;
+             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.pick-card { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit;
+             color: inherit; background: var(--surface); border: 1px solid var(--line);
+             border-radius: 12px; padding: 14px 15px; }
+.pick-card:hover { border-color: var(--warm-2); }
+/* flex-wrap：付費籤放不下時掉到第二行，而不是把代號與 meta 擠成兩行。
+   「還沒選付費別」是三種籤裡最長的，240px 的卡片剛好裝不下（實測 R 那張）。
+   籤的文字不縮寫——paidLabel() 是全站共用的，為了這裡改它會影響客戶列表。 */
+.pick-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pick-av { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+           background: var(--warm-bg); color: var(--warm-ink);
+           display: flex; align-items: center; justify-content: center;
+           font-size: 14px; font-weight: 700; }
+.pick-id { flex: 1 1 120px; min-width: 0; display: block; }
+.pick-code { display: block; font-size: 15px; font-weight: 700; color: var(--ink);
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-meta { display: block; margin-top: 1px; font-size: 12px; color: var(--ink-3); }
+.pick-paid { flex: 0 0 auto; margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 8px;
+             border-radius: 20px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.pick-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-ink); }
+.pick-paid[data-p="probono"] { background: var(--warm-bg);  color: var(--warm-ink); }
+.pick-focus { display: block; margin-top: 9px; font-size: 12.5px; color: var(--ink-2);
+              line-height: 1.5; }
+.pick-focus b { color: var(--ink-4); font-weight: 700; }
+.pick-new { border-style: dashed; background: transparent; }
+.pick-new-t { display: block; font-size: 15px; font-weight: 700; color: var(--warm-ink); }
+.pick-new-s { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
+/* 步驟 1 的已選客戶摘要 */
+.cpick { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+         background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; }
+.cpick-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+            background: var(--warm-bg); color: var(--warm-ink);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; }
+.cpick-id { flex: 1 1 0; min-width: 0; display: block; }
+.cpick-code { display: block; font-size: 14px; font-weight: 700; color: var(--ink);
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cpick-meta { display: block; margin-top: 1px; font-size: 12px; color: var(--ink-3); }
+.cpick-paid { flex: 0 0 auto; font-size: 11px; font-weight: 700; padding: 2px 8px;
+              border-radius: 20px; background: var(--surface); color: var(--ink-2); white-space: nowrap; }
+.cpick-paid[data-p="paid"]    { background: var(--cool-bg); color: var(--cool-ink); }
+.cpick-paid[data-p="probono"] { background: var(--warm-bg); color: var(--warm-ink); }
+.cpick-swap { flex: 0 0 auto; }
+@media (max-width: 1023.98px) {
+  /* 觸控下限：選客戶的卡片與「換一位」都是手指要點的 */
+  .cpick-swap { min-height: 44px; padding: 0 12px; }
+}
+
 </style>
 </head>
 <body>
@@ -2356,7 +2445,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="nav-brand-sub"><span class="js-side-ver" id="side-ver"></span><span class="nav-foot-dot"> · </span><span class="js-side-sync">本機模式</span></div>
     </div>
     <!-- 設計稿把「新增紀錄」做成最上面的陶土色主鈕，不是導覽項。id 沿用 tabNew，行為不變。 -->
-    <button type="button" class="nav-new" id="tabNew" onclick="goStep(1)"><span class="t-full">＋ 新增紀錄</span><span class="t-short">＋ 記</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
+    <button type="button" class="nav-new" id="tabNew" onclick="startNewRecord()"><span class="t-full">＋ 新增紀錄</span><span class="t-short">＋ 記</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
     <span class="nav-group">日常</span>
     <button class="tab" id="tabHome" onclick="showView('home')"><span class="t-full">首頁</span><span class="t-short">首頁</span></button>
     <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
@@ -2420,6 +2509,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   <div id="view-new" data-step="1">
 
     <!-- ── 步驟 1：會談本身（左欄） ── -->
+    <!-- ── 步驟 0：這一場是哪一位客戶？（2026-09-03 第 6 批）──
+         設計稿 isPick.html。卡片式選人，不是下拉——她的手機上一個一個點比拉選單快。
+         **`#f-client-sel` 沒有被移除**，它仍然是「這一場是誰」的唯一來源：
+         這裡的卡片只是把值寫進去而已。所有既有的存檔／編輯／測試邏輯因此原封不動。 -->
+    <div id="form-step0" data-step-only="0" class="hidden">
+      <div class="pick-grid" id="pick-grid"></div>
+    </div>
+
     <div id="form-step1" data-step-only="1">
 
     <!-- 1. 會談基本資料 -->
@@ -2449,11 +2546,29 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="f2col">
         <div class="f2col-cell">
           <label>客戶</label>
+          <!-- 2026-09-03 第 6 批：選人搬到步驟 0，這裡改成「已選的那一位 ＋ 換一位」。
+               **下拉沒有被刪，只是收起來**：它仍然是「這一場是誰」的唯一來源，
+               存檔、編輯、既有的 80 幾處測試全部照舊讀它。
+               刪掉它才是危險的——那會讓每一條讀 f-client-sel 的路徑同時失效。 -->
+          <div id="f-client-pick" class="cpick hidden">
+            <span class="cpick-av" id="f-cpick-av"></span>
+            <span class="cpick-id"><span class="cpick-code" id="f-cpick-code"></span>
+              <span class="cpick-meta" id="f-cpick-meta"></span></span>
+            <span class="cpick-paid" id="f-cpick-paid"></span>
+            <button type="button" class="btn btn-ghost btn-sm cpick-swap"
+                    onclick="goStep(0)">換一位</button>
+          </div>
           <select id="f-client-sel" onchange="onClientSelChange()"></select>
           <!-- 2026-08-28（Yi-En：「在新增紀錄、新增客戶的時候，就要可以記錄這個客戶有沒有付費」）
                這一組寫的是**客戶**的欄位，不是這一場的——ICF 時數表是一列一位客戶。 -->
           <div id="f-paid-box" class="hidden">
-            <label style="margin-top:10px">這位客戶是 <span class="hint" id="f-paid-hint">ICF 時數表要分開列</span></label>
+            <!-- 2026-09-03 Yi-En 畫掉了「ICF 時數表要分開列」那個灰字下標。
+                 標籤本身留著——三顆籤沒有標籤的話看不出是在問什麼。
+                 ⚠ 我第一版在這裡寫「這個 id 沒有被別的地方讀（已查）」——**那是錯的，沒查**。
+                 syncFormPaid() 就在讀它，而且會把文字換成「（改這裡會直接更新這位客戶）」。
+                 那半句是行為警告，不是說明。詳見 syncFormPaid() 裡的註解。
+                 客戶詳情頁的編輯區還有一份同樣的下標，她沒有畫那一個，所以沒動。 -->
+            <label style="margin-top:10px">這位客戶是</label>
             <div class="quickfilters" id="f-paid">
               <button type="button" class="pchip" data-paid=""        onclick="setFormPaid('')">還沒選</button>
               <button type="button" class="pchip" data-paid="paid"    onclick="setFormPaid('paid')">付費</button>
@@ -3219,6 +3334,40 @@ function storeC(a) { localStorage.setItem(CKEY, JSON.stringify(stampChanged(CKEY
 const DKEY = "coachingDeleted_v1";   // 刪除墓碑：避免另一台裝置把已刪的資料「復活」
 const SKEY = "coachingSyncedAt_v1";  // 上次看到的雲端 updated_at
 
+/* ═══ P2 逐場「略過」（2026-09-03）══════════════════════════════
+   Yi-En：「我希望可以在圈起來那裡多一個『略過』的按鍵，因為有時候已經真的是
+   太久之前的了，甚至案件都結束了，就沒有想要再回去寫。」
+
+   這推翻了 決策紀錄/2026-09-01_V3桌機設計_四項定案.md §1-A 第 3 條「不做忽略機制」，
+   但那一條當初就寫了「如果之後 Yi-En 覺得煩，再來談忽略機制」——她現在覺得煩了，
+   所以是**當初就規劃好的那條路**，不是臨時推翻。代價一條沒少：新鍵、升版號、要同步、要能還原。
+
+   資料形狀：純字串陣列，每一筆是 `clientId + '#' + 場次號`（沒有客戶的那一組 clientId 是空字串）。
+   為什麼是字串陣列而不是物件或索引：
+     - 不依賴任何陣列順序，也不依賴紀錄 id——被略過的那一場**根本沒有紀錄**，沒有 id 可以指。
+     - 跟 journalTags 同型別，於是雲端合併／匯出還原可以照抄那一條已經驗過的路。
+   **略過不是刪除**：資料上什麼都沒發生（不新增假紀錄、不動任何既有紀錄），
+   只是首頁那張卡不再提醒。任何時候還原都回得到原狀。 */
+const SKPKEY = "coachingSkipped_v1";
+function loadSkip(){ try { const a = JSON.parse(localStorage.getItem(SKPKEY)); return Array.isArray(a) ? a.filter(x=>typeof x === 'string') : []; } catch(e){ return []; } }
+/* 不走 stampChanged：這是純字串陣列，沒有 id 也沒有 updated，跟 storeJT 同一個做法。 */
+function storeSkip(a){ localStorage.setItem(SKPKEY, JSON.stringify(a)); schedulePush(); }
+function skipKey(clientId, n){ return String(clientId == null ? '' : clientId) + '#' + n; }
+function isSkipped(clientId, n){ return loadSkip().indexOf(skipKey(clientId, n)) >= 0; }
+function skipSession(clientId, n){
+  const a = loadSkip(); const k = skipKey(clientId, n);
+  if (a.indexOf(k) < 0) { a.push(k); storeSkip(a); }
+  renderHome();
+  toast('已略過這一場，想找回來在卡片下面');
+}
+function unskipSession(clientId, n){
+  const a = loadSkip(); const k = skipKey(clientId, n);
+  const i = a.indexOf(k);
+  if (i >= 0) { a.splice(i, 1); storeSkip(a); }
+  renderHome();
+  toast('這一場又回到清單裡了');
+}
+
 /* ═══ 帳號型資料的中央清單 ═══
    「這台裝置上屬於某一個帳號的資料」只在這裡列一次。三個地方共用同一份：
      1. doLogout()      登出成功後清理
@@ -3239,6 +3388,7 @@ const ACCOUNT_KEYS = [
   JTKEY,      // 手帳標籤
   DKEY,       // 刪除墓碑
   SKEY,       // 上次看到的雲端 updated_at
+  SKPKEY,     // P2：略過的場次（提醒設定，但跟著帳號走，不是裝置設定）
   RKEY,       // acc 影子副本
   PREV3KEY    // 四態遷移前的原樣快照
 ];
@@ -3302,6 +3452,15 @@ function mergeCloud(p){
   const tags = loadJT().slice();
   (p.journalTags || []).forEach(t=>{ if (tags.indexOf(t) < 0) tags.push(t); });
   localStorage.setItem(JTKEY, JSON.stringify(tags));
+  /* ⑤ P2 略過的場次：聯集，也不寫墓碑（跟④同一個處理）。
+     代價要講清楚：**一台略過，另一台就跟著略過；但「還原」不會傳播到另一台**
+     ——A 裝置把某一場叫回來，B 裝置的略過紀錄還在，下次合併又會把它蓋回略過。
+     為什麼選這一邊：略過不生效（她每次開都看到同一批不想記的場，就是她抱怨的那件事）
+     比還原不同步（少見，而且在那台裝置上再按一次還原就好）嚴重。
+     兩邊都不會遺失任何**紀錄**資料——略過只是提醒設定。 */
+  const skips = loadSkip().slice();
+  (p.skipped || []).forEach(k=>{ if (typeof k === 'string' && skips.indexOf(k) < 0) skips.push(k); });
+  localStorage.setItem(SKPKEY, JSON.stringify(skips));
   runMigrations(); updateCount(); updateAskCount();
 }
 function clientById(id) { return loadC().find(c=>c.id===id); }
@@ -3635,7 +3794,7 @@ async function refreshKeepaliveToken(user){
 }
 function cloudPayloadJSON(){
   return JSON.stringify({ records: load(), questions: loadQ(), clients: loadC(),
-    journal: loadJ(), journalTags: loadJT(), deleted: loadDel() });
+    journal: loadJ(), journalTags: loadJT(), deleted: loadDel(), skipped: loadSkip() });
 }
 function firestoreRestUrl(uid){
   const projectId = String((fb.app && fb.app.options && fb.app.options.projectId) || FIREBASE_CONFIG.projectId || '');
@@ -3724,7 +3883,12 @@ let pushFailed = false;
    使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 12;  /* v12（2026-09-02）：協議卡的「成果與重要性」拆成兩欄。
+const SCHEMA_VER = 13;  /* v13（2026-09-03）：payload 多一個集合 `skipped`（coachingSkipped_v1），
+                              ＝「這位客戶的第 N 場我不打算補了」的字串陣列，只影響首頁 H1 的提醒。
+                              照 v9／v10／v11／v12 的前例：**不寫遷移、不 backfill**——
+                              讀取端 loadSkip() 拿不到就是空陣列，舊 payload 一個位元組都不動，
+                              只靠 ensureCloudSnapshot(13) 先留 payload_pre_v13。
+                            v12（2026-09-02）：協議卡的「成果與重要性」拆成兩欄。
                               `outcome` 鍵名不動（v11 已上線），語意縮小成「成果」；新增可選 `importance`。
                               不需要遷移：讀取端一律 r.importance || ''，既有 outcome 的內容原樣保留。
                             v11（2026-09-01）：紀錄多三個可選欄位 outcome／obstacle／nextStep
@@ -4836,6 +5000,7 @@ function backupJSON() {
      另一台裝置會把已經刪掉的資料再同步回來。 */
   const data = { records: load(), questions: loadQ(), clients: loadC(),
                  journal: loadJ(), journalTags: loadJT(), deleted: loadDel(),
+                 skipped: loadSkip(),
                  exportedAt: new Date().toISOString() };
   /* 走跟其他匯出同一個下載函式，行為一致也驗得到 */
   downloadBlob(JSON.stringify(data, null, 2),
@@ -4877,6 +5042,13 @@ function restoreJSON(e) {
         const t = loadJT().slice();
         d.journalTags.forEach(x=>{ if (typeof x === 'string' && t.indexOf(x) < 0) t.push(x); });
         storeJT(t);
+      }
+      /* P2 略過的場次：純字串陣列，聯集去重，現有的排前面（跟標籤同一個做法）。
+         沒有這一段的話，換一台裝置用備份還原之後，略過掉的場次會全部跑回來。 */
+      if (Array.isArray(d.skipped)) {
+        const sk = loadSkip().slice();
+        d.skipped.forEach(x=>{ if (typeof x === 'string' && sk.indexOf(x) < 0) sk.push(x); });
+        storeSkip(sk);
       }
       /* 墓碑四桶各自聯集去重 */
       if (d.deleted && typeof d.deleted === 'object' && !Array.isArray(d.deleted)) {
@@ -5459,12 +5631,19 @@ function mkLines(x, i){
 }
 
 /* ---- views ---- */
-const STEP_TOTAL = 2;      // 新增紀錄頁：填內容 → 標職能
-let formStep = 1;          // §13-B 目前在第幾步。欄位一直在 DOM 裡，這裡只切顯示
+/* 2026-09-03 第 6 批：選客戶獨立成一個畫面。
+   **`STEP_TOTAL` 維持 2**——設計稿 isPick.html 的眉標寫的是「新增紀錄 · 步驟 0」，
+   也就是選客戶是**前置**畫面，不是被編號的第三步。
+   決策紀錄 09-01 寫的是「兩步 → 三步」；那份說的是流程有三個畫面（正確），
+   編號怎麼標屬於視覺事實，以設計稿為準（見交接包 §二之一的正本順序）。
+   這樣做的實際好處：眉標「步驟 1 / 2」與 37 處 goStep(2) 的語意都不必改。 */
+const STEP_TOTAL = 2;      // 被編號的步驟：填內容 → 標職能（選客戶是步驟 0，不計入）
+let formStep = 1;          // §13-B 目前在第幾步（0 選客戶／1 填內容／2 標職能）。
+                           // 欄位一直在 DOM 裡，這裡只切顯示
 /* 切步驟：兩步都只是顯示切換，填過的內容不會被清掉。
    從側欄「職能標記」進來時 v 可能不是 new，所以順手把頁面切過去。 */
 function goStep(n){
-  formStep = (n === 2) ? 2 : 1;
+  formStep = (n === 2) ? 2 : (n === 0 ? 0 : 1);
   const v = document.getElementById('view-new');
   if (v) v.setAttribute('data-step', String(formStep));
   document.querySelectorAll('#view-new [data-step-only]').forEach(el => {
@@ -5475,6 +5654,7 @@ function goStep(n){
   else { applyPageHead('new');
          /* §46-R：側欄不再有「職能標記」。步驟 1、2 都讓「＋ 新增紀錄」亮著。 */
          document.getElementById('tabNew').classList.add('active'); }
+  if (formStep === 0) renderPick();
   window.scrollTo(0, 0);
   updateSegbar();
   /* 步驟 1 ↔ 2 也是一次移動：從職能標記按上一頁應該回到會談記錄，不是離站。
@@ -5551,6 +5731,9 @@ const VIEW_HEAD = {
      副標在的時候按鈕對齊的是副標的下緣，不是 h1 的下緣。這是她圈的 alignment 的成因。 */
   home: { title: '今天想記哪一位？',
           actions: [['＋ 記一場', 'startNewRecord()', 'btn-primary', 'btn-home-new']] },
+  /* 2026-09-03 第 6 批：選客戶（步驟 0）。文案照設計稿 isPick.html 逐字。 */
+  new0: { title: '這一場是哪一位客戶？',
+          sub: '先選客戶，日期、會談次數、上一場的焦點會自動帶進來。' },
   new1: { title: '這一場發生了什麼',
           sub: '趁記憶還熱的時候寫。八大職能留到下一步，這裡只寫會談本身。' },
   /* 副標暫時不寫設計稿的「一次只看一項」——那是第 3 批 master–detail 才會成立的行為，
@@ -5633,7 +5816,7 @@ function syncActionBarH(){
   document.documentElement.style.setProperty('--ab-h', h + 'px');
 }
 function applyPageHead(v){
-  const key = v === 'new' ? (formStep === 2 ? 'new2' : 'new1') : v;
+  const key = v === 'new' ? (formStep === 2 ? 'new2' : formStep === 0 ? 'new0' : 'new1') : v;
   const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
   const h1 = document.getElementById('page-h1');
   const sb = document.getElementById('page-sub');
@@ -5681,7 +5864,10 @@ function applyPageHead(v){
   /* §46：首頁的眉標是今天的日期（設計稿 header 上面那一行），不是步驟 */
   /* S7-1：客戶詳情的眉標是「客戶」（設計稿 header）。手機不顯示——那裡的 h1 是客戶代號，
      上面再加一行「客戶」是重複的，而且手機頁首本來就要省空間（見 §S7 的 CSS）。 */
-  if (n)  n.textContent  = (v === 'new') ? ('步驟 ' + formStep + ' / ' + STEP_TOTAL)
+  /* 2026-09-03 Yi-En：「不要眉標」——步驟 0 不顯示。
+     步驟 1／2 的眉標照舊（那是「還有一步」的提示，她沒有要拿掉）。 */
+  if (n)  n.textContent  = (v === 'new') ? (formStep === 0 ? ''
+                                            : '步驟 ' + formStep + ' / ' + STEP_TOTAL)
                          : (v === 'home' ? todayLongStr()
                          : (v === 'clientdetail' ? '客戶' : ''));
   /* 眉標的 tooltip 是講兩步驟的，首頁的眉標是日期，不可以沿用 */
@@ -5690,7 +5876,8 @@ function applyPageHead(v){
   if (es){
     /* 步驟 2 的第二格是可以點的返回連結（設計稿 304–316） */
     const step2 = (v === 'new' && formStep === 2);
-    es.textContent = (v === 'new') ? (step2 ? '　← 回會談記錄' : '　會談記錄') : '';
+    es.textContent = (v === 'new')
+      ? (formStep === 0 ? '' : (step2 ? '　← 回會談記錄' : '　會談記錄')) : '';
     es.className = 'step-eyebrow-sub' + (step2 ? ' link' : '');
     es.onclick = step2 ? (() => goStep(1)) : null;
   }
@@ -5759,7 +5946,7 @@ function navRestore(st){
     currentId = st.id; currentClientId = st.cid; detailFrom = st.from || 'hist';
     if (st.v === 'detail' && st.id != null)            openDetail(st.id, st.from);
     else if (st.v === 'clientdetail' && st.cid)        openClient(st.cid);
-    else if (st.v === 'new')                           goStep(st.step === 2 ? 2 : 1);
+    else if (st.v === 'new')                           goStep(st.step === 2 ? 2 : (st.step === 0 ? 0 : 1));
     else                                               showView(st.v);
   } finally { _navRestoring = false; }
 }
@@ -5940,8 +6127,29 @@ function navTipText(){
 /* §14-B 側欄「進行中」籤：指的是有未存檔的草稿，不是「這個功能存在」。
    從既有的 segFilled()／accFilledCount() 推導——存完檔 resetForm() 會把它們清乾淨，
    籤就自己消失。不寫任何常數。 */
+/* 「有沒有寫到一半的東西」——**跟「某一段填完了沒」是兩個問題**。
+   2026-09-03：第 6 批讓側欄「＋ 新增紀錄」在沒有草稿時 resetForm()，
+   於是 hasDraft() 漏掉什麼，什麼就會被清掉。AUDIT 抓到兩個漏網的：
+   `f-mins` 與 `f-session` 不屬於任何一段（segFilled('basic') 只看日期與客戶），
+   所以只填了時長或場次號的人，按一下側欄就沒了。
+
+   為什麼不把它們併進 segFilled('basic')：那一段的語意是「這一段填完了沒」，
+   只填時長不算填完基本資料，改了會讓右欄導覽說謊。兩個問題要分開答。
+
+   場次號要排除自動填的那一份（autoSessionFill 寫的值會記在 lastAutoSession），
+   否則選完客戶就永遠「有草稿」，等於這個判斷失效。 */
 function hasDraft(){
-  return SEGS.some(([k]) => segFilled(k) === true) || accFilledCount() > 0;
+  if (SEGS.some(([k]) => segFilled(k) === true)) return true;
+  if (accFilledCount() > 0) return true;
+  const v = id => String((document.getElementById(id) || {}).value || '').trim();
+  if (v('f-mins')) return true;
+  /* 新客戶代號：按「＋ 新客戶」打完代號還沒存，那也是寫到一半的東西。
+     這一條是**掃描式守衛**自己抓出來的——原本我只補了 AUDIT 點名的 f-mins 與
+     f-session，列舉法就會停在那裡。 */
+  if (v('f-client-new')) return true;
+  const sess = v('f-session');
+  if (sess && sess !== lastAutoSession) return true;
+  return false;
 }
 function updateWipBadge(){
   const el = document.getElementById('navWip');
@@ -7431,8 +7639,37 @@ function onClientSelChange(){
   syncFormPaid();
   showLastImprove(sel.value === '__new__' ? '' : sel.value);
   refreshFocusReview();
-  if (sel.value === '__new__') { document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
+  if (sel.value === '__new__') { syncClientPick(); document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
+  syncClientPick();
+}
+/* 步驟 1 的「已選客戶」摘要。**只有這一個更新點**，掛在 onClientSelChange() 尾巴上——
+   凡是改變 f-client-sel 的路徑都會經過那裡（步驟 0 的卡片、補記捷徑、編輯舊紀錄、
+   客戶頁那顆按鈕），所以不必在每個入口各補一次，也就不會有人漏掉。
+   下拉沒有被刪：選到已結案客戶（編輯舊紀錄時）或還沒選時，摘要收起來、下拉照樣露出來，
+   使用者永遠有辦法改。 */
+function syncClientPick(){
+  const sel = document.getElementById('f-client-sel');
+  const box = document.getElementById('f-client-pick');
+  if (!sel || !box) return;
+  const c = sel.value && sel.value !== '__new__' ? clientById(sel.value) : null;
+  /* 已結案的客戶不出現在步驟 0 的卡片裡，所以摘要上的「換一位」會讓她選不回原本那位。
+     這種情況（只發生在編輯舊紀錄）維持用下拉，不套摘要。 */
+  const ok = !!c && c.status !== 'closed';
+  box.classList.toggle('hidden', !ok);
+  sel.classList.toggle('hidden', ok);
+  if (!ok) return;
+  const st = clientStats(c.id);
+  const last = lastRec(st);
+  const lastN = last ? parseSessionNum(last.session) : null;
+  const meta = [last && last.date ? '上一場 ' + mdStr(last.date) : '',
+                last ? (lastN == null ? String(last.session || '').trim() : '第 ' + lastN + ' 次') : ''
+               ].filter(Boolean).join(' · ');
+  document.getElementById('f-cpick-av').textContent = (c.code || '?').slice(0, 1);
+  document.getElementById('f-cpick-code').textContent = c.code || '';
+  document.getElementById('f-cpick-meta').textContent = meta;
+  const pd = document.getElementById('f-cpick-paid');
+  pd.textContent = paidLabel(c.paid); pd.dataset.p = c.paid || '';
 }
 /* 新增紀錄頁的付費別：改的是**客戶**的欄位，所以按下去就立刻寫進客戶資料，
    不等這一場存檔——這一場可能根本沒存，但「這位客戶是付費的」這件事已經成立。
@@ -7448,9 +7685,15 @@ function syncFormPaid(){
   const cur = c ? (c.paid || '') : _newClientPaid;
   document.querySelectorAll('#f-paid .pchip').forEach(b=>
     b.classList.toggle('on', (b.dataset.paid || '') === cur));
-  const hint = document.getElementById('f-paid-hint');
-  if (hint) hint.textContent = c ? 'ICF 時數表要分開列（改這裡會直接更新這位客戶）'
-                                 : 'ICF 時數表要分開列';
+  /* 2026-09-03 Yi-En 畫掉了那個下標，所以這裡不再更新它（元素也拿掉了）。
+     被拿掉的文字原本是：
+       選了既有客戶 → 「ICF 時數表要分開列（改這裡會直接更新這位客戶）」
+       新客戶       → 「ICF 時數表要分開列」
+     括號那半句是行為警告不是說明：這三顆籤改的是「客戶」的欄位，
+     按下去會立刻寫進客戶資料、而且**回溯影響那位客戶的所有場次**在 ICF 表上的分類。
+     SPEC 把這件事回報給 Yi-En，她的答覆是：
+       **「不需要警告，反正出 Excel 表的時候他自然會看到」**
+     所以警告不加回來。**這是她的決定，不是漏掉的** —— 不要再自作主張補上去。 */
 }
 function setFormPaid(v){
   const sel = document.getElementById('f-client-sel');
@@ -7674,6 +7917,10 @@ function setClientStatusTop(id, val){
   storeC(cs);
   const hid = document.getElementById('c-status'); if (hid) hid.value = c.status;
   openClient(id);                       /* 重繪：狀態籤與列表一起更新 */
+  /* P1-3：結案之後那位的缺號要**當場**從首頁「還沒記的場」消失，不必重整頁面。
+     這裡不加 currentView === 'home' 的條件——改狀態時人一定在客戶頁，
+     加了條件等於永遠不會執行。首頁的 DOM 一直都在，先算好，走回首頁就是對的。 */
+  renderHome();
   toast(c.status === 'closed' ? '已標記為結案' : '已標記為進行中');
 }
 
@@ -7761,19 +8008,15 @@ function openClient(id){
   if (avEl) avEl.textContent = (Array.from(String(c.code || '').trim())[0] || '');
   const paidEl = document.getElementById('cd-paid');
   if (paidEl){ paidEl.textContent = paidLabel(c.paid); paidEl.dataset.p = c.paid || ''; }
-  /* S2-2／S2-3／S2-4：第二行「最近一場 M/D · 目前議題「…」」。
-     沒有紀錄 → 整行不顯示（S2-4）；最近一場沒填議題 → 只留前半段，
-     **不印「（沒填議題）」**（S2-3；那是清單裡的寫法，標題列不適用）。
-     st.rs 是日期新→舊，[0] 就是最近一場，與統計卡同一份資料。 */
+  /* 2026-09-02 Yi-En：「不需要顯示，太多了，刪掉」。
+     原本這裡是 S2-2 的第二行「最近一場 M/D · 目前議題「…」」（照設計稿做的）。
+     設計稿的假資料議題只有一句（「想清楚要不要離職」），她真實的議題常常是
+     多條列的長文，整行會脹成一大塊，把標題列擠爆。
+     而且「最近一場」在頁首副標已經有一份（「1 場 · 1.2 小時 · 最近一場 2026-09-02」），
+     這一行本來就是重複的——手機上兩個相距 40px、兩種格式。刪掉一次解決兩件事。
+     `#cd-sub` 元素留著不動（空的就不佔位），要復原只要把這一段填回去。 */
   const subEl = document.getElementById('cd-sub');
-  if (subEl){
-    const lastRec = st.rs.length ? st.rs[0] : null;
-    const lastD = lastRec ? mdStr(lastRec.date) : '';
-    const lastT = lastRec ? topicText(lastRec) : '';
-    subEl.innerHTML = !lastRec ? ''
-      : ('最近一場 ' + esc(lastD || '—')
-         + (lastT ? ' · 目前議題「' + esc(lastT) + '」' : ''));
-  }
+  if (subEl) subEl.innerHTML = '';
   /* M2：狀態改放最上方。這裡與底部編輯區共用同一份 c.status，資料欄位不變。
      兩邊都在時會互相覆蓋，所以底部那一份已改成唯讀提示（見下方 client-info）。 */
   const stTop = document.getElementById('cd-status-top');
@@ -8427,7 +8670,16 @@ function updateSideFoot(){
 
 /* H1：依 clientId 分組（沒有客戶的自成一組），在 1…max 之間找沒出現的號碼。
    號碼重複也回報。解析不出來的（'Meet and Greet'）不計入，也不算缺漏。
-   不做「忽略」機制——那要新增 localStorage 鍵並升 SCHEMA_VER，這一版不碰。 */
+
+   P1（2026-09-03 Yi-En：「有時候已經真的是太久之前的了，甚至案件都結束了」）：
+   **已結案的客戶整組不回報**（缺號與重號都不回報）。這裡零新資料，用的是既有的
+   c.status === 'closed'——工具本來就知道誰結案了，只是這張卡沒拿來用。
+   語意是「不再提醒」，不是「不算數」：這個函式只餵首頁 H1 那張卡，
+   時數／場次／不重複客戶數／ICF 送審表都不經過這裡，所以結案不影響任何統計。
+   找不到客戶實體的（clientId 指向已刪除的客戶）照舊回報——那不是結案，是資料有洞。
+
+   逐場的「略過」**不在這裡篩**：略過是畫面層的提醒設定，篩在 renderHomeMissing()，
+   這樣這個函式的輸出永遠是「資料上真正缺的場」，不會有第二種世界觀。 */
 function missingSessions(recs){
   const g = new Map();
   (recs || []).forEach(r => {
@@ -8442,6 +8694,7 @@ function missingSessions(recs){
   const out = [];
   g.forEach((e, key) => {
     const c = key ? clientById(key) : null;
+    if (c && c.status === 'closed') return;      /* P1-1：已結案就不再提醒（缺號與重號都不回報） */
     const code = (c && c.code) || e.name || (key ? '' : '沒有指定客戶的紀錄');
     const seen = new Set(e.nums);
     const max = e.nums.reduce((a, b) => b > a ? b : a, 0);
@@ -8476,7 +8729,7 @@ function monthRecs(recs, back){
    否則會被 autoSessionFill() 用「上一場＋1」蓋掉。 */
 function startMakeup(clientId, n){
   resetForm();
-  if (clientId) buildClientSel(clientId);
+  if (clientId) buildClientSel(clientId);   /* 補記缺號同樣直接進步驟 1 */
   const sess = document.getElementById('f-session');
   if (sess && n){
     sess.value = '第' + numToCh(n) + '次';
@@ -8496,7 +8749,83 @@ function todayLongStr(){
 }
 /* 首頁右上「＋ 記一場」。**刻意只切頁、不 resetForm()**——
    側欄「新增紀錄」也是這個語意（goStep(1)），打到一半的草稿不可以被一顆按鈕清掉。 */
-function startNewRecord(){ goStep(1); }
+/* ═══ 第 6 批：步驟 0「這一場是哪一位客戶？」═══════════════════════════
+   設計稿 isPick.html。每一張卡：頭像／代號／「最近 M/D · 第 N 次」／付費籤／上一場的焦點。
+   **每一個數字都呼叫既有函式**（CLAUDE.md §七-10）：
+     場次與最近日期 → clientStats()　付費籤 → paidLabel()　場次號 → formatSession()
+   已結案的客戶不列——步驟 0 只用在**新增**紀錄，跟新增紀錄的下拉同一個規則。
+   （編輯舊紀錄不會經過這個畫面，所以不需要「保留正在選的那一位」那個例外。） */
+/* 「這位客戶最近的那一場」。抽出來是因為 2026-09-03 AUDIT 指出
+   pickRows() 與 syncClientPick() 各自寫了一份 `st.rs[0]`——同一個語意兩份實作，
+   哪天有人只改一邊，卡片與摘要就會各說各話而且沒人抓得到。
+   clientStats().rs 是日期新→舊，所以最近的是 [0]。 */
+function lastRec(st){ return (st && st.rs && st.rs.length) ? st.rs[0] : null; }
+function pickRows(){
+  return loadC().filter(c => c.status !== 'closed').map(c => {
+    const st = clientStats(c.id);
+    const last = lastRec(st);
+    return { id: c.id, code: c.code || '', paid: c.paid || '',
+             n: st.n, lastDate: last ? (last.date || '') : '',
+             /* 設計稿寫「第 13 次」用阿拉伯數字，不是 formatSession() 的「第十三次會談」——
+                後者在 240px 的卡片裡會換行（實測 A 小姐與 R 兩張都被擠成兩行）。
+                號碼走既有的 parseSessionNum()，解析不出來就退回原文，不自己再寫一套解析。 */
+             lastSess: last ? (function(){
+               const k = parseSessionNum(last.session);
+               return k == null ? String(last.session || '').trim() : '第 ' + k + ' 次';
+             })() : '',
+             lastFocus: last ? String(last.focus || '').trim() : '' };
+  }).sort((a, b) => (b.lastDate || '').localeCompare(a.lastDate || '')
+                 || (a.code || '').localeCompare(b.code || '', 'zh-Hant'));
+}
+function renderPick(){
+  const box = document.getElementById('pick-grid');
+  if (!box) return;
+  const rows = pickRows();
+  const q = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  const meta = r => [r.lastDate ? '最近 ' + mdStr(r.lastDate) : '', r.lastSess]
+                    .filter(Boolean).join(' · ');
+  box.innerHTML = rows.map(r =>
+    '<button type="button" class="pick-card" data-cid="' + esc(r.id) + '"'
+      + ' onclick="pickClient(' + q(r.id) + ')">'
+    + '<span class="pick-top">'
+      + '<span class="pick-av">' + esc((r.code || '?').slice(0, 1)) + '</span>'
+      + '<span class="pick-id"><span class="pick-code">' + esc(r.code) + '</span>'
+        + (meta(r) ? '<span class="pick-meta">' + esc(meta(r)) + '</span>' : '')
+      + '</span>'
+      + '<span class="pick-paid" data-p="' + esc(r.paid) + '">' + esc(paidLabel(r.paid)) + '</span>'
+    + '</span>'
+    /* 沒有上一場焦點就整段不顯示——不印「（沒有）」，那會讓每張卡都掛一句廢話 */
+    + (r.lastFocus ? '<span class="pick-focus"><b>上一場的焦點：</b>' + esc(r.lastFocus) + '</span>' : '')
+    + '</button>').join('')
+    + '<button type="button" class="pick-card pick-new" onclick="pickNewClient()">'
+      + '<span class="pick-new-t">＋ 新客戶</span>'
+      + '<span class="pick-new-s">只要一個代號就能開始，付費籤之後再設。</span>'
+    + '</button>';
+}
+/* 選好之後把值寫進既有的 #f-client-sel，再走既有的 onClientSelChange()
+   —— 日期、會談次數、上一場焦點的自動帶入全部沿用，這裡不重寫任何一條。 */
+function pickClient(id){
+  const sel = document.getElementById('f-client-sel');
+  if (sel){ buildClientSel(id); }
+  goStep(1);
+}
+function pickNewClient(){
+  const sel = document.getElementById('f-client-sel');
+  if (sel){ sel.value = '__new__'; onClientSelChange(); }
+  goStep(1);
+  const nn = document.getElementById('f-client-new');
+  if (nn) nn.focus();
+}
+/* 「＋ 新增紀錄」從步驟 0 開始（設計稿的流程）——**但有進行中的草稿就不要**。
+   側欄那顆「進行中」籤就是 hasDraft()；本來按「＋ 新增紀錄」是回到填到一半的地方，
+   若改成無條件 resetForm()＋步驟 0，等於每次點側欄都把她寫到一半的東西清掉。
+   編輯中（editId）同理，那不是新增。
+   帶著客戶進來的入口（客戶頁那顆按鈕、補記缺號）直接跳步驟 1，
+   否則使用者要再選一次同一個人。 */
+function startNewRecord(){
+  if (editId || hasDraft()) { goStep(1); return; }
+  resetForm(); goStep(0);
+}
 /* 從客戶詳情頁直接記這一位的一場。帶入客戶之後走的是**既有的** buildClientSel()，
    它會接著呼叫 onClientSelChange() → autoSessionFill()／refreshFocusReview()，
    所以場次號自動接續上一場、上一場的焦點也照常帶出來——這裡不另外算任何東西。
@@ -8505,7 +8834,7 @@ function startClientRecord(cid){
   const c = clientById(cid || currentClientId);
   resetForm();
   if (c) buildClientSel(c.id);
-  goStep(1);
+  goStep(1);   /* 已經帶好客戶，不必再經過步驟 0 */
   const d = document.getElementById('f-date');
   if (d) d.focus();
   if (c) toast('已帶入 ' + c.code + '，日期與場次先填好了');
@@ -8517,46 +8846,82 @@ function homeStatCard(label, big, foot){
     + '<div class="hstat-b">' + esc(big) + '</div>'
     + '<div class="hstat-f">' + esc(foot) + '</div></div>';
 }
+/* P2-8「一定要能還原」：展開狀態放在模組層，跨重繪保留——
+   按「還原」會 renderHome()，如果狀態存在 DOM 裡，清單會在你按下去的那一刻自己收起來。 */
+let missSkipOpen = false;
+function toggleMissSkipped(){ missSkipOpen = !missSkipOpen; renderHome(); }
 function renderHomeMissing(){
   const card = document.getElementById('miss-card');
   const list = document.getElementById('miss-list');
   const badge = document.getElementById('miss-n');
   if (!card || !list) return;
+  /* missingSessions() 給的是「資料上真正缺的場」（已排除結案客戶）。
+     略過在這裡篩掉，不篩在那個函式裡——那個函式的輸出要保持單一世界觀。 */
   const rows = missingSessions(load());
-  /* 一場都不缺就整張卡收起來——空卡等於在說「這裡本來應該有東西」。 */
-  card.classList.toggle('hidden', rows.length === 0);
-  if (!rows.length) { list.innerHTML = ''; return; }
-  const total = rows.reduce((t, x) => t + x.miss.length, 0);
-  if (badge){ badge.textContent = total ? String(total) : ''; badge.classList.toggle('hidden', !total); }
+  const skipSet = new Set(loadSkip());
   const q = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
   /* 2026-09-01 Yi-En：「左邊就是好好放名字，然後下標示，如果他有好幾場，你就分別記就好了」。
-     ＝ 一個缺漏場次一列（不是一位客戶一句話），左邊頭像＋代號、下面「第 N 場」、右邊一顆按鈕。
+     ＝ 一個缺漏場次一列（不是一位客戶一句話），左邊頭像＋代號、下面「第 N 場」、右邊按鈕。
      設計稿那列的「8/26 · 60 分鐘 · 3 天前」算不出來（缺的那場從來沒被記過，沒有日期也沒有時長），
      所以下面那行只寫場次號——寧可少一個欄位，也不編一個看起來像真的的時間。 */
   const av = c => esc(String(c || '?').slice(0, 1));
   const html = [];
+  const skipped = [];          /* 目前真的被略過掉的那幾場（＝這張卡因為略過而沒顯示的） */
+  let total = 0;               /* 徽章的數字：只數「現在還在提醒」的，不含已略過的 */
   rows.forEach(x => {
     const code = x.code || '找不到的客戶';
     x.miss.forEach(m => {
+      if (skipSet.has(skipKey(x.clientId, m))) { skipped.push({ id: x.clientId, code: code, n: m }); return; }
+      total++;
       html.push('<div class="miss-row">'
         + '<span class="miss-av">' + av(code) + '</span>'
         + '<span class="miss-id"><span class="miss-code">' + esc(code) + '</span>'
           + '<span class="miss-sub">第 ' + m + ' 場</span></span>'
+        /* P2-6：主要動作仍然是「記這一場」。「略過」是次要動作，用無框的文字鈕，
+           不跟主鈕平起平坐——她要的是少一點雜訊，不是多一顆一樣顯眼的按鈕。 */
+        + '<button type="button" class="miss-skip" onclick="skipSession('
+          + q(x.clientId) + ',' + m + ')">略過</button>'
         + '<button type="button" class="btn btn-ghost btn-sm miss-go" onclick="startMakeup('
           + q(x.clientId) + ',' + m + ')">記這一場</button>'
         + '</div>');
     });
   });
   /* 重複不是缺漏：不給按鈕、也不算進上面那顆數字，只放一句提醒。
-     語氣照 CLAUDE.md §七-9——「看看是不是」，不是「你記錯了」。 */
+     語氣照 CLAUDE.md §七-9——「看看是不是」，不是「你記錯了」。
+     重號也不提供略過：它不是「要不要補記」的問題，是「這兩筆是不是同一場」。 */
+  let dupN = 0;
   rows.forEach(x => {
     if (!x.dup.length) return;
+    dupN += x.dup.length;
     const code = x.code || '找不到的客戶';
     const who = esc(code) + (/[\u4e00-\u9fff]$/.test(code) ? '的' : ' 的');
     html.push('<div class="miss-dup">' + who + '第 ' + x.dup.join('、')
       + ' 場有兩筆以上，看看是不是同一場記了兩次</div>');
   });
-  list.innerHTML = html.join('');
+  /* P2-8 還原入口。語氣（P2-10）：標題就寫「已略過 N 場」，不寫「你放棄的」那類字眼。
+     只列「現在還算缺號」的略過（例如那一場後來真的記了，它就不再是缺號，也就不必再列）——
+     這樣「已略過 N 場」永遠等於「這張卡因為略過而少顯示的場數」，數字對得起來。 */
+  if (skipped.length){
+    const items = skipped.map(x =>
+      '<div class="miss-srow">'
+      + '<span class="miss-sid"><span class="miss-scode">' + esc(x.code) + '</span>'
+        + '<span class="miss-ssub">第 ' + x.n + ' 場</span></span>'
+      + '<button type="button" class="btn btn-ghost btn-sm miss-restore" onclick="unskipSession('
+        + q(x.id) + ',' + x.n + ')">還原</button></div>').join('');
+    html.push('<div class="miss-skipped">'
+      + '<button type="button" class="miss-skipped-tog" aria-expanded="' + (missSkipOpen ? 'true' : 'false')
+        + '" onclick="toggleMissSkipped()">已略過 ' + skipped.length + ' 場'
+        + '<span class="miss-caret">' + (missSkipOpen ? '▾' : '▸') + '</span></button>'
+      + (missSkipOpen ? '<div class="miss-slist">' + items + '</div>' : '')
+      + '</div>');
+  }
+  /* 收卡的條件（P1-4 的既有行為擴充）：原本是 rows.length === 0。
+     現在還要考慮「全部都被略過」——那種情況卡片仍然要在，因為它是唯一的還原入口；
+     真正該收的是「三種內容都沒有」。空卡等於在說「這裡本來應該有東西」。 */
+  const has = total > 0 || dupN > 0 || skipped.length > 0;
+  card.classList.toggle('hidden', !has);
+  if (badge){ badge.textContent = total ? String(total) : ''; badge.classList.toggle('hidden', !total); }
+  list.innerHTML = has ? html.join('') : '';
 }
 function renderHomeClients(){
   const box = document.getElementById('home-cli');
