@@ -148,7 +148,24 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 /* reflect report */
 .reflect-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
 .pchip { border: 1px solid var(--warm-line); background: var(--surface); color: var(--ink-2); border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
-.pchip.on { background: var(--warm); color: var(--surface); border-color: var(--warm); }
+/* R9-F1（2026-09-04 Yi-En：「一起收乾淨」）：磚紅從選中態收回來。
+   **但 `.pchip` 有兩種語意，不能一視同仁**（SPEC 2026-09-04 逐一查過呼叫端）：
+
+     篩選用   歷史頁快篩、手帳標籤篩選
+              → 只是畫面狀態，選錯了一秒就看得出來。收成淺色疊層＋字重（照 R2 側欄選中項的做法）。
+
+     資料輸入 步驟 1 付費別、新客戶付費別、導師提問分類（`.pchip-in`）
+              → **選了什麼就是會被存下去的值**，選中態必須一眼看得出來，不可以收淡。
+                收淡等於讓人問「我到底選了嗎」——那正是 §七-2 那條規則的來源。
+                改成**實心冷色**：明確、對比夠、而且不是磚紅。
+
+   兩種都不用 --warm 實心。主色從此只留給「主要動作」。色票全部既有，沒有新增。
+   `.pchip` 這個 class **兩邊都保留**——§26／§55 的 44px 觸控覆寫掛在它身上，
+   拆成新 class 而不繼承的話那個覆寫會漏掉。 */
+.pchip.on { background: var(--warm-bg); color: var(--warm-ink);
+            border-color: var(--warm-2); font-weight: 700; }
+.pchip-in.on { background: var(--cool); color: var(--surface);
+               border-color: var(--cool); font-weight: 700; }
 .reflect-score { flex: 1; background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 10px 4px; text-align: center; }
 .reflect-score .rs-num { font-size: 22px; font-weight: 700; color: var(--cool); }
 .reflect-score .rs-name { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
@@ -174,15 +191,31 @@ textarea { resize: vertical; min-height: 46px; }
 .row { display: flex; gap: 10px; }
 .row > div { flex: 1; min-width: 0; }
 @media (max-width: 480px) { .row { flex-direction: column; gap: 0; } }
-.score-wrap { display: flex; align-items: center; gap: 12px; }
-.score-wrap input[type=range] { flex: 1; accent-color: var(--warm); }
-.score-val {
-  min-width: 42px; text-align: center; font-weight: 700; font-size: 17px;
-  color: var(--cool-d); background: var(--cool-bg); border-radius: 8px; padding: 3px 0;
+/* C（2026-09-04）：滑桿換成 1–10 按鈕。
+   十顆一排；窄螢幕排不下就折成兩排五顆——**不縮小按鈕**（C5）。 */
+.sc10 { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.sc10-b {
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2);
+  border-radius: 9px; font-size: 14px; font-weight: 600; padding: 8px 0; cursor: pointer;
+  font-variant-numeric: tabular-nums;
 }
-/* A2 未評估：這一場沒評過這一項。灰用 .hint 那個 --ink-4，不新增色票 */
-.score-val.unset { font-size: 12.5px; letter-spacing: 0.02em; font-weight: 600;
-                   color: var(--ink-2); background: var(--line-3); }
+.sc10-b.on { background: var(--warm); border-color: var(--warm); color: var(--surface); }
+/* 沒選／舊值不在 1–10 上：據實寫一行字，不佔一個看起來像分數的方塊。
+   12.5px 的小字對比門檻是 4.5:1，所以「還沒選」用深字＋灰底的小籤，
+   不靠「顏色淡一點」來表示弱化——那會同時把可讀性弱化掉（既有規則，§A2 那條守衛）。 */
+.score-state { font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+               margin-top: 7px; min-height: 1em; }
+.score-state.unset, .score-state.legacy {
+  display: inline-block; color: var(--ink); background: var(--line-3);
+  border-radius: 8px; padding: 3px 9px;
+}
+@media (max-width: 559.98px) {
+  /* 375px 放不下十顆 ≥44px 的按鈕 → 折成兩排五顆（C5：換排法，不縮小按鈕） */
+  .sc10 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 1023.98px) {
+  .sc10-b { min-height: 44px; }        /* §55 觸控下限 */
+}
 .multi-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
 .multi-item textarea { flex: 1; }
 .mini-btn {
@@ -672,20 +705,26 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-head { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink-3); margin-bottom: 6px; }
 .hm-note { font-size: 11.5px; line-height: 1.7; color: var(--ink-3); background: var(--surface-2);
            border-radius: 7px; padding: 8px 10px; margin-bottom: 9px; }
-/* 2026-08-29：分母那行從「12／28 場」變成「4–7／7 場有逐條勾（這項共評估 27 場）樣本少…」，
-   84px 的欄位加上 nowrap 會把整列撐爆，桌機出現橫向捲動。改成自己佔一整行。 */
-.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr);
-          gap: 4px 10px; align-items: center; padding: 5px 0; }
-.hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0; }
+/* R10-6（2026-09-05）：三個東西排成**一行**。
+   改版前分母自己佔一整行（`grid-column: 1 / -1`），列高 53px——那是 2026-08-29
+   的補救：當時分母是一長串「4–7／7 場有逐條勾（這項共評估 27 場）樣本少…」，
+   84px 的欄位加 nowrap 會把列撐爆。**R10-1 把那串縮成「4 / 7」之後，
+   撐爆的成因不在了**，所以可以收回同一行。 */
+.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr) 44px;
+          gap: 0 10px; align-items: center; padding: 2px 0; }
+.hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0;
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hm-name b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.hm-cells { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
-.hm-den { grid-column: 1 / -1; font-size: 11px; color: var(--ink-4);
-          text-align: left; white-space: normal; line-height: 1.5;
+.hm-cells { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; }
+.hm-den { font-size: 11px; color: var(--ink-4); text-align: right; white-space: nowrap;
           font-variant-numeric: tabular-nums; }
+/* R10-5：編號留著，但**更小更細**（她：「保留編號，但字小一點、細一點」）。
+   34×22／10.5px → 26×16／9px＋字重 400＋顏色降一階。
+   底線是「還看得清楚」——她要的是小，不是看不到，所以沒有再往下壓。 */
 .hm-cell {
-  flex: 0 0 auto; min-width: 34px; height: 22px; border-radius: 5px;
+  flex: 0 0 auto; min-width: 26px; height: 16px; border-radius: 4px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 10.5px; font-variant-numeric: tabular-nums;
+  font-size: 9px; font-weight: 400; font-variant-numeric: tabular-nums;
   border: 1px solid var(--line); background: var(--surface);
 }
 /* 0 次＝從來沒點到。空心，跟「最冷的顏色」明確區分——這是盲點，不是弱項。 */
@@ -699,8 +738,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
              margin-top: 12px; font-size: 11px; color: var(--ink-3); }
 .hm-caveat { font-size: 11px; line-height: 1.7; color: var(--ink-4); margin-top: 7px; }
 .hm-legend .hm-cell { min-width: 22px; }
+/* 圖例尾巴那句分母：比色票標籤再淡一階，讀得到但不搶戲 */
+.hm-legend-den { color: var(--ink-4); }
 @media (max-width: 700px) {
+  /* 手機仍然堆疊：一行三欄在 375px 放不下（名稱 132px ＋ 39 格 ＋ 數字）。
+     R10-6 的「一行」是桌機的事，她看的截圖也是桌機。 */
   .hm-row { grid-template-columns: minmax(0,1fr); gap: 4px; padding: 8px 0; }
+  .hm-name { white-space: normal; }
+  .hm-den { text-align: left; }
 }
 .cum-todo { margin-top: 18px; border-top: 1px solid var(--line-2); padding-top: 12px; }
 .todo-row { border-left: 3px solid var(--st1-line); padding: 8px 0 8px 11px; margin-top: 10px; }
@@ -780,7 +825,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   align-items: baseline;
 }
 .sess-head span { font-size: 11px; font-weight: 700; color: var(--ink-4); }
-.sess-head .sh-topic { color: var(--warm-ink); }
+/* R9-F1：欄位標題「這一場的議題」原本用 --warm-ink 當強調。
+   磚紅收乾淨之後，它跟其他欄位標題一樣吃 --ink-4（那一行本來就是 11px/700）。
+   要強調的話字重已經是 700 了，不需要再借主色。 */
 .sess-head .sh-meta { text-align: right; }
 .sess-head .sh-cells { text-align: center; white-space: nowrap; }
 .sess {
@@ -1044,14 +1091,20 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .jtag-x { border: none; background: none; color: var(--ink-4); cursor: pointer; font-size: 13px; padding: 0 0 0 2px; line-height: 1; }
 .j-confirm { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
 .j-title { font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.5; margin-top: 6px; }
-/* 三種內容三個底色：提醒＝可以照唸的句子（藍底）、為什麼＝暖粉底、例子＝灰底 */
-.j-note { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 8px;
-          padding: 9px 11px; margin-top: 8px; font-size: 14.5px; line-height: 1.65; color: var(--ink); white-space: pre-wrap; }
-.j-why  { background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 8px;
-          padding: 8px 11px; margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; }
-.j-ex   { background: var(--line-3); border: 1px solid var(--line-2); border-radius: 8px;
-          padding: 8px 11px; margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; }
-.j-lbl  { display: block; font-size: 11px; font-weight: 700; color: var(--ink-3); margin-bottom: 2px; }
+/* R5-2（2026-09-04）：**一張卡只留一塊底色**。
+   原本是「三種內容三個底色」（提醒藍底／為什麼暖粉底／例子灰底），三個框上下堆——
+   視覺對比報告的說法是「設計是翻卡牆（一張卡只有一塊粉色在跳），現況是長帖子」。
+   現在：主句（提醒）＝唯一那塊粉底；為什麼與例子改成「小標籤＋純文字」，沒有底色也沒有邊框。
+   數值全部來自設計稿 isJournal.html 的 inline style，顏色一律用既有 token
+   （粉底 --warm-bg-2、主句字 --warm-d、為什麼 --ink-2、例子 --cool-d，四個都與設計稿逐位元組相同）。 */
+.j-note { background: var(--warm-bg-2); border-radius: 10px;
+          padding: 11px 13px; margin-top: 9px; font-size: 14px; line-height: 1.75;
+          color: var(--warm-d); white-space: pre-wrap; }
+.j-why  { margin-top: 11px; font-size: 13px; line-height: 1.75; color: var(--ink-2); white-space: pre-wrap; }
+.j-ex   { margin-top: 10px; font-size: 13px; line-height: 1.75; color: var(--cool-d); white-space: pre-wrap; }
+/* 小標：11px / 700 / 字距 .06em（設計稿）。內文與小標之間 3px。 */
+.j-lbl  { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+          color: var(--ink-3); margin-bottom: 3px; }
 .j-src  { margin-top: 9px; border-left: 3px solid var(--line-dash); padding: 3px 0 3px 10px;
           font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
 .j-src-lbl { display: block; font-size: 11px; font-weight: 700; color: var(--ink-3); }
@@ -1433,10 +1486,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    ① 欄位標籤旁的短提示（議題、馬上掉出來的問題）＝標籤層，12.5px／400，見上面 label .hint
    ② 四條滑桿：名稱 14px／600，提示另起一行 11.5px（設計稿 scoreRows 第 216–221 行）
    ③ 送審欄下方的說明 11.5px（設計稿第 148 行）
-   :has() 選到「後面緊接著 .score-wrap 的那個 label」＝四條滑桿的名稱，
-   同一張卡裡的「因為」不會被選到，也不必動 DOM。 */
-#form-step1 #sec-score label:has(+ .score-wrap) { font-size: 14px; }
-#form-step1 #sec-score label:has(+ .score-wrap) .hint {
+   :has() 原本選「後面緊接著 .score-wrap 的那個 label」＝滑桿的名稱。
+   C（2026-09-04）滑桿換成按鈕之後，緊接在 label 後面的是那個 hidden input，
+   選擇器跟著改；選到的仍然是同樣那兩個 label，同一張卡裡的「因為」不會被選到。 */
+#form-step1 #sec-score label:has(+ input[type="hidden"]) { font-size: 14px; }
+#form-step1 #sec-score label:has(+ input[type="hidden"]) .hint {
   display: block; font-size: 11.5px; font-weight: 400; color: var(--ink-4); line-height: 1.4;
 }
 #form-step1 .submit-cand + .hint { font-size: 11.5px; }
@@ -1470,13 +1524,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* ── A14／A15／A16：滑桿 ────────────────────────────────────────
    數值方塊改暖色（設計稿 scoreRows.valStyle）。「未評估」仍是灰底灰字，
    和有數值的狀態一眼分得出來（規格 B4）。 */
-#form-step1 .score-wrap { gap: 14px; }
-#form-step1 .score-wrap input[type=range] { height: 5px; }
-#form-step1 .score-val {
-  min-width: 54px; font-size: 19px; letter-spacing: -.01em;
-  color: #8E4F3B; background: var(--warm-bg);
-}
-#form-step1 .score-val.unset { font-size: 12.5px; color: var(--ink-2); background: var(--line-3); }
+#form-step1 .sc10 { gap: 7px; margin-top: 2px; }
 
 /* ── A17／A18／A19：上一場留下的 ───────────────────────────────── */
 #form-step1 .review-card { border: 1px solid var(--warm-line); }
@@ -1831,18 +1879,26 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    L4 的橫條照設計稿：高 7px、圓角、左邊職能全名、右邊 N/M。
    顏色沿用熱力圖的 data-lv（--hm-* 那組），不另定色票。 */
 .cov-row {
-  display: grid; grid-template-columns: minmax(0,1fr) minmax(60px,1.3fr) auto;
+  /* R9-J：右邊那欄從 auto 改成固定 86px。
+     每一列各自是一個 grid（不是共用欄），auto 會讓「0/2部分 2」那列的數字欄比
+     「2/2」那列寬，**橫條就跟著長短不一，八列之間不能互相比較**——那是這張圖唯一的用途。
+     86px 是量出來的：「還沒評估過」與「0/2部分 2」都放得下（12px 字、nowrap）。 */
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(60px,1.3fr) 86px;
   align-items: center; gap: 10px; padding: 5px 0;
 }
 .cov-label { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cov-track { height: 7px; border-radius: var(--r-pill); background: var(--line-3); overflow: hidden; }
-.cov-fill  { display: block; height: 100%; border-radius: var(--r-pill); background: var(--cool-2); }
-/* 一條都沒標到：留空槽，不上色——沒標到不等於沒做到 */
-.cov-fill[data-lv="none"] { background: transparent; }
-.cov-fill[data-lv="1"] { background: #DCE9EE; }
-.cov-fill[data-lv="2"] { background: var(--cool-2); }
-.cov-fill[data-lv="3"] { background: #4E96AC; }
-.cov-fill[data-lv="4"] { background: var(--cool); }
+/* R9-J：橫條分兩段，所以 track 改成 flex；高度圓角都沒動。
+   舊的 data-lv 五段色票是舊指標（標到幾條/39 條）用的，那個指標已經換掉，
+   規則配不到任何元素了，一起移除——留著會讓下一個人以為還在用。
+   hitLevel() 沒有跟著刪：clientCoverage() 仍在算 lv，餵「職能已點到 N/20 條」那張卡。 */
+.cov-track { height: 7px; border-radius: var(--r-pill); background: var(--line-3); overflow: hidden; display: flex; }
+.cov-fill  { display: block; height: 100%; }
+/* 到位＝實色；部分到位＝淺色但**看得出來有東西**。
+   兩者必須分得開：部分到位算進分母卻不算分子，畫成一樣就等於說「你沒做到」。 */
+.cov-fill[data-seg="done"]    { background: var(--cool); }
+.cov-fill[data-seg="partial"] { background: #BFD9E2; }
+.cov-none { color: var(--ink-4); }
+.cov-part { margin-left: 6px; color: var(--ink-4); }
 .cov-num {
   font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums;
   white-space: nowrap; min-width: 54px; text-align: right;
@@ -1996,7 +2052,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .home-sect-head .btn { margin-left: auto; }
 .home-cli { display: grid; gap: 12px; margin-top: 10px;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-.hcli { display: block; width: 100%; text-align: left; cursor: pointer;
+/* R4-2（2026-09-04 Yi-En 實機回報）：「首頁不能因為議題沒有填，名字就沒有和其他的名字對齊。」
+   成因不是議題那一欄，是**這是一顆 `<button>`**——瀏覽器對按鈕的預設就是把內容垂直置中，
+   而這裡只寫了 `display: block`，沒有覆蓋它。`.home-cli` 是 grid、`align-items` 預設 stretch，
+   所以每張卡都被拉到同列最高；矮的那張多出來的高度就被平均分到上下，
+   名字低 21.8px、底列高 21.8px（線上實測）。
+   改成 flex column ＋ 內容靠上，把**成因**關掉——只補「議題」那一個欄位的話，
+   哪天再有別的選填欄位就原地重演。這跟第 5 批「首頁右側空白」是同一族。 */
+.hcli { display: flex; flex-direction: column; align-items: stretch;
+        width: 100%; text-align: left; cursor: pointer;
         background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
         padding: 13px 14px; font: inherit; color: inherit; }
 .hcli:hover { border-color: var(--warm-2); }
@@ -2009,10 +2073,28 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hcli-code { display: block; font-size: 14px; font-weight: 700; }
 .hcli-meta { display: block; font-size: 11.5px; color: var(--ink-3); }
 .hcli .ccard-paid { margin: 0; }
-.hcli-topic { display: block; margin-top: 9px; padding: 7px 9px; border-radius: 8px;
+.hcli-topic { display: block; margin-top: 9px; margin-bottom: 11px;
+              padding: 7px 9px; border-radius: 8px;
               background: var(--warm-bg); color: var(--warm-ink); font-size: 12.5px;
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hcli-foot { display: flex; align-items: flex-end; gap: 10px; margin-top: 11px; }
+/* R4-1：沒有議題時放一個同尺寸的虛線框（Yi-En 指定的做法）。
+   **框裡不放任何字**——「沒有寫議題」那類文字會讀成指認失敗（CLAUDE.md §七-9）。
+   內距補回 1px：邊框佔掉的 2px 從 padding 扣回來，總高才跟有議題那張一模一樣（R4-4）。
+   `::before` 放一個零寬空格，只為了撐出一個行框——沒有它，空的 span 只剩內距高度。
+   虛線色用既有的 --warm-line，沒有新增色票。 */
+/* R9-H1（2026-09-04 Yi-En：「虛線框可以做矮一點，總之卡片都要一樣高一樣寬」）：
+   佔位從「跟議題框一樣高」（34.6px）改成矮的一條（20px）。
+   矮了之後有議題與沒議題的卡**自然高度又會不同**，等高靠的是另外三件事，
+   **三件缺一不可，不可以為了等高把前兩件退回去**（R9-H2）：
+     ① `.home-cli` 是格線、`align-items` 預設 stretch → 同一列的卡拉到等高
+     ② `.hcli` 是 flex column（R4-2）→ 內容仍然靠上，不會被垂直置中
+     ③ `.hcli-foot { margin-top: auto }`（R4-3）→ 底列仍然貼齊卡底
+   `::before` 的零寬空格拿掉了——高度改用 min-height 給，不再靠行框撐。 */
+.hcli-topic-none { background: none; border: 1px dashed var(--warm-line);
+                   padding: 0; min-height: 18px; color: transparent; }
+/* R4-3：底列永遠貼齊卡底。11px 的間距移到 .hcli-topic 的 margin-bottom——
+   留在這裡的話，`margin-top: auto` 會在沒有多餘空間時解析成 0，那 11px 就沒了。 */
+.hcli-foot { display: flex; align-items: flex-end; gap: 10px; margin-top: auto; }
 .hbars { display: flex; align-items: flex-end; gap: 3px; height: 34px; }
 .hbar { width: 9px; border-radius: 3px 3px 0 0; background: var(--cool-2); display: inline-block; }
 .hcli-num { flex: 1 1 0; min-width: 0; text-align: right; font-size: 11.5px; color: var(--ink-2); }
@@ -2335,6 +2417,130 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .ccard-st[data-s="active"] { display: none; }
 }
 
+/* ═══ S7（2026-09-04）帳號與權限 ═══════════════════════════════════ */
+.acct-rows { margin-top: 8px; }
+.acct-row { display: flex; align-items: baseline; gap: 12px; padding: 9px 0;
+            border-bottom: 1px solid var(--line-2); font-size: 13.5px; }
+.acct-row:last-child { border-bottom: none; }
+.acct-k { flex: 0 0 110px; color: var(--ink-3); font-size: 12.5px; }
+.acct-v { flex: 1 1 0; min-width: 0; color: var(--ink); word-break: break-all; }
+
+/* ═══ S8（2026-09-04）導師提問兩欄 ═════════════════════════════════
+   設計稿 靜態版/isAsk.html 是兩欄的「工作台」，現況是一條長清單。
+   覺察手帳那一半 R5 已經做過，這裡只做導師提問。
+   **`align-items: start` 不可省**——`.qcard` 跟 `.jcard` 一樣是 div，
+   被 grid 拉到等高之後內容仍然靠上，所以症狀不是「內容被推下去」（那是 R4 那顆 button
+   才有的置中行為），而是**短卡被拉高、底下空一大塊**。守衛量的也是後者。 */
+@media (min-width: 1024px) {
+  .qgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .qgrid .qcard { margin-bottom: 0; }
+}
+
+/* ═══ S10（2026-09-04）第 8 批的三件小事 ═══════════════════════════ */
+/* S10-2：DOM 順序改成「主要動作在前」（給螢幕閱讀器與 Tab），視覺順序用 order 擺回原樣。
+   兩顆都寫死 order，不要只寫一顆——只寫一顆的話另一顆是預設值 0，會跑到前面去。 */
+.miss-row .miss-skip { order: 1; }
+.miss-row .miss-go   { order: 2; }
+/* S10-3：全站鍵盤焦點樣式。**這是可及性下限，不是功能**——在這之前整站按鈕
+   按 Tab 走過去看不出焦點在哪。用 :focus-visible 不用 :focus：後者連滑鼠點擊都會亮，
+   那會讓每次點按鈕都留下一個框，使用者會以為是壞掉。
+   顏色用既有的 --warm（跟主要動作同一個色），offset 2px 讓框不貼著圓角。 */
+:focus-visible {
+  outline: 2px solid var(--warm);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+/* 深色側欄上用磚紅框會糊掉，那裡改用淺色。 */
+.tabs :focus-visible, .drawer-close:focus-visible {
+  outline-color: rgba(239, 235, 228, .85);
+}
+
+/* ═══ R7a（2026-09-04）歷史紀錄：桌機那張表補上場次與分數 ════════════
+   欄位與寬度來自設計稿 靜態版/isHist.html。**只動 ≥1100px**：
+     1024–1099  維持 2026-08-28 的既有決定（五欄＋八格換到第二列，議題拿回整條寬度）
+     <1024      R7-3 明文「完全維持現況的卡片，一個像素都不要動」
+   所以那兩欄在 <1100px 直接不顯示——不是換位置，是不存在，
+   這樣手機與窄桌機的格線欄數與現況完全一樣。 */
+.sess-sess, .sess-score, .sess-head .sh-sess, .sess-head .sh-score { display: none; }
+@media (min-width: 1100px) {
+  .sess-sess, .sess-score { display: block; }
+  .sess-head .sh-sess, .sess-head .sh-score { display: block; }
+  /* 八欄：日期 客戶 場次 議題 八格 時長・到位 推進感 箭頭。
+     欄寬由這一份 grid-template 決定，標題列與資料列共用同一份（§14-4 在守兩列對齊）。
+     日期 46／客戶 84／場次 46 是設計稿的值；照抄它們同時也把議題的剩餘寬度撐回 200px 以上
+     （§30 那條「議題在任何寬度都還讀得到」是硬保證，這張表被壓到讀不到已經發生過四次）。 */
+  /* 欄距從 10px 收到 8px、分數欄 36px、時長欄 100px——**目的只有一個**：
+     把議題的剩餘寬度撐到 200px 以上。1440 兩欄時左欄只有 710px，
+     照設計稿原尺寸算下來議題只剩 185px，會撞到 §30 那條硬保證。
+     收的是欄距與兩個放得下的欄，不是砍議題。 */
+  .sess-cols { grid-template-columns: 46px 84px 46px minmax(0,1fr) 69px 100px 36px 20px;
+               gap: 7px 8px; }
+  .sess-sess { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .sess-score { font-size: 13px; color: var(--ink-2); text-align: right;
+                font-variant-numeric: tabular-nums; }
+  .sess-head .sh-score { text-align: right; }
+  /* R7a-R7 客戶欄是這一列的主詞：13px／700／--ink（設計稿 rgb(44,42,40)）。
+     現況 12.5px／400／--ink-2 比議題還輕。 */
+  .sess-client { font-size: 13px; font-weight: 700; color: var(--ink); }
+  /* R7a-R8 議題欄：13.5px／400／--ink（設計稿）。
+     現況是 14px／600／--warm-ink——**磚紅又被花在不是動作的地方**，跟 R2 同一個病。 */
+  .sess-topic { font-size: 13.5px; font-weight: 400; color: var(--ink); }
+  .sess-topic.none { color: var(--ink-4); }
+  /* R7a-R11 列造型：設計稿是「靠分隔線分列」，不是一張一張的小卡。
+     現況每列 1px 邊框＋radius 9＋列間再空 7px＋內距 13/12，
+     那是總高 1,915px 在「列」這一層的主要來源。
+     只動 ≥1100px：1024–1099 與手機維持現況（R7-3）。 */
+  .sess { border: none; border-radius: 0; box-shadow: none; margin-bottom: 0;
+          padding: 12px 4px; border-bottom: 1px solid var(--zone-line); }
+  .sess:hover { border-color: var(--zone-line); background: var(--surface-2); }
+  .sess-head { padding-left: 4px; padding-right: 4px; }
+}
+
+/* ═══ R6（2026-09-04）新增紀錄・填內容 ══════════════════════════════
+   數值來自設計稿 靜態版/isStep1.html 的 inline style。 */
+/* R6-2（欄位標籤 700／6px）與 R6-1（主格線 1.25fr 1fr）**這一批沒有做**——
+   兩條都跟已上線並且有守衛釘著的決定衝突，已回報 SPEC 等裁決：
+     R6-2 的 `#form-step1 label{font-weight:700}` 會掃到衡量卡的滑桿名稱，
+          撞到 §15-A9「名稱 14px／600」（那是定案過的）。
+     R6-1 的 `1.25fr 1fr` 撞到 §13-F「右欄固定 268px／232px」，
+          而且實測讓左欄變窄、頁面總高從 2,792px **變成 2,825px**（往反方向走）。
+   標籤本來就在欄位正上方（12.5px／--ink-2），所以 R6-2 只差字重與 1px 間距。
+   R6-4 右欄「這位客戶前 3 場」。一列四格，議題截斷不換行——右欄是上下文不是主角。 */
+.prev3card { margin-bottom: 12px; }
+.p3row { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr);
+         align-items: baseline; gap: 8px; margin-top: 8px;
+         font-size: 12.5px; color: var(--ink-2); }
+.p3-date { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.p3-n, .p3-score { color: var(--ink-3); white-space: nowrap; }
+.p3-topic { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            color: var(--ink-3); }
+/* ═══ R5（2026-09-04）覺察手帳：翻卡牆 ═══════════════════════════════
+   數值來自設計稿 靜態版/isJournal.html 的 inline style。 */
+/* R5-3 籤列移到卡片底部，上面一條分隔線。
+   只有真的有標籤時才渲染這一塊——沒有標籤卻留一條線，等於畫一條沒有內容的分隔。 */
+.j-foot { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line-2);
+          display: flex; gap: 6px; flex-wrap: wrap; }
+.j-foot .j-tags { gap: 6px; }
+.j-foot .jtag { padding: 3px 9px; border-radius: 20px; font-size: 11.5px; }
+/* 籤搬走之後，檢視卡的頁首只剩右上角那兩顆（R5-4：它們刻意留在原位，
+   搬到底部會跟籤搶位置，而且刪除鈕靠近籤很容易誤點）。
+   `space-between` 在只剩一個子元素時會把它推到左邊，所以這裡改成靠右。
+   編輯中的卡不套——它的頁首仍然是「可編輯的籤 ＋ 收起」兩個東西。 */
+.jcard:not(.j-edit) .j-head { justify-content: flex-end; }
+/* R5-5：來源提問那一塊保留（它帶著導師的原話與她的回答，是真內容不是裝飾），
+   只把它調得不搶戲：與上面拉開一點、字再小一級。 */
+.j-src { margin-top: 12px; }
+@media (min-width: 1024px) {
+  /* R5-1 兩欄。**align-items:start 不可省**——沒有它，同一列的兩張卡會被拉到等高，
+     內容被撐開或置中，就是 2026-09-04 R4 那個 bug 的形狀（那次是首頁客戶卡）。 */
+  #j-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  #j-list .jcard { margin-bottom: 0; }
+  /* R5-6：編輯中的卡跨兩欄。編輯表單有五個欄位，塞進半欄會讓每個輸入框變得很窄，
+     而且它一進編輯就比同列另一張高一大截，兩欄下看起來像破版。
+     跨兩欄的代價是「編輯時版面會跳一下」，但那一刻使用者的注意力本來就在這張卡上。 */
+  #j-list .j-edit { grid-column: 1 / -1; }
+}
+
 /* ═══ R2-1／R2-3（2026-09-03）：把磚紅還給主要動作 ══════════════════
    設計稿裡 rgb(166,96,74)（--warm）是**稀缺**的：整個側欄只有「＋ 新增紀錄」一顆，
    內容區只有當頁的主要動作一顆。現況把它也花在「側欄選中項」上，兩者互相搶，
@@ -2440,6 +2646,92 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .cpick-swap { min-height: 44px; padding: 0 12px; }
 }
 
+/* ── R9-I（2026-09-04）：客戶詳情頁上排兩張卡底部對齊 ──────────────────
+   問題：#view-client-detail 是 align-items:start，趨勢圖那張卡比右邊的職能覆蓋矮一截，
+   底下留一塊白。之前幾批都是在「拿掉多餘拉伸」，這一批相反：**這兩張卡要一樣高**。
+   做法上有兩件事要同時成立，缺一就只是把空白換個地方：
+     1. 卡片一樣高 → 只給這兩個 id 個別 align-self:stretch。
+        **不改容器的 align-items** ——那會連帶拉伸這個格線裡其他項目。
+     2. 圖自己長高填滿 → 卡片變 flex 直排、圖的容器 flex:1 吃掉剩餘空間，
+        再由 clientChart 用量到的實際尺寸重畫 svg（見那裡的註解，不是 CSS 拉伸）。
+   內容仍然靠上：flex 直排的預設就是由上往下排，卡片變高不會把標題推到中間。
+   寫在樣式表結尾＝後出現者勝，不會被前面的 .card 蓋掉。 */
+#client-chart-card, #client-cov-card { align-self: stretch; }
+#client-chart-card { display: flex; flex-direction: column; }
+#client-chart-card .chart-box { flex: 1 1 auto; min-height: 0; }
+#client-chart-card .chart-box svg { display: block; width: 100%; height: 100%; }
+
+/* ── K1（2026-09-04）：自評趨勢直條圖 ────────────────────────────────
+   結構照設計稿 isClient，**唯一刻意不照抄的是那兩個寫死的高度**
+   （外層 128px、柱區 100px）：照抄就會讓圖不再跟著卡片長高，
+   把 R9-I 第三件弄壞。這裡高度全部交給 flex。
+   色票用 token，不寫色碼：推進感 --cool（深）、專注 --cool-line（淺），
+   與設計稿量到的 rgb(22,116,140) / rgb(192,218,226) 完全相同。 */
+.bchart { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.bchart-legend {
+  display: flex; gap: 12px; justify-content: flex-end;
+  font-size: 11.5px; color: var(--ink-2);
+}
+.bchart-key { display: flex; align-items: center; gap: 5px; }
+.bchart-key i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+.bchart-key i[data-s="progress"] { background: var(--cool); }
+.bchart-key i[data-s="perf"]     { background: var(--cool-line); }
+/* 放不下就整條捲，不丟資料也不用寫死「最近 N 筆」（K4） */
+.bchart-plot {
+  flex: 1 1 auto; min-height: 0; margin-top: 16px;
+  display: flex; align-items: flex-end; gap: 12px; overflow-x: auto;
+}
+.bcol {
+  flex: 1 0 auto; min-width: 34px; height: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.bcol-bars {
+  flex: 1 1 auto; min-height: 0; width: 100%;
+  display: flex; align-items: flex-end; gap: 4px; justify-content: center;
+}
+.bbar { width: 13px; border-radius: 4px 4px 0 0; display: block; }
+.bbar[data-s="progress"] { background: var(--cool); }
+.bbar[data-s="perf"]     { background: var(--cool-line); }
+.bcol-lb {
+  flex: 0 0 auto; font-size: 10.5px; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+
+/* ── D4（2026-09-04）：右欄旅程列表自己捲 ──────────────────────────
+   整個 #form-side 本來就有 max-height + overflow（第 651 行），
+   但那是**整根右欄**在捲——場次一多，「下一步」那張卡會被推到要捲很久才看得到。
+   所以改成讓列表自己捲：卡片維持原高度，下一步永遠在視線內。
+   46vh 是量出來的：七場（她目前最多）放得下不出現捲軸，二三十場才開始捲。 */
+.jrn-list { max-height: 46vh; overflow-y: auto; }
+/* R9d 的說明是分段的字，用 textContent 寫入（不組 HTML），所以換行交給 CSS。
+   只鎖這一格，不動全站的 .sub-note。 */
+#fill-note { white-space: pre-line; }
+/* 沒填議題就留白，不寫「（沒填議題）」——右欄是掃一眼用的 */
+#form-side .p3-topic.none::before { content: ''; }
+
+/* ── E（2026-09-04 Yi-En）：客戶頁「旅程中的議題」下面兩個收合區 ──
+   她的原話：「客戶自己說的那句話」以及「旅程上我對客戶的認可」，
+   「這兩個是原本可以收著，要看再點開」。
+   E5：收合狀態**不進 localStorage**，不新增任何鍵。每次進客戶頁重新收起來才對，
+   常駐展開等於沒收；而且多一個鍵就多一份要同步、要遷移、要備份的東西。 */
+.jsec { margin-top: 10px; }
+.jsec-head {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  background: none; border: none; padding: 10px 0; cursor: pointer;
+  font-size: 14px; font-weight: 700; color: var(--ink); text-align: left;
+}
+.jsec-arrow { color: var(--ink-4); font-size: 12px; }
+.jsec-n { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--ink-4); }
+.jsec-body.collapsed { display: none; }
+.jrow { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px;
+        align-items: start; padding: 7px 0; border-top: 1px solid var(--zone-line); }
+.jrow-when { font-size: 12px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.jrow-txt { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+@media (max-width: 1023.98px) {
+  .jsec-head { min-height: 44px; }        /* §55 觸控下限 */
+  .jrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
 </style>
 </head>
 <body>
@@ -2501,9 +2793,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <span class="nav-group">系統</span>
     <!-- M1：備份／還原是資料安全功能，不能刪，只能移位。手機從這裡進。 -->
     <button class="tab" id="tabData" onclick="openDataTools()"><span class="t-full">資料與備份</span><span class="t-short">資料</span></button>
-    <!-- S7 是第 8 批。設計稿自己把這一項標成「本稿未涵蓋」，那是它的佔位標記，不照抄那五個字。
-         這裡先放進去並停用，讓順序與設計稿一致，做完再接上。 -->
-    <button class="tab tab-soon" id="tabAcct" disabled title="這一頁還沒做"><span class="t-full">帳號與權限</span><span class="t-short">帳號</span></button>
+    <!-- S7（第 8 批）：這一項本來是停用的佔位，現在接上了。
+         內容只有四樣，全部是既有功能搬過來——**沒有新增任何權限機制**（S7-5）。 -->
+    <button class="tab" id="tabAcct" onclick="showView('acct')"><span class="t-full">帳號與權限</span><span class="t-short">帳號</span></button>
     <div class="nav-foot" id="nav-foot">
       <!-- 這一份只在 1024–1099 的窄側欄出現（那個寬度站名整塊是隱藏的）。
            內容與站名下方那一份完全相同，由 updateSideFoot() 一次寫兩處。 -->
@@ -2621,9 +2913,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
                  客戶詳情頁的編輯區還有一份同樣的下標，她沒有畫那一個，所以沒動。 -->
             <label style="margin-top:10px">這位客戶是</label>
             <div class="quickfilters" id="f-paid">
-              <button type="button" class="pchip" data-paid=""        onclick="setFormPaid('')">還沒選</button>
-              <button type="button" class="pchip" data-paid="paid"    onclick="setFormPaid('paid')">付費</button>
-              <button type="button" class="pchip" data-paid="probono" onclick="setFormPaid('probono')">公益（Pro Bono）</button>
+              <button type="button" class="pchip pchip-in" data-paid=""        onclick="setFormPaid('')">還沒選</button>
+              <button type="button" class="pchip pchip-in" data-paid="paid"    onclick="setFormPaid('paid')">付費</button>
+              <button type="button" class="pchip pchip-in" data-paid="probono" onclick="setFormPaid('probono')">公益（Pro Bono）</button>
             </div>
           </div>
           <div id="f-client-newbox" class="hidden">
@@ -2689,9 +2981,24 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <label>馬上掉出來的問題</label>
-      <div class="hint">會談後第一個浮現的念頭</div>
-      <textarea id="f-instant" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
+      <!-- B1（2026-09-04）：這張卡的欄位改成成對並排。配對原則是**語意相近**：
+           第一對是「會談一結束當下的兩個第一反應」——一個朝向自己（我發現我…），
+           一個朝向客戶（我看見他…）。第二對是客戶那一半（沿用 §15-B9 既有的那一組，沒動）。
+           第三對是我這一半的收穫與待改進。<1024px 一律回單欄（B2），CSS 在 .f2col。 -->
+      <div class="f2col">
+        <div class="f2col-cell">
+          <label>馬上掉出來的問題</label>
+          <div class="hint">會談後第一個浮現的念頭</div>
+          <textarea id="f-instant" rows="3" placeholder="例：我發現我在時間快結束時會有點慌張"></textarea>
+        </div>
+        <div class="f2col-cell">
+          <!-- A1／A5：這是「認可」不是評分。標籤與提示都不出現分數、等第，
+               也不用「你做到了嗎」的句式（§七-9）。 -->
+          <label>我對客戶的認可</label>
+          <div class="hint">這一場我看見他的哪一點，想讓他自己也看見</div>
+          <textarea id="f-affirm" rows="3" placeholder="例：他願意把「我不想再撐了」講出口"></textarea>
+        </div>
+      </div>
       <div class="fld-div"></div>
       <div class="sub-note">下面兩欄只記他說的那個詞或畫面，不記事件細節與人名。</div>
       <!-- §15-B9（Q4）兩欄並排、都是三行 textarea（設計稿 199–207 行）。
@@ -2708,12 +3015,18 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       </div>
       <div id="f-insight-legacy" class="hidden"></div>
       <div class="fld-div"></div>
-      <label>我做得好的（1–3 個）</label>
-      <div id="good-list"></div>
-      <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
-      <label>我覺得我可以改進的部分</label>
-      <div id="improve-list"></div>
-      <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
+      <div class="f2col">
+        <div class="f2col-cell">
+          <label>我做得好的（1–3 個）</label>
+          <div id="good-list"></div>
+          <button class="add-btn" onclick="addItem('good-list')">＋ 再加一項</button>
+        </div>
+        <div class="f2col-cell">
+          <label>我覺得我可以改進的部分</label>
+          <div id="improve-list"></div>
+          <button class="add-btn" onclick="addItem('improve-list')">＋ 再加一項</button>
+        </div>
+      </div>
       </div>
     </section>
 
@@ -2729,21 +3042,24 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <span class="fold-act">收起 ▴</span>
       </button>
       <div class="fold-body">
-      <div class="hint">0–10，可以拉半格。這不是評分，只是給自己一個衡量——第一個直覺通常最準。</div>
+      <!-- C（2026-09-04 Yi-En）：滑桿 → 1–10 按鈕。她的原話：
+           「1-10 的按鈕，和教練問衡量問題一樣，不要從 0 開始」。
+           教練的量尺提問就是 1–10，**0 不是一個合法輸入**（C1）。
+
+           ⚠ 只換了輸入方式，**存讀的介面一個字都沒動**：值仍然放在
+           `#f-perf` / `#f-progress`（改成 hidden input），saveRecord 照樣讀 `.value`，
+           `_scoreUnset` 那套「沒碰過就不落地」的機制原封不動。
+           這樣做的好處是 C4 自動成立：舊紀錄若是 0 或 7.5，值還在 hidden input 裡，
+           只是沒有任何一顆按鈕會亮；不去碰它，存檔就原樣寫回去，磁碟不被改寫。 -->
+      <div class="hint">1–10，選一個就好。這不是評分，只是給自己一個衡量——第一個直覺通常最準。</div>
       <label>我的專注程度 <span class="hint">從頭到尾在他身上嗎</span></label>
-      <div class="score-wrap">
-        <input type="range" id="f-perf" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('perfVal').textContent=this.value;markTouched('score')">
-        <span class="score-val" id="perfVal">7</span>
-      </div>
+      <input type="hidden" id="f-perf">
+      <div class="sc10" id="sc10-perf"></div>
+      <div class="score-state" id="perfVal"></div>
       <label>這一場的推進感 <span class="hint">他離目標更近了嗎</span></label>
-      <div class="score-wrap">
-        <input type="range" id="f-progress" min="0" max="10" step="0.5" value="7"
-               oninput="document.getElementById('progressVal').textContent=this.value;markTouched('score');clearScoreUnset('progress')"
-               onpointerup="clearScoreUnset('progress')"
-               onkeyup="clearScoreUnset('progress')">
-        <span class="score-val" id="progressVal">7</span>
-      </div>
+      <input type="hidden" id="f-progress">
+      <div class="sc10" id="sc10-progress"></div>
+      <div class="score-state" id="progressVal"></div>
       <label>我覺得客戶的感受 <span class="hint">這裡是猜的（subjective）</span></label>
       <!-- markTouched('score')：C 批之前這一格沒有掛，只填感受文字而不碰滑桿時，
            右欄導覽的「衡量」會一直顯示「未填」。撤掉兩條滑桿之後這格變成卡裡唯一的文字欄，
@@ -2789,10 +3105,17 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
     <!-- ── 步驟 1：右欄段落導覽（§13-D） ── -->
     <aside id="form-side" data-step-only="1">
-      <section class="card navcard">
-        <div class="navcard-title">這一場的段落</div>
-        <div id="form-nav"></div>
-        <div class="navcard-tip" id="form-nav-tip"></div>
+      <!-- D（2026-09-04 Yi-En）：右欄只留「這位客戶的旅程」。
+           她的原話：「拿掉導覽，這位客戶前三場，變成每一場的議題都列，
+           標題變成（客戶名）的旅程」。
+           ⚠ 這**推翻** R6 當時「兩個都留」的決定——那時是等她看過再定，現在她定了。
+           段落導覽的 DOM 整段移除；updateSegbar() 本來就對 #form-nav 做了 null 檢查，
+           折疊標題上的「已填／未填」走的是 updateFoldHead()，不受影響（狀態一項都沒少）。
+           資料全部走既有函式（clientStats／sessionNum），沒有另寫一套查詢或排序。 -->
+      <section class="card prev3card hidden" id="f-prev3">
+        <div class="navcard-title" id="f-prev3-title"></div>
+        <div id="f-prev3-list" class="jrn-list"></div>
+        <div class="navcard-tip">同一位客戶的上下文放在這裡，不用切到客戶頁去翻。</div>
       </section>
       <section class="nextcard">
         <div class="next-eyebrow">下一步</div>
@@ -2876,13 +3199,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <!-- ① 八大職能的累積（§2-2） -->
     <div class="card" id="cum-card">
       <label style="margin-top:0">八大職能的累積</label>
-      <div class="sub-note">一格是一條標記。虛線空格＝那一項還沒評估過，不是做不到。滑過格子看確切場次。</div>
+      <!-- R10-4：壓成一句，照她圖上的意思。
+           **後半句不可以刪**——「不是做不到」是 §七-9 的保護（沒走到 ≠ 做不到），
+           §71-G2 釘著它。「滑過格子看確切場次」拿掉：那是在解釋機制。 -->
+      <div class="sub-note">一格是一條標記。虛線空格＝還沒點到，那是還沒走到，不是做不到。</div>
       <div class="cum-grid" id="cum-grid"></div>
       <div class="cum-todo" id="cum-todo">
         <div class="ask-sub" style="margin-top:0">下一場可以補這幾條</div>
-        <div class="sub-note">這幾條是你<b>做到比例最低</b>的・例句可以直接用<br>
-          分母是你<b>評估過那一項的場次</b>；按「到位」而沒逐條勾的場次，底下每一條都算做到。
-          每次都做到的不會列在這裡</div>
+        <!-- R10-7：留「這是什麼、能怎麼用」，刪「怎麼算」與「什麼不會列在這裡」。 -->
+        <div class="sub-note">你<b>做到比例最低</b>的幾條・例句可以直接用</div>
         <div id="cum-todo-list"></div>
       </div>
     </div>
@@ -2935,11 +3260,45 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <button class="btn btn-ghost" onclick="backupJSON()">備份全部（下載檔）</button>
         <!-- 2026-08-28：這個 span 是 flex 項目，裡面的鈕不會跟著伸縮，所以三顆對不齊。
              display:contents 讓 span 自己不佔版面，裡面那顆鈕直接成為 .actions 的 flex 項目。 -->
-        <span id="admin-backup-slot" style="display:contents"></span>
+        <!-- S7（2026-09-04）：這一塊現在渲染在兩個地方（資料與備份、帳號與權限），
+             所以改用 class ＋ querySelectorAll 一次寫兩份。
+             寫死 id 只會更新到第一份，另一份永遠停在初始值（lessons 記過的坑）。 -->
+        <span class="js-admin-backup" style="display:contents"></span>
         <button class="btn btn-ghost" onclick="document.getElementById('restoreFile').click()">還原備份</button>
         <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
       </div>
     </div>
+    <!-- R9d（2026-09-05）：一次性補值。**管理者限定**，整張卡非管理者看不到。
+         走跟 backupAllUsers() 同一個 isAdmin() 判定，不新增權限機制。 -->
+    <div class="card hidden" id="fill-card">
+      <label style="margin-top:0">一次性維護：把沒有推進感分數的舊紀錄補成 7</label>
+      <div class="sub-note" id="fill-note"></div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-ghost" onclick="previewFillScores()">先看看會改幾筆</button>
+        <button class="btn btn-ghost hidden" id="fill-go" onclick="fillMissingScores()">補上去（一次性，會先下載備份）</button>
+      </div>
+      <div id="fill-out"></div>
+    </div>
+  </div>
+
+  <!-- ===== S7 帳號與權限（第 8 批）=====
+       **只把既有的東西集中，不新增任何權限機制**（S7-5，決策紀錄 09-01 明文的範圍限制）：
+       登入狀態／登出／同步狀態／（管理者限定）備份全體，四樣都是本來就有的。
+       數字與狀態一律由 renderAcct() 從既有來源取，HTML 裡不寫死任何一個。 -->
+  <div id="view-acct" class="hidden">
+    <div class="card">
+      <label style="margin-top:0">這台裝置</label>
+      <div class="acct-rows" id="acct-rows"></div>
+      <div class="actions" style="margin-top:12px" id="acct-actions"></div>
+    </div>
+    <div class="card hidden" id="acct-admin">
+      <label style="margin-top:0">管理者</label>
+      <div class="sub-note">備份全體會讀取所有使用者的資料，只有管理者帳號看得到這一顆。</div>
+      <div class="actions" style="margin-top:10px">
+        <span class="js-admin-backup" style="display:contents"></span>
+      </div>
+    </div>
+    <div style="height:24px"></div>
   </div>
 
   <!-- ===== CLIENTS ===== -->
@@ -2955,9 +3314,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
            預設「還沒選」——沒問過的事不要替她填。 -->
       <label style="margin-top:12px">這位客戶是 <span class="hint">ICF 時數表要分開列</span></label>
       <div class="quickfilters" id="new-client-paid">
-        <button type="button" class="pchip on" data-paid=""        onclick="setNewClientPaid('')">還沒選</button>
-        <button type="button" class="pchip"    data-paid="paid"    onclick="setNewClientPaid('paid')">付費</button>
-        <button type="button" class="pchip"    data-paid="probono" onclick="setNewClientPaid('probono')">公益（Pro Bono）</button>
+        <button type="button" class="pchip pchip-in on" data-paid=""        onclick="setNewClientPaid('')">還沒選</button>
+        <button type="button" class="pchip pchip-in"    data-paid="paid"    onclick="setNewClientPaid('paid')">付費</button>
+        <button type="button" class="pchip pchip-in"    data-paid="probono" onclick="setNewClientPaid('probono')">公益（Pro Bono）</button>
       </div>
       <div class="privacy-tip">🔒 真實姓名不要進工具。代號會出現在匯出的 PDF 與時數表裡，是給你自己對照用的。</div>
     </div>
@@ -3031,8 +3390,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div class="chart-box" id="clientChart"></div>
     </div>
     <!-- L4（V3 第 4 批）：這位客戶的職能覆蓋。八列橫條，照設計稿 isClient。
-         資料一律走 markerHitStats()，只是把輸入限縮成這位客戶的紀錄——
-         不另寫算法（CLAUDE.md §七-10：同一份資料只能有一個計算來源）。 -->
+         R9-J（2026-09-04）換指標：現在是「做到的場次／評估過的場次」，
+         資料走 clientCompetencyRate()＋accSt()，不再走 markerHitStats()。
+         舊指標（標到幾條／39 條）幾乎永遠滿格，那張圖沒有訊號。 -->
     <div class="card" id="client-cov-card">
       <label style="margin-top:0">這位客戶的職能覆蓋</label>
       <div class="sub-note" id="cov-sub"></div>
@@ -3040,8 +3400,28 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     </div>
     <!-- 4. 每一場（S4：搬到兩欄那組下面。S5：一列四格，每列可點進單場詳情） -->
     <div class="card" id="client-sess-card">
-      <label style="margin-top:0">每一場 <span class="hint" id="cd-sess-count"></span></label>
+      <!-- E1（2026-09-04 Yi-En）：「每一場」改名「旅程中的議題」。 -->
+      <label style="margin-top:0">旅程中的議題 <span class="hint" id="cd-sess-count"></span></label>
       <div id="client-recs"></div>
+      <!-- E2：兩個預設收合的區塊，資料分別是既有的 clientQuote 與 v14 的 affirm。
+           放在同一張卡裡而不是各開一張：它們講的是同一段旅程的三個面向
+           （談了什麼／他說了什麼／我看見他什麼）。 -->
+      <div class="jsec">
+        <button type="button" class="jsec-head" onclick="toggleJSec('quote')">
+          <span class="jsec-arrow" id="jsec-quote-arrow">▸</span>
+          <span>客戶自己說的那句話</span>
+          <span class="jsec-n" id="jsec-quote-n"></span>
+        </button>
+        <div class="jsec-body collapsed" id="jsec-quote-body"></div>
+      </div>
+      <div class="jsec">
+        <button type="button" class="jsec-head" onclick="toggleJSec('affirm')">
+          <span class="jsec-arrow" id="jsec-affirm-arrow">▸</span>
+          <span>旅程上我對客戶的認可</span>
+          <span class="jsec-n" id="jsec-affirm-n"></span>
+        </button>
+        <div class="jsec-body collapsed" id="jsec-affirm-body"></div>
+      </div>
     </div>
     <div class="card" id="client-info"></div>
     <div class="actions">
@@ -3074,8 +3454,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <div id="ask-dup"></div>
       <label>這題是關於 <span class="hint">二選一</span></label>
       <div class="qcat" id="ask-cat">
-        <button type="button" class="pchip on" data-cat="skill"  onclick="setAskCat('skill')">卡住的技巧</button>
-        <button type="button" class="pchip"    data-cat="client" onclick="setAskCat('client')">特定客戶</button>
+        <button type="button" class="pchip pchip-in on" data-cat="skill"  onclick="setAskCat('skill')">卡住的技巧</button>
+        <button type="button" class="pchip pchip-in"    data-cat="client" onclick="setAskCat('client')">特定客戶</button>
       </div>
       <label>相關情境 <span class="hint">選填，客戶／會談</span></label>
       <input type="text" id="ask-ctx" placeholder="例：Tom 第一次">
@@ -3404,7 +3784,11 @@ function loadSkip(){ try { const a = JSON.parse(localStorage.getItem(SKPKEY)); r
 /* 不走 stampChanged：這是純字串陣列，沒有 id 也沒有 updated，跟 storeJT 同一個做法。 */
 function storeSkip(a){ localStorage.setItem(SKPKEY, JSON.stringify(a)); schedulePush(); }
 function skipKey(clientId, n){ return String(clientId == null ? '' : clientId) + '#' + n; }
-function isSkipped(clientId, n){ return loadSkip().indexOf(skipKey(clientId, n)) >= 0; }
+/* S10-1（2026-09-04）：這裡本來有一個 `isSkipped(clientId, n)`。
+   它是 P2 寫資料層時一起寫的，**寫了從來沒有人呼叫**（AUDIT 2026-09-03 指出，我 grep 過確認）。
+   選擇刪掉而不是「找個地方用它」：`renderHomeMissing()` 是用 Set 做 O(1) 比對，
+   改成逐列呼叫它會每一列重新 parse 一次 localStorage——那是為了用而用。
+   刪除同步從 EXPECTED_FNS 移除，讓它是一個明確的動作，不是一次意外。 */
 function skipSession(clientId, n){
   const a = loadSkip(); const k = skipKey(clientId, n);
   if (a.indexOf(k) < 0) { a.push(k); storeSkip(a); }
@@ -3637,6 +4021,17 @@ const AGREE_FIELDS = [
 ];
 function agreeText(r, k){ return String((r && r[k]) || '').trim(); }
 function agreeRows(r){ return AGREE_FIELDS.map(([n,k]) => [n, agreeText(r,k)]).filter(x => x[1]); }
+/* A4（v14 2026-09-04）：「客戶那一半」的三欄改走**同一份**列渲染。
+   在這之前 clientQuote／notCaught 在四個出口各手寫一次（詳情頁／PDF／匯出文字／
+   PDF 內容清單），新增 `affirm` 時就會變成四個地方各補一次、漏一個沒人會發現。
+   跟 AGREE_FIELDS 同一套做法：常數列欄位、`agreeText()` 讀值（沒填就不列）。
+   **順序與標籤刻意與改版前一字不差**，只有 affirm 是新加在最後的。 */
+const HALF_FIELDS = [
+  ['他自己說的一句話', 'clientQuote'],
+  ['我注意到但沒接的', 'notCaught'],
+  ['我對客戶的認可',   'affirm']
+];
+function halfRows(r){ return HALF_FIELDS.map(([n,k]) => [n, agreeText(r,k)]).filter(x => x[1]); }
 function topicHTML(r){
   const t = topicText(r);
   return t ? '<div class="topic">' + esc(t) + '</div>'
@@ -3934,7 +4329,12 @@ let pushFailed = false;
    使用者要自己還原，走「備份全部（下載檔）／還原備份」的手動 JSON。
    SCHEMA_VER 跟 accv 是兩回事：accv 仍是 4（acc 陣列的格式版號，遷移鏈語意未動），
    SCHEMA_VER 是「整份 payload 的版號」，每次改版遞增，快照欄位就叫 payload_pre_v{SCHEMA_VER}。 */
-const SCHEMA_VER = 13;  /* v13（2026-09-03）：payload 多一個集合 `skipped`（coachingSkipped_v1），
+const SCHEMA_VER = 14;  /* v14（2026-09-04）：紀錄多一個選填欄位 `affirm`（「我對客戶的認可」）。
+                              照 v9 progress／v10 paid／v11 outcome／v12 importance 同一套：
+                              **不寫遷移、不 backfill**，讀取端一律 `r.affirm || ''`。
+                              舊紀錄沒有這個鍵就是沒填，磁碟上一個位元組都不動，
+                              只靠 ensureCloudSnapshot(14) 先留 payload_pre_v14。
+                            v13（2026-09-03）：payload 多一個集合 `skipped`（coachingSkipped_v1），
                               ＝「這位客戶的第 N 場我不打算補了」的字串陣列，只影響首頁 H1 的提醒。
                               照 v9／v10／v11／v12 的前例：**不寫遷移、不 backfill**——
                               讀取端 loadSkip() 拿不到就是空陣列，舊 payload 一個位元組都不動，
@@ -4233,7 +4633,11 @@ function renderAsk() {
   const sec = (v, title, arr, render, empty) =>
     (_askTab !== 'all' && _askTab !== v) ? ''
     : `<div class="ask-sub"${v==='pending'?'':' style="margin-top:18px"'}>${title}（${arr.length}）</div>`
-      + (arr.length ? arr.map(render).join('') : '<div class="empty" style="padding:14px 0">' + empty + '</div>');
+      /* S8-1（2026-09-04）：卡片包一層 `.qgrid`，兩欄只套在**卡片**上。
+         直接把 `#ask-list` 做成格線是錯的——區塊標題（待回答／已回答）與籤列
+         也是它的直接子元素，會被塞進格子裡。 */
+      + (arr.length ? '<div class="qgrid">' + arr.map(render).join('') + '</div>'
+                    : '<div class="empty" style="padding:14px 0">' + empty + '</div>');
   document.getElementById('ask-list').innerHTML = chips
     + sec('pending', '待回答', pend, pItem, '目前沒有待問的問題')
     + sec('answered', '已回答', done, dItem, '還沒有已回答的問題');
@@ -4357,8 +4761,7 @@ function recordMainHTML(r){
     ${r.instant?`<div class="lbl">馬上掉出來的問題</div><div>${esc(r.instant)}</div>`:''}
     ${r.prevFocus?`<div class="lbl">上次說要盯</div><div>「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div>`:''}
     ${r.focus?`<div class="lbl">下一場只盯這一件事</div><div>${esc(r.focus)}</div>`:''}
-    ${r.clientQuote?`<div class="lbl">他自己說的一句話</div><div>${esc(r.clientQuote)}</div>`:''}
-    ${r.notCaught?`<div class="lbl">我注意到但沒接的</div><div>${esc(r.notCaught)}</div>`:''}
+    ${halfRows(r).map(([n2,v])=>`<div class="lbl">${n2}</div><div>${esc(v)}</div>`).join('')}
     ${list('我做得好的', r.good)}
     ${r.insight?`<div class="lbl">客戶受到啟發／頓悟的時刻</div><div>${esc(r.insight)}</div>`:''}
     ${list('可以改進的部分', r.improve)}
@@ -4386,7 +4789,7 @@ function exportPDF(){
   let arr = load();
   const fc = histFilter ? clientById(histFilter) : null;
   if (fc) arr = arr.filter(r=>r.clientId===histFilter);
-  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  arr = arr.slice().sort(recNewestFirst);
   if (!arr.length) { toast('沒有紀錄'); return; }
   printRecordsPDF(arr, '會談後快速紀錄_'+(fc?fc.code+'_':'')+todayStr());
 }
@@ -4403,7 +4806,7 @@ function exportClientPDF(cid){
   const id = cid || currentClientId;
   const c = clientById(id); if (!c) return;
   const arr = clientRecs(id).slice()
-    .sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+    .sort(recNewestFirst);
   if (!arr.length) { toast('這位客戶還沒有紀錄'); return; }
   printRecordsPDF(arr, '會談後快速紀錄_' + (c.code || '') + '_' + todayStr());
 }
@@ -4462,8 +4865,8 @@ const PDF_BLOCKS = [
   ['馬上掉出來的問題',      r => !!r.instant],
   ['上次說要盯與結果',      r => !!String(r.prevFocus||'').trim()],
   ['下一場只盯這一件事',    r => !!String(r.focus||'').trim()],
-  ['他自己說的一句話',      r => !!String(r.clientQuote||'').trim()],
-  ['我注意到但沒接的',      r => !!String(r.notCaught||'').trim()],
+  /* 同一份 HALF_FIELDS 展開，新增欄位不必再回來補一行（A4） */
+  ...HALF_FIELDS.map(([n,k]) => [n, r => !!agreeText(r,k)]),
   ['我做得好的',            r => (r.good||[]).filter(Boolean).length > 0],
   ['客戶受到啟發／頓悟的時刻（舊欄位）', r => !!String(r.insight||'').trim()],
   ['可以改進的部分',        r => (r.improve||[]).filter(Boolean).length > 0],
@@ -4977,8 +5380,13 @@ const CHART = (() => {
            surface: v('--surface') };
 })();
 function escSvg(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-function svgLineChart(labels, series) {
-  const W=600, H=250, padL=26, padR=14, padT=30, padB=44;
+/* R9-I（2026-09-04）：W／H 改成可帶入，**預設值與原本完全相同**（600×250），
+   所以沒帶參數的呼叫端行為一個像素都沒變。
+   帶入的用途見 clientChart：量到卡片實際多大就照那個尺寸重畫一次，
+   讓圖自己長高填滿，而不是靠 CSS 拉伸（拉伸會把文字一起變形）。 */
+function svgLineChart(labels, series, w, h) {
+  const W = w || 600, H = h || 250;
+  const padL=26, padR=14, padT=30, padB=44;
   const plotW=W-padL-padR, plotH=H-padT-padB, n=labels.length;
   const X=i=> n===1 ? padL+plotW/2 : padL + plotW*i/(n-1);
   const Y=v=> padT + plotH*(1 - v/10);
@@ -5011,11 +5419,142 @@ function svgLineChart(labels, series) {
 /* ---- backup / restore / export ---- */
 /* 只有管理者才會有這顆按鈕；其他人連 DOM 節點都不會被建出來 */
 function renderAdminBackup(){
-  const slot = document.getElementById('admin-backup-slot');
-  if (!slot) return;
-  slot.innerHTML = isAdmin()
+  /* S7-3：非管理者**看不到**那顆按鈕（不是看得到但按不動）。
+     兩個地方共用同一份判定與同一段 HTML，用 class 一次寫兩份。 */
+  const html = isAdmin()
     ? '<button class="btn btn-ghost" onclick="backupAllUsers()">備份所有人（管理者）</button>'
     : '';
+  document.querySelectorAll('.js-admin-backup').forEach(el => { el.innerHTML = html; });
+  const card = document.getElementById('acct-admin');
+  if (card) card.classList.toggle('hidden', !isAdmin());
+  /* R9d 那張卡跟這裡同一個判定、同一個更新點——兩個地方各自判定 isAdmin()
+     遲早會有一邊忘了更新（S7 那次寫死 id 就是這樣踩的）。 */
+  renderFillCard();
+}
+/* ═══ R9d（2026-09-05）一次性補值：把沒有推進感分數的舊紀錄補成 7 ═══
+   **來由**：她原本說「舊紀錄要補，我沒發現原來沒有預設七分，都要補」。
+   查了程式才發現缺值**不是**因為改掉預設值——`progress` 是 2026-08-24 才有的欄位，
+   在那之前的場次**記錄當下根本沒有這一題**。把這件事告訴她之後，
+   她的裁決是「**只補我自己的**」。
+
+   所以這裡有三條刻意的限制，改動前請先讀懂為什麼：
+   1. **不是遷移。** 不進 runMigrations()、不動 SCHEMA_VER（payload 形狀沒變）。
+      遷移會在每一台裝置上跑，等於連帶改到其他 17 位教練的資料——那正是她排除掉的做法。
+   2. **管理者限定。** 走既有的 isAdmin()，不新增權限機制。
+   3. **兩步驟，不合併成一鍵。** 先只讀地看會改幾筆，確認之後才寫；
+      而且寫之前一定先下載一份備份，備份不成功就中止。
+
+   **不加任何標記欄位**：她要的就是「這些場次就是 7」。加一個「這是補的」欄位
+   等於新增鍵名（§七-8），也讓她的資料多一個她沒要的東西。
+   做了什麼、哪一天做的，寫在按鈕旁邊的說明文字裡。 */
+const FILL_KEYS = ['progress', 'perf'];
+const FILL_VALUE = '7';
+/* 缺值的判定只有這一份，預覽與實補共用——兩邊各寫一次，遲早會不一致。
+   ⚠ `0` 不算缺值：那是她給的分數。`'' `／null／undefined／整個沒有這個鍵才算。 */
+function fillMissing(recs, k){
+  return (recs || []).filter(r => {
+    const v = r[k];
+    return v === undefined || v === null || String(v).trim() === '';
+  });
+}
+function fillStats(){
+  const recs = load();
+  const out = { total: recs.length };
+  FILL_KEYS.forEach(k => { out[k] = fillMissing(recs, k); });
+  return out;
+}
+function previewFillScores(){
+  if (!isAdmin()) { toast('只有管理者可以用這個'); return; }
+  const st = fillStats();
+  const box = document.getElementById('fill-out');
+  const go  = document.getElementById('fill-go');
+  /* 數字一律從結果推導，不手寫（§七-10）。 */
+  const line = k => {
+    const rs = st[k];
+    const name = k === 'progress' ? '推進感' : '專注程度';
+    if (!rs.length) return '<div class="jrow"><span class="jrow-when">' + name
+      + '</span><span class="jrow-txt">一筆都不缺，不需要補。</span></div>';
+    const days = rs.map(r => String(r.date || '（沒有日期）'))
+                   .sort().join('、');
+    return '<div class="jrow"><span class="jrow-when">' + name + '</span>'
+      + '<span class="jrow-txt">' + rs.length + ' 筆缺值（共 ' + st.total + ' 筆）：'
+      + esc(days) + '</span></div>';
+  };
+  box.innerHTML = '<div class="sub-note" style="margin-top:10px">'
+    + '這一步只有讀取，什麼都沒有改。</div>' + FILL_KEYS.map(line).join('');
+  const n = FILL_KEYS.reduce((a, k) => a + st[k].length, 0);
+  /* 一筆都不缺就不要給她一顆會寫入的按鈕 */
+  if (go) go.classList.toggle('hidden', n === 0);
+}
+function fillMissingScores(){
+  if (!isAdmin()) { toast('只有管理者可以用這個'); return; }
+  const before = fillStats();
+  const n = FILL_KEYS.reduce((a, k) => a + before[k].length, 0);
+  if (!n) { toast('沒有需要補的紀錄'); return; }
+  if (!confirm('會把 ' + n + ' 個缺值補成 ' + FILL_VALUE
+    + '。\n按下確定會先下載一份備份，再開始補。')) return;
+  /* D4：先備份。走既有的 backupJSON()，不另寫一套匯出——
+     另寫一套的話，備份格式會跟正式的那份漂移，還原時才發現就來不及了。
+     **備份丟例外就中止，一個位元組都不寫。** */
+  try { backupJSON(); }
+  catch (e) { toast('備份沒有成功，所以沒有補任何東西'); return; }
+  const arr = load();
+  let done = 0;
+  FILL_KEYS.forEach(k => {
+    /* 重新從 arr 上判定，不用 before 存的參考——中途若有同步進來的變動，
+       以當下磁碟上的為準。已經有值的一律不碰，包含值是 0 的。 */
+    fillMissing(arr, k).forEach(r => { r[k] = FILL_VALUE; done++; });
+  });
+  store(arr);
+  updateCount();
+  toast('補好了，共 ' + done + ' 個值');   /* D7：數字從結果推導 */
+  previewFillScores();
+}
+/* 管理者才看得到整張卡（非管理者連 DOM 都不會有內容），
+   說明文字寫清楚它做了什麼、哪一天做的。 */
+function renderFillCard(){
+  const card = document.getElementById('fill-card');
+  if (!card) return;
+  card.classList.toggle('hidden', !isAdmin());
+  const note = document.getElementById('fill-note');
+  /* 這段字**她自己會讀到**，所以有兩件事不可以再犯（2026-09-05 SPEC 指出）：
+     1. 不要用第三人稱轉述她（「她要的就是…」）——那是寫給看程式的人的話，
+        跑到她的畫面上就變成在她面前討論她。要說的話對她說。
+     2. 不要寫「只改這台」——補完會同步上雲端，其他裝置也會拿到。
+        講範圍要講**帳號**，不是裝置。
+     排序也照她最需要先知道的：發生了什麼 → 這顆會做什麼 → 這是一次性的。 */
+  if (note) note.textContent = [
+    '2026-08-24 以前的場次沒有「推進感」這一題，所以那些紀錄的分數是空的——不是 0，是沒有。',
+    '',
+    '這顆會把空的補成 7。已經有分數的一律不動，包含 0。'
+      + '只動你自己的帳號，其他使用者不受影響。補完之後看不出哪些是補的。',
+    '',
+    '這是一次性的維護動作，做過一次就不用再做。'
+  ].join('\n');
+}
+
+/* S7 帳號與權限：**四樣全部是既有功能搬過來**，一個新機制都沒有。
+   登入者、同步狀態、管理者判定分別走 currentUser／同一句「已同步／本機模式」的判斷／isAdmin()，
+   跟側欄底部（updateSideFoot）用的是同一組來源，不另外算一次。 */
+function renderAcct(){
+  const rows = document.getElementById('acct-rows');
+  const acts = document.getElementById('acct-actions');
+  if (!rows || !acts) return;
+  const inCloud = !!currentUser;
+  const who = inCloud ? (currentUser.displayName || currentUser.email || '（沒有顯示名稱）') : '';
+  const row = (k, v) => '<div class="acct-row"><span class="acct-k">' + esc(k) + '</span>'
+    + '<span class="acct-v">' + esc(v) + '</span></div>';
+  /* S7-4：沒登入時說清楚「還沒登入」並給入口，不可以出現空白頁或 undefined。 */
+  rows.innerHTML = inCloud
+    ? row('登入帳號', who) + row('同步狀態', '已同步')
+      + row('這台裝置的資料', '會跟雲端保持一致')
+    : row('登入帳號', '還沒登入')
+      + row('同步狀態', '本機模式')
+      + row('這台裝置的資料', '只存在這台裝置上，換一台看不到');
+  acts.innerHTML = inCloud
+    ? '<button class="btn btn-ghost" onclick="doLogout()">登出</button>'
+    : '<button class="btn btn-primary" onclick="doGoogleLogin()">使用 Google 登入</button>';
+  renderAdminBackup();
 }
 async function backupAllUsers(){
   if (!isAdmin()){ toast('這個功能只有管理者帳號能用'); return; }
@@ -5143,7 +5682,7 @@ function exportAllText() {
   let arr = load();
   const fc = histFilter ? clientById(histFilter) : null;
   if (fc) arr = arr.filter(r=>r.clientId===histFilter);
-  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  arr = arr.slice().sort(recNewestFirst);
   if (!arr.length) { toast('沒有紀錄'); return; }
   const blocks = arr.map(r => recordToText(r));
   const text = blocks.join('\n\n──────────\n\n');
@@ -5164,8 +5703,7 @@ function recordToText(r) {
   if(r.because) lines.push('　我覺得客戶的感受：'+r.because);
   if(r.prevFocus) lines.push('上次說要盯：'+r.prevFocus+(r.prevFocusResult?'　→　'+focusResultLabel(r.prevFocusResult):''));
   if(r.focus) lines.push('下一場只盯這一件事：'+r.focus);
-  if(r.clientQuote) lines.push('他自己說的一句話：'+r.clientQuote);
-  if(r.notCaught) lines.push('我注意到但沒接的：'+r.notCaught);
+  halfRows(r).forEach(([n2,v])=>lines.push(n2+'：'+v));
   if(r.good&&r.good.length){ lines.push('我做得好的：'); r.good.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
   if(r.insight) lines.push('客戶受到啟發／頓悟的時刻：'+r.insight);
   if(r.improve&&r.improve.length){ lines.push('我可以改進的部分：'); r.improve.forEach((g,i)=>lines.push('  '+(i+1)+'. '+g)); }
@@ -5811,6 +6349,9 @@ const VIEW_HEAD = {
                `btn-save-top` 保留當掛鉤（沒有 CSS，只是給查找用），id 也沒動。 */
             ['✓ 儲存這一場', 'saveRecord()', 'btn-primary btn-save-top', 'saveBtnTop']
           ] },
+  /* S7：這一頁只是把既有的登入／登出／同步狀態／管理者備份集中在一個地方。 */
+  acct: { title: '帳號與權限',
+          sub: () => currentUser ? '這台裝置已經連上雲端' : '這台裝置還沒登入，資料只存在本機' },
   hist: { title: '我進步了嗎', sub: histHeadSub,
           actions: [['匯出 PDF', "exportTwoStep('hist')", 'btn-primary', 'btn-exp-hist'],
                     ['匯出文字', "exportTwoStep('txt')", 'btn-ghost', 'btn-exp-txt']] },
@@ -6029,6 +6570,7 @@ function showView(v) {
   document.getElementById('view-client-detail').classList.toggle('hidden', v!=='clientdetail');
   document.getElementById('view-cred').classList.toggle('hidden', v!=='cred');
   document.getElementById('view-journal').classList.toggle('hidden', v!=='journal');
+  document.getElementById('view-acct').classList.toggle('hidden', v!=='acct');   /* S7 */
   document.getElementById('tabHome').classList.toggle('active', v==='home');
   /* §46-R：「＋ 新增紀錄」在步驟 1 與步驟 2 都算「正在這一頁」 */
   document.getElementById('tabNew').classList.toggle('active', v==='new');
@@ -6037,6 +6579,7 @@ function showView(v) {
   document.getElementById('tabAsk').classList.toggle('active', v==='ask');
   document.getElementById('tabCred').classList.toggle('active', v==='cred');
   document.getElementById('tabJournal').classList.toggle('active', v==='journal');
+  document.getElementById('tabAcct').classList.toggle('active', v==='acct');     /* S7 */
   /* R1-3（2026-09-03）：「資料與備份」不是獨立畫面（它是 showView('hist') ＋ 捲到底部那張卡），
      所以這裡一律先熄掉它，只有 openDataTools() 會在 showView 之後把它點亮。
      少了這一行，點過一次「資料與備份」之後它會永遠亮著。 */
@@ -6047,6 +6590,7 @@ function showView(v) {
   if (v==='clients') renderClients();
   if (v==='cred') renderCred();
   if (v==='journal') renderJournal();
+  if (v==='acct') renderAcct();
   closeDrawer();          /* M1：選取頁面後關閉抽屜 */
   if (changed) navPush();
 }
@@ -6154,7 +6698,8 @@ function segFilled(k){
        跟他今天想談什麼是兩件事。 */
     case 'agree':   return !!(fv('f-topic') || fv('f-outcome') || fv('f-importance')
                               || fv('f-obstacle') || fv('f-nextstep'));
-    case 'this':    return !!(fv('f-instant') || fv('f-clientquote') || fv('f-notcaught')
+    case 'this':    return !!(fv('f-instant') || fv('f-affirm')
+                              || fv('f-clientquote') || fv('f-notcaught')
                               || getItemsLen('good-list') || getItemsLen('improve-list'));
     case 'score':   return _scoreTouched;
     case 'focus':   return !!fv('f-focus');
@@ -6315,6 +6860,9 @@ function saveRecord(later) {
     nextStep: fv('f-nextstep'),
     clientQuote: fv('f-clientquote'),
     notCaught: fv('f-notcaught'),
+    /* v14（2026-09-04）「我對客戶的認可」。選填、無遷移、不 backfill，
+       讀取端一律 agreeText()／`|| ''`。四個出口走 HALF_FIELDS 一份到底。 */
+    affirm: fv('f-affirm'),
     /* M3（2026-08-28）：送審勾選已撤下，新存檔不再產生 submitCandidate。
        舊紀錄裡的值保留在 payload 相容層，載入不壞。 */
   };
@@ -6364,9 +6912,19 @@ function resetForm() {
   document.getElementById('f-client-new').value = '';
   document.getElementById('f-client-pre').value = '0';
   document.getElementById('f-instant').value = '';
-  document.getElementById('f-perf').value = 7; document.getElementById('perfVal').textContent = '7';
-  document.getElementById('f-progress').value = 7; document.getElementById('progressVal').textContent = '7';
+  /* ⚠ 這裡有一條**刻意的分界**，改之前先讀完（2026-09-04 Yi-En 裁決）：
+       新表單          → 預設點亮 7    （＝改版前滑桿停在 7 的行為，她要留著）
+       編輯既有紀錄     → 載入那筆自己的值；**沒有值就維持沒有值**
+     兩者不是同一件事。預設 7 是「表單的起始值」，不是「把沒有的值補成 7」。
+     她那 38 筆裡有真的沒填 progress 的紀錄——那些不是新表單，
+     它們的空值必須留著（沒有值 → 不畫柱子、不進平均、詳情頁寫「—」）。
+     所以**只有這裡**設 7，editCurrent 那邊一個字都不能照抄過去。
+     （本批一度改成「新表單也不預設」，她看過之後選擇回到舊行為。） */
   _scoreUnset = new Set();
+  ['perf', 'progress'].forEach(k => {
+    document.getElementById('f-' + k).value = '7';
+    paintScore(k);
+  });
   ['progressVal'].forEach(id => document.getElementById(id).classList.remove('unset'));
   document.getElementById('f-because').value = '';
   document.getElementById('f-focus').value = '';
@@ -6374,6 +6932,7 @@ function resetForm() {
   ['f-outcome','f-importance','f-obstacle','f-nextstep'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('f-clientquote').value = '';
   document.getElementById('f-notcaught').value = '';
+  document.getElementById('f-affirm').value = '';
   /* M3：送審勾選已撤下，這裡不再重設它 */
   _legacyInsight = '';
   const lg = document.getElementById('f-insight-legacy');
@@ -6653,14 +7212,18 @@ function jCardHTML(j){
     ? '<span class="j-confirm">你確定要刪除嗎？<button class="mini-link del-link" onclick="jDelete(' + idArg + ')">刪除</button>'
       + '<button class="mini-link" onclick="jCancelDelete()">取消</button></span>'
     : '<button class="mini-link del-link" onclick="jAskDelete(' + idArg + ')">刪除</button>';
+  /* R5-3：籤從頁首搬到卡片底部（設計稿）。編輯／刪除留在右上角（R5-4）。
+     沒有標籤時整塊不渲染——留一條沒有內容的分隔線比沒有還糟。 */
+  const tags = (j.tags || []).length ? '<div class="j-foot">' + jTagChips(j, false) + '</div>' : '';
   return '<div class="jcard">'
-    + '<div class="j-head">' + jTagChips(j, false)
+    + '<div class="j-head">'
       + '<span class="j-acts">' + del + '<button class="mini-link" onclick="jEdit(' + idArg + ')">編輯</button></span></div>'
     + (j.title ? '<div class="j-title">' + esc(j.title) + '</div>' : '')
     + (j.note ? '<div class="j-note">' + esc(j.note) + '</div>' : '')
     + (j.why ? '<div class="j-why"><span class="j-lbl">為什麼</span>' + esc(j.why) + '</div>' : '')
     + (j.example ? '<div class="j-ex"><span class="j-lbl">例子</span>' + esc(j.example) + '</div>' : '')
     + jSrcLine(j)
+    + tags
     + '</div>';
 }
 function renderJournal(){
@@ -6989,6 +7552,115 @@ function clientCoverage(recs){
              lv: hitLevel(touched, total ? touched / total : 0) };
   });
 }
+/* R9-I（2026-09-04）：整段從 openClient 中間抽成函式，並改在
+   renderClientCoverage() **之後**才呼叫。
+   **為什麼順序要換**：第二趟要量「卡片實際給了圖多少高度」，而那個高度
+   來自右邊職能覆蓋卡（同一列、比較高的那張）。原本的位置在右邊那張還沒渲染之前，
+   量到的是還沒撐開的高度——第一版就是這樣，圖框量到 291px 卻沒重畫。
+   抽成函式而不是就地搬，是為了讓「先算資料、再量、再重畫」三件事看得出來是一組。 */
+/* K1（2026-09-04）：自評趨勢的兩系列直條圖。照設計稿 isClient 的結構，
+   但**不照抄它寫死的 height:128px / 100px**——那兩個固定值會把 R9-I 第三件
+   （圖自己長高填滿）弄壞。高度全部交給 flex，柱子用百分比。
+
+   K3：沒有分數的那一場**不畫那根柱子**，不是畫一根高度 0 的。
+   「沒填」與「填了 0」在畫面上必須分得開——高度 0 的柱子跟不存在的柱子看起來一樣，
+   但 DOM 上分得出來，守衛才守得住（§七-1：不要把沒有填當成最低分）。
+   scoreNum() 對沒填的回傳 null，這裡就是唯一的判斷點。
+
+   K4：不限筆數、不丟資料。每一組有最小寬度，放不下就整條橫向捲動
+   ——限筆數就得寫一個「最近 N 筆」的數字，而那個數字很容易變成手寫的（§七-10）。
+   她目前最多 7 場，這個寬度下捲不到；長到二三十場也不會擠成看不見的細線。 */
+function barChartHTML(rs) {
+  const legend = SCORES.map(([k, n]) =>
+    '<span class="bchart-key"><i data-s="' + k + '"></i>' + esc(n) + '</span>').join('');
+  const cols = rs.map(r => {
+    /* 標籤與別處同一條規則：解析得出就寫「第 N 次」，解析不出就原樣顯示她寫的字。 */
+    const num = parseSessionNum(r.session);
+    const lb = num ? '第 ' + num + ' 次' : (String(r.session || '').trim() || mdStr(r.date) || '');
+    const bars = SCORES.map(([k]) => {
+      const v = scoreNum(r, k);
+      if (v === null) return '';                 /* K3：沒填就不畫 */
+      /* 分數 0–10 → 高度 0–100%。0 分仍然畫得出來（保底 3%），
+         否則「填了 0」會退化成「沒填」的樣子，剛好是這條規則要防的反面。 */
+      return '<span class="bbar" data-s="' + k + '" data-v="' + v
+        + '" style="height:' + Math.max(3, v * 10) + '%"></span>';
+    }).join('');
+    return '<div class="bcol"><div class="bcol-bars">' + bars + '</div>'
+      + '<span class="bcol-lb">' + esc(lb) + '</span></div>';
+  }).join('');
+  return '<div class="bchart"><div class="bchart-legend">' + legend + '</div>'
+    + '<div class="bchart-plot">' + cols + '</div></div>';
+}
+
+function renderClientChart(rs) {
+  /* 3. 左：自評趨勢；右：職能覆蓋。兩張卡是 grid 的直接項目。
+     底部對齊靠**各自的 align-self:stretch**（不是容器的 align-items——
+     容器是 align-items:start，其他項目要維持不被拉伸）。CSS 在樣式表結尾 R9-I 那段。 */
+  const cc = document.getElementById('client-chart-card');
+  /* 2026-09-03 Yi-En：「即使客戶只有一場，但至少圖表上面還是會有兩個點吧？還是要有圖啊」——
+     「兩個點」指的是兩條線各一個點（推進感與專注），不是兩場。
+     原本 >= 2 才畫，只有一場的客戶會看到一塊空白（右邊的職能覆蓋還在，左邊是洞）。
+     改成只要有紀錄就畫。（K1 改直條圖之後這件事更單純：一場就是一組柱子。） */
+  if (rs.length >= 1) {
+    cc.classList.remove('hidden');
+    /* K1（2026-09-04 Yi-En 指定）：折線 → 設計稿的兩系列直條圖。
+       ⚠ 這**推翻**視覺對比報告 §五「刻意不做」的第一條（「自評趨勢維持折線圖」）。
+       她 2026-09-04 看過截圖後改的主意，以她為準。
+       日後要照那份清單「還原」回折線之前，先確認她真的改回去了。
+
+       用 DOM 而不是 SVG：柱子高度要跟著卡片伸縮（K2／R9-I 第三件），
+       flex 天生就會；SVG 要嘛固定 viewBox 留白邊，要嘛拉伸把文字弄變形。
+       換成 DOM 之後也不再需要「量完再重畫一次」那一趟。
+
+       顏色照設計稿：推進感 --cool（深）、專注 --cool-line（淺），寫在 CSS 用 token，
+       這裡不碰色碼。備註：2026-08-28 她說過「兩個藍分不出來」，那是**四條折線疊在一起**
+       的情況；直條是並排的，兩色相鄰比得出來。若她看了仍覺得難分，
+       把 .bbar[data-s="perf"] 換一個色票即可，一行。 */
+    const box = document.getElementById('clientChart');
+    box.innerHTML = barChartHTML(rs);
+  } else {
+    cc.classList.add('hidden');
+    /* R3-5（2026-09-04）：順手把上一位客戶的圖清掉。
+       AUDIT 逐條試過五條外洩路徑（九個寬度都是 display:none、print media 下仍是 none、
+       PDF 走另建的 #print-root、祖先的 innerText 拿不到），判定**目前無害**，
+       全產品檔也沒有任何程式在讀 #clientChart。**所以這是整潔，不是修 bug。**
+       留著的風險是日後有人新增「截圖／匯出／複製這張圖」的功能，
+       它會在那一刻從無害變成顯示別人的資料。一行的成本，先清掉。 */
+    document.getElementById('clientChart').innerHTML = '';
+  }
+}
+
+/* R9-J（2026-09-04 Yi-En 決定）：「這位客戶的職能覆蓋」換算法。
+   **舊指標為什麼沒用**（SPEC 用她的真實資料查的）：分母是全部 39 條標記，
+   而「標到位但一條都沒逐條勾 → 底下每一條都算到」的推導讓它幾乎永遠滿格
+   ——多位客戶八條全部 100%，那張圖沒有訊號。
+   **新指標**：某一項在**幾場做到** ／ 那一項**評估過的場次**。
+
+   ⚠ **另外算，不動 `clientCoverage()`**：那個函式的 `accTouched`／`accTotal`
+   還餵著「職能已點到 N ／ 20 條 ACC」那張統計卡（她沒有說要改）。
+   改它會連帶動到那張卡，所以這裡新增一個函式，舊的一個字都沒動（守衛 §66-2 釘住）。
+
+   分母只數**評估過的場次**（`accSt() !== ST_NE`）——「尚未評估」不進分母，
+   那是 §七-1 的核心，四態的 -1 就是為此存在。
+   狀態一律走 `accSt()`，不自己判讀 st／on。
+   `partial`（部分到位）另外數：它落進分母卻不算分子，呈現上必須跟「未到位」分得開，
+   否則就是把「部分做到」畫成「沒做到」（§七-9）。 */
+function clientCompetencyRate(recs){
+  const rs = recs || [];
+  return ACC.map((a, i) => {
+    let assessed = 0, done = 0, partial = 0;
+    rs.forEach(r => {
+      const st = accSt((r.acc || [])[i]);
+      if (st === ST_NE) return;          /* 尚未評估：不進分母 */
+      assessed++;
+      if (st === 2) done++;
+      else if (st === 1) partial++;
+    });
+    return { i, label: a[0], assessed, done, partial,
+             rate: assessed ? done / assessed : 0,
+             partialRate: assessed ? partial / assessed : 0 };
+  });
+}
 /* L1：標出左欄「現在看的是誰」。清單可能還沒渲染（例如直接進詳情），
    所以 renderClients() 之後也要再呼叫一次——兩處共用這一個函式，不產生第二套邏輯。 */
 function markCurrentClientCard(id){
@@ -7006,15 +7678,28 @@ function renderClientCoverage(recs){
     box.innerHTML = '<div class="acc-none">這位客戶還沒有紀錄，八大職能都還沒評估。</div>';
     return;
   }
-  const rows = clientCoverage(rs);
-  sub.textContent = '這 ' + rs.length + ' 場裡，八大職能各標到幾條';
-  box.innerHTML = rows.map(r =>
-    '<div class="cov-row">'
-    + '<span class="cov-label">' + esc(r.label) + '</span>'
-    + '<span class="cov-track"><span class="cov-fill" data-lv="' + r.lv
-    + '" style="width:' + Math.round(r.rate * 100) + '%"></span></span>'
-    + '<span class="cov-num">' + (r.assessed ? r.touched + '/' + r.total : '還沒評估') + '</span>'
-    + '</div>').join('');
+  const rows = clientCompetencyRate(rs);
+  /* J2：副標跟著改。舊的寫「這 N 場裡，八大職能各標到幾條」——換算法之後那句話會變成錯的。 */
+  sub.textContent = '每一項：做到的場次 ／ 評估過的場次。沒評估過的場次不算在裡面。';
+  box.innerHTML = rows.map(r => {
+    /* J5：一場都沒評估過時說「還沒評估過」——中性事實，不是失敗。
+       不寫 0/0，也不寫任何讀起來像「你沒做到」的字（§七-9）。 */
+    if (!r.assessed) return '<div class="cov-row">'
+      + '<span class="cov-label">' + esc(r.label) + '</span>'
+      + '<span class="cov-track"></span>'
+      + '<span class="cov-num cov-none">還沒評估過</span></div>';
+    /* J4：長條分兩段——到位實色 ＋ 部分到位淺色。
+       「部分到位」落進分母卻不算分子，如果只畫一段，它看起來會跟「未到位」一樣。 */
+    return '<div class="cov-row">'
+      + '<span class="cov-label">' + esc(r.label) + '</span>'
+      + '<span class="cov-track">'
+        + '<span class="cov-fill" data-seg="done" style="width:' + Math.round(r.rate * 100) + '%"></span>'
+        + '<span class="cov-fill" data-seg="partial" style="width:' + Math.round(r.partialRate * 100) + '%"></span>'
+      + '</span>'
+      + '<span class="cov-num">' + r.done + '/' + r.assessed
+        + (r.partial ? '<span class="cov-part">部分 ' + r.partial + '</span>' : '') + '</span>'
+      + '</div>';
+  }).join('');
 }
 function hitLevel(hits, rate){
   if (!hits) return 'none';
@@ -7118,14 +7803,13 @@ function renderAccCum(){
        所以有差距時寫成區間「21–24／25 場」，全部一樣時就寫「25／26 場」。 */
     const hs2 = x.markers.map(m => m.hits);
     const lo = Math.min.apply(null, hs2), hi = Math.max.apply(null, hs2);
-    /* 2026-08-29：分母改成「你逐條勾過這一項的場次」。
-       同時把「評估過幾場」一起寫出來，不然 3／28 場會被誤讀成「28 場只做到 3 場」。 */
-    /* 2026-08-29：分母改回「評估過的場次」。同時把「其中幾場是逐條勾的」也寫出來——
-       那是「這些數字有多細」的線索：逐條勾的場次越多，同一列的差距越可信。 */
+    /* R10-1（2026-09-05 Yi-En：「我不要那些瑣碎的說明」「點到為止就好」）：
+       列尾只留數字。原本後面跟著一段括號說明（「其中 N 場有逐條勾」／
+       「都是按到位推出來的」）——**那段在八列各印一次**，重複八次的解釋不是資訊，是噪音。
+       「尚未評估」那個分支**不可以動**：那是 §七-9，沒評估過不等於做不到。
+       「這些數字有多細」的線索仍然在滑過格子的 tooltip 裡（做到幾場／評估過幾場／%）。 */
     const den = !x.assessed ? '尚未評估'
-              : (lo === hi ? lo : lo + '–' + hi) + '／' + x.assessed + ' 場'
-                + (x.basis ? '（其中 ' + x.basis + ' 場有逐條勾）'
-                           : '（都是按「到位」推出來的，還沒逐條勾過）');
+              : (lo === hi ? lo : lo + '–' + hi) + ' / ' + x.assessed;
     return '<div class="hm-row">'
       + '<div class="hm-name"><b>' + (x.i + 1) + '</b> ' + name + '</div>'
       + '<div class="hm-cells">' + cells + '</div>'
@@ -7143,18 +7827,19 @@ function renderAccCum(){
       + '<span class="hm-cell" data-lv="2"></span>過半'
       + '<span class="hm-cell" data-lv="3"></span>常常'
       + '<span class="hm-cell" data-lv="4"></span>幾乎每場'
+      /* R10-3 定案 (b)（2026-09-05）：分母那一句**併進圖例這一行**。
+         她要的是「只要一個說明就解釋所有顏色」——說明就是圖例本身，
+         但「一半以下／過半／常常」是**比例**，分母沒寫出來就講不清楚
+         （她圖上的四級是絕對次數，那個才不需要分母）。
+         所以不是把說明加回來，是讓那唯一的說明把分母講完。措辭到此為止，不再解釋。 */
+      + '<span class="hm-legend-den">以評估過的場次為分母</span>'
     + '</div>'
-    + '<div class="hm-caveat">分母是<b>你評估過那一項的場次</b>。按「到位」而沒有逐條勾的場次，'
-      + '底下每一條都算做到（「部分到位」但沒說是哪幾條的場次不列入計算）。'
-      + '顏色是分布，不是分數；不同職能之間不直接比較。</div>'
-    + '<div class="hm-sect">'
-      + '<div class="hm-head">基礎｜核心職能 1–2</div>'
-      + hs.slice(0, MK_BASE_COUNT).map(rowHTML).join('')
-    + '</div>'
-    + '<div class="hm-sect">'
-      + '<div class="hm-head">會談中的實踐｜核心職能 3–8</div>'
-      + hs.slice(MK_BASE_COUNT).map(rowHTML).join('')
-    + '</div>';
+    /* R10-2（2026-09-05 Yi-En：「不需要分基礎跟會談中，直接 1 到 8 列出來就對了」）：
+       兩個分區標題拿掉，八列連續。MK_BASE_COUNT 沒有刪——它是 ICF 的分組事實，
+       別處還在用；只是這張卡不再拿它來切版面。
+       R10-3：`.hm-caveat` 那三行整段拿掉。她要「只要一個說明就解釋所有顏色」＝
+       **圖例本身就是那個說明**，圖例底下再補一段解釋就違反了那句話。 */
+    + hs.map(rowHTML).join('');
 
   /* 2026-08-28 語意變更（Yi-En）：「這裡不是應該秀出最沒有做到的五項嗎？」
      舊版列的是「標過到位、但還沒留時間戳」的條目——那是**送審證據**的缺口，
@@ -7218,7 +7903,7 @@ function histFiltered(){
       if (hay.indexOf(kw) < 0) return false;
     }
     return true;
-  }).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  }).sort(recNewestFirst);
   /* 「最近 7 場」是**截取**不是過濾，所以在排序之後做。
      有搜尋關鍵字時不截——她打字就是要找特定那一場，截掉會讓她以為沒有。 */
   if (histQuick === 'recent' && !kw) return out.slice(0, HIST_RECENT_N);
@@ -7330,11 +8015,17 @@ function renderHist() {
   const newest = groups.length ? groups[0].key : null;
   const filtering = histIsFiltering();
   list.innerHTML =
+    /* R7-2（2026-09-04）：補上設計稿有、這裡沒有的兩欄——場次與分數。
+       兩欄只在 ≥1100px 顯示（那是六欄並排本來就成立的區間）；
+       1024–1099 維持 2026-08-28 那個「五欄＋八格換第二列」的既有決定，
+       <1024 是手機卡片，R7-3 明文一個像素都不動。 */
     '<div class="sess-cols sess-head">'
       + '<span>日期</span><span>客戶</span>'
+      + '<span class="sh-sess">場次</span>'
       + '<span class="sh-topic">這一場的議題</span>'
       + '<span class="sh-cells">八大職能</span>'
-      + '<span class="sh-meta">時長・到位</span><span></span>'
+      + '<span class="sh-meta">時長・到位</span>'
+      + '<span class="sh-score">推進感</span><span></span>'
     + '</div>'
     + groups.map(g=>{
     const open = histMonthOpen(g.key, newest, filtering);
@@ -7343,7 +8034,9 @@ function renderHist() {
         + ' onclick="toggleHistMonth(\'' + esc(g.key) + '\')">'
         + '<span class="hm-arrow">▸</span>'
         + '<span class="hm-t">' + esc(histMonthLabel(g.key)) + '</span>'
-        + '<span class="hm-n">' + g.arr.length + ' 場</span>'
+        /* R7-4：月份小計加時數。**走既有的 credStats()**，跟認證進度頁同一個進位
+           （那邊是 Math.round(分/60*10)/10），不在這裡另訂一套加總。 */
+        + '<span class="hm-n">' + g.arr.length + ' 場 · ' + credStats(g.arr).totalH + ' 小時</span>'
       + '</button>'
       + '<div class="hmonth-body">' + g.arr.map(r=>{
         const c = sessionMkCounts(r);
@@ -7360,13 +8053,20 @@ function renderHist() {
         return '<span class="scell" data-lv="' + s2.lv + '" title="核心職能 ' + a[0]
           + '：' + tip + '">' + (i+1) + '</span>';
       }).join('');
+      /* R7-7：分數用「推進感」——首頁客戶卡顯示的就是「N 小時 · 推進感 N」，
+         同一個值在兩個地方要一致。走既有的 scoreNum()，
+         舊紀錄沒填就**留空**（0 分跟沒填是兩件事，CLAUDE.md §七-1）。 */
+      const sn = sessionNum(r.session);
+      const pg = scoreNum(r, 'progress');
       return '<div class="sess sess-cols" onclick="openDetail(' + r.id + ')">'
           + '<span class="sess-date">' + esc((r.date||'').slice(5) || '—') + '</span>'
           + '<span class="sess-client">' + (esc(r.client) || '（未填）') + '</span>'
+          + '<span class="sess-sess">' + (sn != null ? '第 ' + sn + ' 次' : '') + '</span>'
           + '<span class="sess-topic' + (topicText(r) ? '' : ' none') + '">'
             + (topicText(r) ? esc(topicText(r)) : '（沒填議題）') + '</span>'
           + '<span class="sess-scells">' + cellsHTML + '</span>'
           + '<span class="sess-meta">' + (r.mins ? esc(r.mins) + ' 分・' : '') + '到位 <b>' + c.done + '</b> 項</span>'
+          + '<span class="sess-score">' + (pg === null ? '' : pg) + '</span>'
           + '<span class="sess-arrow">›</span>'
         + '</div>';
       }).join('') + '</div>'
@@ -7494,8 +8194,7 @@ function openDetail(id, from) {
     ${r.instant?`<div class="detail-field"><div class="detail-label">馬上掉出來的問題　<button class="mini-link" onclick="addQuestionFromRecord(${r.id})">＋加入導師提問</button></div><div class="detail-val">${esc(r.instant)}</div></div>`:''}
     ${r.prevFocus?`<div class="detail-field"><div class="detail-label">上次說要盯</div><div class="detail-val">「${esc(r.prevFocus)}」${r.prevFocusResult?'　→　'+esc(focusResultLabel(r.prevFocusResult)):''}</div></div>`:''}
     ${r.focus?`<div class="detail-field"><div class="detail-label">下一場只盯這一件事</div><div class="detail-val">${esc(r.focus)}</div></div>`:''}
-    ${r.clientQuote?`<div class="detail-field"><div class="detail-label">他自己說的一句話</div><div class="detail-val">${esc(r.clientQuote)}</div></div>`:''}
-    ${r.notCaught?`<div class="detail-field"><div class="detail-label">我注意到但沒接的</div><div class="detail-val">${esc(r.notCaught)}</div></div>`:''}
+    ${halfRows(r).map(([n2,v])=>`<div class="detail-field"><div class="detail-label">${n2}</div><div class="detail-val">${esc(v)}</div></div>`).join('')}
     ${listBlock('我做得好的', r.good)}
     ${r.insight?`<div class="detail-field"><div class="detail-label">客戶受到啟發／頓悟的時刻</div><div class="detail-val">${esc(r.insight)}</div></div>`:''}
     ${listBlock('可以改進的部分', r.improve)}
@@ -7515,19 +8214,46 @@ function openDetail(id, from) {
    使用者一碰滑桿就移除；存檔時集合裡還在的欄位一律不寫入磁碟。
    目的：不讓預設值 7 冒充成真實評估。 */
 let _scoreUnset = new Set();
+/* C（2026-09-04）1–10 按鈕。**只有這一支在畫**，三個地方（新表單、編輯載入、清空）
+   都呼叫它，不各自拼一次 HTML。
+   C1：1 到 10，沒有 0。
+   C3：沒選就是**沒有任何一顆亮**，跟「選了 1」（第一顆亮）在畫面與 DOM 上都分得開；
+       絕不預設落在某個數字上。
+   C4：舊紀錄可能是 0、或 7.5 這種半格值——那時候一顆都不亮，但**值還在 hidden input**，
+       底下據實寫出「原本記的是 X」。不碰它，存檔就原樣寫回，不改寫磁碟。 */
+function paintScore(k){
+  const box = document.getElementById('sc10-' + k);
+  if (!box) return;
+  const raw = String(document.getElementById('f-' + k).value || '');
+  const unset = _scoreUnset.has(k) || raw === '';
+  const n = Number(raw);
+  const pick = (!unset && Number.isInteger(n) && n >= 1 && n <= 10) ? n : null;
+  box.innerHTML = Array.from({ length: 10 }, (_, i) => i + 1).map(v =>
+    '<button type="button" class="sc10-b' + (v === pick ? ' on' : '') + '" data-v="' + v + '"'
+    + ' aria-pressed="' + (v === pick ? 'true' : 'false') + '"'
+    + ' onclick="pickScore(\'' + k + '\',' + v + ')">' + v + '</button>').join('');
+  const st = document.getElementById(k + 'Val');
+  if (unset) { st.textContent = '還沒選'; st.className = 'score-state unset'; }
+  else if (pick === null) {
+    /* 舊紀錄的值不在 1–10 的整數上（例如 0 或 7.5）。據實說它是多少，
+       不改寫、也不假裝沒填——那兩種都是替她決定她記過的東西。 */
+    st.textContent = '原本記的是 ' + raw + '（點一個數字就會換掉它）';
+    st.className = 'score-state legacy';
+  } else { st.textContent = ''; st.className = 'score-state'; }
+}
+function pickScore(k, v){
+  document.getElementById('f-' + k).value = String(v);
+  _scoreUnset.delete(k);
+  paintScore(k);
+  markTouched('score');
+}
 function clearScoreUnset(k){
-  if (_scoreUnset.has(k)) {
-    _scoreUnset.delete(k);
-    const el = document.getElementById(k + 'Val');
-    if (el) { el.classList.remove('unset'); el.textContent = document.getElementById('f-' + k).value; }
-  }
+  if (_scoreUnset.has(k)) { _scoreUnset.delete(k); paintScore(k); }
 }
 function markScoreUnset(k){
   _scoreUnset.add(k);
-  const s = document.getElementById('f-' + k), el = document.getElementById(k + 'Val');
-  s.value = 7;                       /* 滑桿把手停在中間，但不代表 7 */
-  el.textContent = '未評估';
-  el.classList.add('unset');
+  document.getElementById('f-' + k).value = '';   /* C3：不預設落在任何一個數字上 */
+  paintScore(k);
 }
 
 function editCurrent() {
@@ -7540,13 +8266,14 @@ function editCurrent() {
   document.getElementById('f-client-new').value = '';
   document.getElementById('f-mins').value = r.mins || '';
   document.getElementById('f-instant').value = r.instant || '';
-  document.getElementById('f-perf').value = r.perf; document.getElementById('perfVal').textContent = r.perf;
+  /* C3（2026-09-04）：perf 也納入「沒選就是沒選」。
+     改版前 perf 沒有 unset 機制——滑桿一律停在 7，所以編輯一筆沒有 perf 的舊紀錄
+     再存檔，會憑空多出一個 7。按鈕沒有「把手停在哪裡」這回事，兩條一視同仁。 */
   _scoreUnset = new Set();
-  ['progress'].forEach(k => {
+  ['perf', 'progress'].forEach(k => {
     const v = r[k];
     if (v === undefined || v === null || v === '') { markScoreUnset(k); }
-    else { document.getElementById('f-'+k).value = v; document.getElementById(k+'Val').textContent = v;
-           document.getElementById(k+'Val').classList.remove('unset'); }
+    else { document.getElementById('f-' + k).value = v; paintScore(k); }
   });
   document.getElementById('f-because').value = r.because || '';
   document.getElementById('f-focus').value = r.focus || '';
@@ -7555,6 +8282,7 @@ function editCurrent() {
   document.getElementById('f-outcome').value = r.outcome || '';
   document.getElementById('f-importance').value = r.importance || '';
   document.getElementById('f-obstacle').value = r.obstacle || '';
+  document.getElementById('f-affirm').value = r.affirm || '';
   document.getElementById('f-nextstep').value = r.nextStep || '';
   document.getElementById('f-clientquote').value = r.clientQuote || '';
   document.getElementById('f-notcaught').value = r.notCaught || '';
@@ -7703,15 +8431,63 @@ function onClientSelChange(){
   syncFormPaid();
   showLastImprove(sel.value === '__new__' ? '' : sel.value);
   refreshFocusReview();
-  if (sel.value === '__new__') { syncClientPick(); document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
+  if (sel.value === '__new__') { syncClientPick(); renderJourney(); document.getElementById('f-client-new').focus(); newClientPreChange(); return; }
   autoSessionFill();
   syncClientPick();
+  renderJourney();          /* R6-4：跟 syncClientPick() 掛同一個更新點，不另外找入口 */
 }
 /* 步驟 1 的「已選客戶」摘要。**只有這一個更新點**，掛在 onClientSelChange() 尾巴上——
    凡是改變 f-client-sel 的路徑都會經過那裡（步驟 0 的卡片、補記捷徑、編輯舊紀錄、
    客戶頁那顆按鈕），所以不必在每個入口各補一次，也就不會有人漏掉。
    下拉沒有被刪：選到已結案客戶（編輯舊紀錄時）或還沒選時，摘要收起來、下拉照樣露出來，
    使用者永遠有辦法改。 */
+/* R6-4：右欄「這位客戶前 3 場」。
+   **一個數字都不自己算**：場次清單走 clientStats(id).rs（已經照日期新→舊排好，
+   跟客戶詳情頁同一個來源）、場次號走 sessionNum()、分數走 scoreNum(r,'progress')。
+   分數選推進感是因為首頁客戶卡顯示的就是「N 小時 · 推進感 N」——同一個值在兩個地方要一致。
+   舊紀錄沒有 progress 就**留空**，不補 0（0 分跟沒填是兩件事，CLAUDE.md §七-1）。
+   編輯舊紀錄時把「這一筆自己」排除掉——它不是「前幾場」。 */
+/* D（2026-09-04）：原本叫 renderPrev3，只列前 3 場。Yi-En 要「每一場的議題都列」，
+   於是改名 renderJourney——一個叫 Prev3 的函式列出全部，是給下一個人挖坑。
+   D5：仍然排除**正在編輯的那一場**（那一場的議題就在左邊表單裡，列在右邊等於自己看自己）。
+   D4：場次多的時候由 .jrn-list 自己捲（CSS 在樣式表結尾），
+       不讓右欄長到比左欄還長——那會把「下一步」那張卡推到看不見的地方。 */
+function renderJourney(){
+  const box  = document.getElementById('f-prev3');
+  const list = document.getElementById('f-prev3-list');
+  const ttl  = document.getElementById('f-prev3-title');
+  if (!box || !list) return;
+  const sel = document.getElementById('f-client-sel');
+  const id  = sel && sel.value && sel.value !== '__new__' ? sel.value : '';
+  const c   = id ? clientById(id) : null;
+  if (!c){ box.classList.add('hidden'); list.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  const rs = clientStats(c.id).rs.filter(r => String(r.id) !== String(editId));
+  if (ttl) ttl.textContent = c.code + '的旅程';
+  if (!rs.length){
+    /* 沒有前幾場時說實話。不編一個看起來像真的的日期，也不留 undefined。 */
+    list.innerHTML = '<div class="acc-none">這是他的第一場，還沒有可以參考的上一場。</div>';
+    return;
+  }
+  list.innerHTML = rs.map(r => {
+    const n = sessionNum(r.session);
+    const p = scoreNum(r, 'progress');
+    const tp = String(r.topic || '').trim();
+    return '<div class="p3row">'
+      /* 日期格式跟首頁客戶卡一致（那裡是 `.slice(5).replace('-','/').replace(/^0/,'')`）——
+         同一個日期在兩個地方長得不一樣，看的人會以為是兩種東西。 */
+      + '<span class="p3-date">' + esc(String(r.date || '').slice(5).replace('-', '/').replace(/^0/, '')) + '</span>'
+      + '<span class="p3-n">' + (n != null ? '第 ' + n + ' 次' : '') + '</span>'
+      /* 推進感這一格是 R6-4 就有的，D 沒有要我拿掉——她要的是「每一場都列」，
+         不是「只留議題」。拿掉等於順手刪掉她已經在看的東西。
+         沒填就留空（不補 0、不寫 undefined），這是 §60-G5 在守的。 */
+      + '<span class="p3-score">' + (p === null ? '' : '推進感 ' + p) + '</span>'
+      /* 沒填議題就留白，不寫「（沒填議題）」——右欄是給她掃一眼的，
+         一整排括號提醒她哪幾場沒填，是指認失敗（§七-9）。 */
+      + '<span class="p3-topic' + (tp ? '' : ' none') + '">' + esc(tp) + '</span>'
+      + '</div>';
+  }).join('');
+}
 function syncClientPick(){
   const sel = document.getElementById('f-client-sel');
   const box = document.getElementById('f-client-pick');
@@ -7776,7 +8552,7 @@ function showLastImprove(clientId){
   _lastImproveText = '';
   _prevSessDate = '';
   if (clientId && !editId){          // 編輯舊紀錄時不顯示，避免時間對不上
-    const rs = clientRecs(clientId).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+    const rs = clientRecs(clientId).sort(recNewestFirst);
     if (rs.length) _prevSessDate = rs[0].date || '';
     const last = rs.find(r=>r.improve && r.improve.length);
     /* 「上次要改」可能來自更早的一場；日期跟卡片右上角不同時才自己再標一次，
@@ -7867,8 +8643,19 @@ function setNewClientPaid(v){
     b.classList.toggle('on', (b.dataset.paid || '') === v));
 }
 /* 一位客戶的場次／時數／最近一場：openClient 的統計卡與列表卡共用同一份 */
+/* R9-G2（2026-09-04）：「一場紀錄怎麼排」的**唯一**定義。
+   Yi-En：「如果是同一天，照儲存的時間排」——那是一條通則，不是只針對客戶卡。
+   日期新→舊；同一天再比 `id`（新的在前）。
+   為什麼是 id 不是 updated：`saveRecord` 寫的是 `id: editId || Date.now()`，
+   **編輯時沿用原 id**，所以它是「第一次存檔的時間」；而 `updated` 在遷移時被整批寫成
+   同一個值，同一天的場次完全分不開。
+   ⚠ 這個規則**本來就已經是這樣**，只是散在九個地方各寫一次（2026-09-04 清點）。
+   抽成一份不是改行為，是讓「兩處用兩套排序」這件事以後不可能發生。 */
+function recNewestFirst(a, b){
+  return (b.date || '').localeCompare(a.date || '') || ((Number(b.id) || 0) - (Number(a.id) || 0));
+}
 function clientStats(id){
-  const rs = clientRecs(id).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  const rs = clientRecs(id).slice().sort(recNewestFirst);
   const mins = rs.reduce((t,r)=>t + (parseInt(r.mins,10) || 0), 0);
   const dones = rs.map(r=>(r.acc || []).filter(x=>accSt(x) === 2).length);
   const focusDone = rs.filter(r=>r.prevFocusResult === 'done').length;
@@ -7880,6 +8667,29 @@ function clientStats(id){
     doneAvg: rs.length ? Math.round(dones.reduce((x,y)=>x+y, 0) / rs.length * 10) / 10 : 0,
     focusDone, focusAns
   };
+}
+/* R3-1a（2026-09-04）：客戶排序的**唯一**實作。
+   在這之前客戶頁與首頁各有一份一模一樣的 sort，而且首頁那份的註解寫著
+   「排序跟客戶頁一致（…），不另訂一套」——**註解宣稱的事跟程式做的事相反**。
+   AUDIT 的突變把首頁那份整個反向，1614 條守衛沒有一條紅（§56 只掃 #client-list），
+   而那是 Yi-En 打開工具的第一眼畫面。抽成一份之後，那句註解才是真的。
+
+   兩層鍵，順序不可交換：
+     主鍵  進行中 → 已結案（既有上線行為，2026-09-03 §56 有單獨的守衛釘著）
+     次鍵  clientStats().last（最近一場會談的日期）新 → 舊；沒有紀錄的 last 是空字串，自然排最後
+   吃的是 [{ c, st }] 的陣列（st 必須是 clientStats(c.id) 的輸出），就地排序並回傳同一個陣列。 */
+function sortClientInfo(info){
+  /* R9-G（2026-09-04 Yi-En：「如果是同一天，照儲存的時間排」）：
+     第三層鍵——最近一場的日期一樣時，比**那一場的 id**（新的在前）。
+     為什麼是 id 不是 updated：`saveRecord` 寫的是 `id: editId || Date.now()`，
+     **編輯時沿用原 id**，所以 id 就是「第一次存檔的時間」；
+     而 `updated` 在遷移時被整批寫成同一個值，同一天的場次完全分不開。
+     `st.rs` 是 clientStats() 排好的（日期新→舊、同日再比 id），所以 rs[0] 就是最近那一場。 */
+  const lastId = x => (x.st.rs && x.st.rs.length ? Number(x.st.rs[0].id) || 0 : 0);
+  return (info || []).sort((a, b) =>
+    ((a.c.status === 'closed') ? 1 : 0) - ((b.c.status === 'closed') ? 1 : 0)
+    || (b.st.last || '').localeCompare(a.st.last || '')
+    || (lastId(b) - lastId(a)));
 }
 /* ═══ §14-2 客戶卡的兩條 bar ═══
    推進感＝progress、專注＝perf（欄位名不動，只改顯示的字）。
@@ -7917,9 +8727,7 @@ function renderClients(){
      「如果之後客戶變成 100 位、200 位、300 位，難道要讓使用者一直往下滑嗎？」
      排序不變（進行中在前、最近一場新的在前），先篩後截。 */
   const q = clientQuery.trim().toLowerCase();
-  let info = cs.map(c=>({ c, st: clientStats(c.id) })).sort((a,b)=>
-    ((a.c.status==='closed')?1:0)-((b.c.status==='closed')?1:0)
-    || (b.st.last||'').localeCompare(a.st.last||''));
+  let info = sortClientInfo(cs.map(c=>({ c, st: clientStats(c.id) })));
   const total = info.length;
   if (q) info = info.filter(x=>String(x.c.code||'').toLowerCase().indexOf(q) >= 0);
   const matched = info.length;
@@ -8045,7 +8853,7 @@ const RECAP_FIELDS = [
   ['阻礙',   r => mkExample(r, '3.4')]
 ];
 function clientRecapRows(rs){
-  const desc = rs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  const desc = rs.slice().sort(recNewestFirst);
   return RECAP_FIELDS.map(([label, get])=>{
     let val = '', from = '';
     for (const r of desc){ const v = get(r); if (v){ val = v; from = r.date || ''; break; } }
@@ -8067,7 +8875,9 @@ function openClient(id){
   /* L1：讓左欄那張卡標出「現在看的是誰」。不另外渲染一份清單。 */
   markCurrentClientCard(id);
   const st = clientStats(id);                       // 與客戶列表同一份統計
-  const rs = st.rs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || a.id-b.id);
+  /* K5（2026-09-04）：舊到新＝recNewestFirst 的反序。原本這裡自己寫了一份一模一樣的
+     比較函式（日期升冪、同日比 id），改成呼叫既有那支，全檔就只有一份排序規則。 */
+  const rs = st.rs.slice().sort((a, b) => recNewestFirst(b, a));
 
   /* 1. 四張統計卡（數字全部從資料推導） */
   document.getElementById('cd-title').textContent = c.code;
@@ -8162,28 +8972,19 @@ function openClient(id){
       }).join('')
     : '<div class="acc-none">這位客戶還沒有紀錄。</div>';
 
-  /* 3. 左：自評趨勢；右：recap。兩張卡是 grid 的直接項目，靠 align-items:stretch 底部對齊 */
-  const cc = document.getElementById('client-chart-card');
-  /* 2026-09-03 Yi-En：「即使客戶只有一場，但至少圖表上面還是會有兩個點吧？還是要有圖啊」——
-     「兩個點」指的是兩條線各一個點（推進感與專注），不是兩場。
-     原本 >= 2 才畫，只有一場的客戶會看到一塊空白（右邊的職能覆蓋還在，左邊是洞）。
-     改成只要有紀錄就畫。一個資料點的折線圖畫不出線，但畫得出點，
-     而且比一塊空白誠實——那一場的分數確實存在。 */
-  if (rs.length >= 1) {
-    cc.classList.remove('hidden');
-    const labels = rs.map(r => r.session || (r.date||'').slice(5) || '');
-    const series = [
-      ...SCORES.map(([k,n])=>({ name:n, color:CHART[k==='clientfeel'?'client':k],
-                                vals: rs.map(r=>scoreNum(r,k)) }))
-    ];
-    document.getElementById('clientChart').innerHTML = svgLineChart(labels, series);
-  } else {
-    cc.classList.add('hidden');
-  }
   /* M2（2026-08-28）：recap 卡已撤下（與歷史紀錄重複）。容器不在 DOM 裡，這裡不再渲染。
      clientRecapRows()／copyClientRecap() 暫留在相容層，等確認無其他依賴再清死碼。 */
 
   renderClientCoverage(rs);
+  /* E：兩個收合區跟「旅程中的議題」同一份 rs（舊→新），不另外查一次。
+     每次進客戶頁都重新渲染＝重新收起來，這是 E5 要的（狀態不留存）。 */
+  Object.keys(JSECS).forEach(k => {
+    renderJSec(k, rs);
+    const b = document.getElementById('jsec-' + k + '-body');
+    const a = document.getElementById('jsec-' + k + '-arrow');
+    if (b) b.classList.add('collapsed');
+    if (a) a.textContent = '▸';
+  });
 
   /* 客戶資料編輯。2026-08-28（Yi-En 實機回報）：這一整組常駐在詳情頁最下面是噪音。
      但整段刪掉會一起失去三個能力——改代號、改「開始記錄前已談次數」（會談次數自動編號要用它）、
@@ -8213,10 +9014,50 @@ function openClient(id){
     </div>
     </div>`;
   showView('clientdetail');
+  /* R9-I：圖必須在**顯示之後**才畫。
+     第二趟要量「卡片實際給了圖多少高度」，而在 showView 之前整個 view 還是 display:none，
+     量到的一律是 0——第一版把它放在中間，量到 0 就跳過重畫，圖永遠停在 600×250。
+     放在這裡也順便保證右邊職能覆蓋卡已經渲染完（同一列的高度由它決定）。 */
+  renderClientChart(rs);
 }
 
 /* #1：編輯客戶資料的折疊。狀態不需要記憶——每次進客戶詳情都重新收起來才對，
    常駐展開的話等於沒收。 */
+/* E（2026-09-04）：客戶頁兩個收合區。**一支函式吃兩個區塊**，
+   兩邊的資料只差在讀哪個欄位——寫兩份的話，日後改一邊忘了另一邊。
+   E3：每一條都帶「哪一場」（日期＋第幾次），否則一堆句子沒有上下文。
+   E4：沒有內容時說**那件事還沒發生**，不寫「你還沒寫過」這種指認的句子（§七-9）。
+   E5：收合狀態只活在 DOM 的 class 上，**不寫 localStorage、不新增任何鍵**。 */
+const JSECS = {
+  quote:  ['clientQuote', '這段旅程裡他自己說過的話，會列在這裡。'],
+  affirm: ['affirm',      '這段旅程裡你看見他的地方，會列在這裡。']
+};
+function renderJSec(kind, rs){
+  const [key, empty] = JSECS[kind];
+  const body = document.getElementById('jsec-' + kind + '-body');
+  const num  = document.getElementById('jsec-' + kind + '-n');
+  if (!body) return;
+  /* 走跟四個出口同一個讀值函式，沒填就不列——沒填不等於沒發生（§七-1）。 */
+  const rows = (rs || []).map(r => [r, agreeText(r, key)]).filter(x => x[1]);
+  if (num) num.textContent = rows.length ? rows.length + ' 則' : '';
+  body.innerHTML = rows.length
+    ? rows.map(([r, v]) => {
+        const n = sessionNum(r.session);
+        /* 日期格式與首頁客戶卡、右欄旅程一致，不另外長一種 */
+        const d = String(r.date || '').slice(5).replace('-', '/').replace(/^0/, '');
+        return '<div class="jrow"><span class="jrow-when">' + esc(d)
+          + (n != null ? '　第 ' + n + ' 次' : '') + '</span>'
+          + '<span class="jrow-txt">' + esc(v) + '</span></div>';
+      }).join('')
+    : '<div class="acc-none">' + empty + '</div>';
+}
+function toggleJSec(kind){
+  const b = document.getElementById('jsec-' + kind + '-body');
+  const a = document.getElementById('jsec-' + kind + '-arrow');
+  if (!b) return;
+  const open = b.classList.toggle('collapsed') === false;
+  if (a) a.textContent = open ? '▾' : '▸';
+}
 function toggleClientInfo(){
   const b = document.getElementById('cinfo-body'), a = document.getElementById('cinfo-arrow');
   if (!b) return;
@@ -8282,7 +9123,7 @@ function toggleInsight(){
 function renderInsight(){
   let arr = load();
   if (histFilter) arr = arr.filter(r=>r.clientId===histFilter);
-  arr = arr.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id);
+  arr = arr.slice().sort(recNewestFirst);
   _insightGoods = []; _insightImps = [];
   arr.forEach(r=>{
     (r.good||[]).forEach(t=>_insightGoods.push({t, r}));
@@ -8532,11 +9373,16 @@ function renderReflect(){
 
 /* 導師督導包：彙整待問問題 + 浮現的問題 + 待改進，去識別化打包 */
 let _mentorPack = '';
+/* ⚠ 2026-09-05 Yi-En 裁決：**客戶的原話（clientQuote）與「我注意到但沒接的」（notCaught）
+   刻意不進督導包。** 問過她，她選「不用，維持現狀」。
+   記在這裡是因為 AUDIT 把它當成「可能的落差」報上來過——**沒有寫下來的決定會被當成疏漏**，
+   下一輪很可能再問一次、或者被「順手補齊」。要加之前先問她。
+   （`affirm` 是另一回事：她指定要進，走下面的「二之二」那一節。） */
 function buildMentorPack(){
   let recs = load();
   const fc = histFilter ? clientById(histFilter) : null;
   if (fc) recs = recs.filter(r=>r.clientId===histFilter);
-  recs = recs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.id-a.id).slice(0, 10);
+  recs = recs.slice().sort(recNewestFirst).slice(0, 10);
   const pend = loadQ().filter(x=>!x.answered).sort((a,b)=>a.id-b.id);
   const ctx = r => ((r.client||'')+' '+formatSession(r.session||'')).trim();
   const L = [];
@@ -8567,6 +9413,15 @@ function buildMentorPack(){
       L.push('- '+(r.date||'')+'（'+ctx(r)+'）'+(topicText(r) ? '　議題：'+topicText(r) : ''));
       agreeRows(r).forEach(([n3,v]) => L.push('  · '+n3+'：'+v));
     });
+    L.push('');
+  }
+  /* A4（v14）：認可也要進督導包。照上面「二之一」同一個形狀寫，
+     沒填的場次不列——沒填不等於沒有（§七-1）。 */
+  const affs = recs.filter(r => agreeText(r, 'affirm'));
+  if (affs.length){
+    L.push('## 二之二、旅程上我對客戶的認可');
+    L.push('');
+    affs.forEach(r => L.push('- '+(r.date||'')+'（'+ctx(r)+'）：'+agreeText(r, 'affirm')));
     L.push('');
   }
   L.push('## 三、我覺得可以改進的部分');
@@ -8980,14 +9835,17 @@ function renderHomeMissing(){
           + '<span class="miss-sub">第 ' + m + ' 場</span></span>'
         /* P2-6：主要動作仍然是「記這一場」。「略過」是次要動作，用無框的文字鈕，
            不跟主鈕平起平坐——她要的是少一點雜訊，不是多一顆一樣顯眼的按鈕。 */
+        + '<button type="button" class="btn btn-primary btn-sm miss-go" onclick="startMakeup('
+          + q(x.clientId) + ',' + m + ')">記這一場</button>'
         + '<button type="button" class="miss-skip" onclick="skipSession('
           + q(x.clientId) + ',' + m + ')">略過</button>'
         /* R2-2（2026-09-03）：這一列的主要動作是「記這一場」，它本來是 btn-ghost（灰底），
            因為磚紅被側欄選中項佔走了。磚紅還回來之後，這裡改回 btn-primary。
            「略過」維持無框文字鈕——一列只能有一顆主要動作。
-           `.miss-go` 這個 class 保留：<1024px 的 44px 觸控覆寫掛在它身上（§55）。 */
-        + '<button type="button" class="btn btn-primary btn-sm miss-go" onclick="startMakeup('
-          + q(x.clientId) + ',' + m + ')">記這一場</button>'
+           `.miss-go` 這個 class 保留：<1024px 的 44px 觸控覆寫掛在它身上（§55）。
+           S10-2（2026-09-04）：**主要動作在 DOM 裡排在前面**——螢幕閱讀器與 Tab
+           照的是 DOM 順序，先讀到次要動作是錯的。視覺順序用 CSS `order` 擺回原樣
+           （`.miss-skip{order:1}`／`.miss-go{order:2}`），畫面上一個像素都沒變。 */
         + '</div>');
     });
   });
@@ -9044,10 +9902,10 @@ function renderHomeClients(){
     box.innerHTML = '<div class="acc-none">還沒有客戶。記下第一場的時候可以順手建一位（用代號就好）。</div>';
     return;
   }
-  /* 排序跟客戶頁一致（進行中在前、最近一場新的在前），不另訂一套 */
-  const info = cs.map(c => ({ c: c, st: clientStats(c.id) })).sort((a, b) =>
-    ((a.c.status === 'closed') ? 1 : 0) - ((b.c.status === 'closed') ? 1 : 0)
-    || (b.st.last || '').localeCompare(a.st.last || ''));
+  /* 排序跟客戶頁一致（進行中在前、最近一場新的在前），不另訂一套。
+     R3-1a：這句話以前是假的——這裡曾經複製了一份一模一樣的 sort。
+     現在兩處都呼叫 sortClientInfo()，改一處兩頁一起動。 */
+  const info = sortClientInfo(cs.map(c => ({ c: c, st: clientStats(c.id) })));
   const more = info.length - Math.min(info.length, HOME_CLIENT_N);
   box.innerHTML = info.slice(0, HOME_CLIENT_N).map(x => {
     const rs = x.st.rs;                     /* clientStats 已經照日期新到舊排好 */
@@ -9076,7 +9934,11 @@ function renderHomeClients(){
           + '<span class="hcli-meta">' + esc(meta) + '</span></span>'
         + paidChip(x.c.paid)
       + '</span>'
-      + (topic ? '<span class="hcli-topic">' + esc(topic) + '</span>' : '')
+      /* R4-1：沒有議題時，議題的位置放一個虛線佔位（不是不渲染）。
+         用同一個 .hcli-topic 撐出同樣的幾何，差別只在 .hcli-topic-none 那層樣式。
+         aria-hidden：它沒有內容，不需要讀給輔助技術聽。 */
+      + (topic ? '<span class="hcli-topic">' + esc(topic) + '</span>'
+               : '<span class="hcli-topic hcli-topic-none" aria-hidden="true"></span>')
       + '<span class="hcli-foot">'
         + '<span class="hbars">' + bars + '</span>'
         + '<span class="hcli-num">' + x.st.hours + ' 小時'
