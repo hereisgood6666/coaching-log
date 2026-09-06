@@ -710,14 +710,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    的補救：當時分母是一長串「4–7／7 場有逐條勾（這項共評估 27 場）樣本少…」，
    84px 的欄位加 nowrap 會把列撐爆。**R10-1 把那串縮成「4 / 7」之後，
    撐爆的成因不在了**，所以可以收回同一行。 */
-.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr) 44px;
+/* R12（2026-09-06）：三欄 → 兩欄（名稱｜格子）。右邊那 44px 的場次數字整欄拿掉。 */
+.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr);
           gap: 0 10px; align-items: center; padding: 2px 0; }
 .hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0;
            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hm-name b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .hm-cells { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; }
-.hm-den { font-size: 11px; color: var(--ink-4); text-align: right; white-space: nowrap;
-          font-variant-numeric: tabular-nums; }
 /* R10-5：編號留著，但**更小更細**（她：「保留編號，但字小一點、細一點」）。
    34×22／10.5px → 26×16／9px＋字重 400＋顏色降一階。
    底線是「還看得清楚」——她要的是小，不是看不到，所以沒有再往下壓。 */
@@ -745,7 +744,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      R10-6 的「一行」是桌機的事，她看的截圖也是桌機。 */
   .hm-row { grid-template-columns: minmax(0,1fr); gap: 4px; padding: 8px 0; }
   .hm-name { white-space: normal; }
-  .hm-den { text-align: left; }
 }
 .cum-todo { margin-top: 18px; border-top: 1px solid var(--line-2); padding-top: 12px; }
 .todo-row { border-left: 3px solid var(--st1-line); padding: 8px 0 8px 11px; margin-top: 10px; }
@@ -820,8 +818,22 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .scell[data-lv="2"] { background: var(--st2-bg); color: var(--st2-fg); border-color: var(--st2-line); }
 .scell[data-lv="3"] { background: var(--st3-bg); color: var(--st3-fg); border-color: var(--st3-line); }
 .scell[data-lv="4"] { background: var(--st4-bg); color: var(--st4-fg); border-color: var(--st4-line); }
+/* R13（2026-09-06）：Yi-En 圈了欄位標題那一列說「太擠了」。
+   實測（1276 寬、她的 38 筆）：篩選列下緣 → 表頭上緣只有 **6px**，
+   表頭下緣 → 月份標題只有 **9px**，三個東西幾乎黏成一坨。
+   **每一欄的文字都沒有被切到**（逐欄比過 scrollWidth vs clientWidth）——
+   所以擠的是**垂直空間**，不是文字放不下。
+
+   **只加上面那一道，下面那道原樣留著 9px**——理由是層級靠的是**對比**不是空間總量：
+     上面 18px → 「篩選」與「表格」是兩個區塊
+     下面  9px → 表頭跟它標示的那張表**貼在一起**（鄰近＝同一組）
+   兩邊都加寬的話，三個東西會從「黏成一坨」變成「三個並列的東西」，層級還是讀不出來。
+   （下面那道本來就有月份標題自己的 8px 內距與一條 border-top 在分隔。）
+   ⚠ **資料列一個像素都沒動**——她圈的是表頭，不是資料列；
+   把整張表撐鬆會讓一屏看到的場次變少，跟她一路要求的「變短」相反。 */
 .sess-head {
-  padding: 0 12px 9px; border-bottom: 1px solid var(--line-2); margin-bottom: 9px;
+  padding: 0 12px 9px; border-bottom: 1px solid var(--line-2);
+  margin-top: 18px; margin-bottom: 9px;
   align-items: baseline;
 }
 .sess-head span { font-size: 11px; font-weight: 700; color: var(--ink-4); }
@@ -7798,22 +7810,18 @@ function renderAccCum(){
                         + Math.round(m.rate * 100) + '%）'
                     : '這一項還沒評估過') + '">'
       + m.c + '</span>').join('');
-    /* 2026-08-28：數字直接寫在列尾，不用滑過去才看得到。
-       同一列裡各條 marker 的命中數可能不同（例：職能4 是 21、22、24），
-       所以有差距時寫成區間「21–24／25 場」，全部一樣時就寫「25／26 場」。 */
-    const hs2 = x.markers.map(m => m.hits);
-    const lo = Math.min.apply(null, hs2), hi = Math.max.apply(null, hs2);
-    /* R10-1（2026-09-05 Yi-En：「我不要那些瑣碎的說明」「點到為止就好」）：
-       列尾只留數字。原本後面跟著一段括號說明（「其中 N 場有逐條勾」／
-       「都是按到位推出來的」）——**那段在八列各印一次**，重複八次的解釋不是資訊，是噪音。
-       「尚未評估」那個分支**不可以動**：那是 §七-9，沒評估過不等於做不到。
-       「這些數字有多細」的線索仍然在滑過格子的 tooltip 裡（做到幾場／評估過幾場／%）。 */
-    const den = !x.assessed ? '尚未評估'
-              : (lo === hi ? lo : lo + '–' + hi) + ' / ' + x.assessed;
+    /* R12（2026-09-06）：**列尾那一欄場次數字整欄拿掉**。
+       Yi-En 看了線上版，圈出每一列右邊的「36 / 38」「29–31 / 34」，說「這不需要」。
+       演進的軌跡（三次都是她）：
+         2026-08-28 加上去（「數字直接寫在列尾，不用滑過去才看得到」）
+         2026-09-05 R10-1 把後面那段括號說明拿掉，只留數字
+         2026-09-06 R12   整欄拿掉
+       **算法一個字都沒動**——分母仍然是「評估過的場次」，顏色級距照舊；
+       拿掉的只有這一個顯示。做到幾場／評估過幾場／百分比仍然在
+       **滑過格子的 tooltip** 裡（上面那段 title），要看得到細節的人看得到。 */
     return '<div class="hm-row">'
       + '<div class="hm-name"><b>' + (x.i + 1) + '</b> ' + name + '</div>'
       + '<div class="hm-cells">' + cells + '</div>'
-      + '<div class="hm-den">' + den + '</div>'
     + '</div>';
   };
   /* 2026-08-28（Yi-En 實機回報）：
@@ -7831,8 +7839,14 @@ function renderAccCum(){
          她要的是「只要一個說明就解釋所有顏色」——說明就是圖例本身，
          但「一半以下／過半／常常」是**比例**，分母沒寫出來就講不清楚
          （她圖上的四級是絕對次數，那個才不需要分母）。
-         所以不是把說明加回來，是讓那唯一的說明把分母講完。措辭到此為止，不再解釋。 */
-      + '<span class="hm-legend-den">以評估過的場次為分母</span>'
+         所以不是把說明加回來，是讓那唯一的說明把分母講完。措辭到此為止，不再解釋。
+
+         R12-2 措辭調整（2026-09-06）：原句是「以評估過的場次為分母」。
+         R12 把列尾那一欄數字拿掉之後，**畫面上再也沒有任何看得見的分數**，
+         「分母」這個詞沒有可指的東西了——照原字留著反而不符合她當初要的效果。
+         改成直接講顏色在比什麼。**她 09-05 裁決的是「要有一個說明解釋顏色」這件事，
+         不是那 12 個字**；換句話是讓那個決定繼續成立，不是推翻它。 */
+      + '<span class="hm-legend-den">顏色比的是你評估過那一項的場次</span>'
     + '</div>'
     /* R10-2（2026-09-05 Yi-En：「不需要分基礎跟會談中，直接 1 到 8 列出來就對了」）：
        兩個分區標題拿掉，八列連續。MK_BASE_COUNT 沒有刪——它是 ICF 的分組事實，
