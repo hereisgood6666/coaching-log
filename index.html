@@ -2307,7 +2307,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      次數  flex 0 0 52px／12px／rgb(95,88,80)
      議題  flex 1 1 0／13.5px／單行省略號
      標記  flex 0 0 auto／padding 2px 9px／radius 20px／11.5px 700／冷色籤
-   設計稿的第五格（沒有標籤的數字）Yi-En 已裁決刪掉，寬度也不預留。
+   ⚠ 設計稿最右邊本來還有第五格（一個推進感分數，13.5px 700 青色）。這格的命運反覆了三次，
+     完整寫在這裡，不要看到「照設計稿」就把它補第三次：
+       2026-09-02 Yi-En 裁決刪掉，連寬度都不預留（當時的決定）。
+       2026-09-06 R14-C6 又把它補了回來——SPEC 寫規格時沒查到這條舊裁決，照設計稿要求加回。
+       2026-09-07 她再次裁決拿掉，回到 09-02 那個決定，這次的退回就是在做這件事。
+     現在＝一列四格，沒有第五格，也不預留寬度。CSS 規則與渲染程式碼都已移除，
+     不是「隱藏」——見本檔搜尋「R14-C6 退回」。
    卡片本身左右各有 padding，所以列的 18px 用負邊距拉到卡片邊緣，分隔線才會通到底。 */
 #client-sess-card #client-recs { margin: 0 -14px -14px; }
 .cdrow {
@@ -2744,6 +2750,77 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .jrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 
+/* ── R14-A（2026-09-06 Yi-En 手機上發現）：直條圖在 1440 以下柱高是 0 ──────
+   實測（修改前）：375 與 768 的 #clientChart 圖框只有 59px、每一根 .bbar 都是 0；
+   ≥1024 才量得到 291px、柱高 93–208。
+
+   成因（不是顏色也不是資料，是「百分比高度找不到測量基準」）：
+     柱子的高度是 `height:N%`，一路往上數到 .chart-box 才能解出實際像素。
+     ≥1024 時 #client-chart-card 是 grid 項目＋`align-self:stretch`，被右邊職能覆蓋卡
+     拉成一樣高 → 卡片高度是確定的 → .chart-box 的 `flex:1 1 auto` 分得到確定高度，
+     百分比才算得出來。<1024 那段 grid 整個不生效，卡片高度改由內容決定，
+     于是「卡片高 ← 圖高 ← 柱高百分比 ← 圖高」繞成循環，浏覽器就把百分比當 auto，
+     柱子沒有內容，高度歸 0。
+
+   修法：給 .chart-box 一個**實高**當基準。`flex:1 1 auto` 的 basis 讀的就是這個 height，
+   所以：<1024（卡片沒被拉高、沒有剩餘空間）就是 200px；≥1024（卡片被拉高、有剩餘空間）
+   `flex-grow:1` 照樣吃掉剩餘高度，仍然是 291px。一行就同時满足兩邊，
+   **不碰 R9a-2 的 I 三條**（兩張卡等高／內容靠上／圖自己長高填滿）。
+   200px 是量出來的：扇去圖例與標籤之後柱區約 165px，跟桌機的 208 同一個量級；
+   寫在樣式表結尾，後出現者勝。 */
+#client-chart-card .chart-box { height: 200px; }
+
+/* ── R14-B4（2026-09-06）：桌機沒有「客戶列表」這個畫面了，那顆返回鍵沒有去處 ──
+   頁首那顆「← 回客戶列表」早就在 S7 那段被收起來了（≥1024），
+   但詳情頁**最下面**還有一顆同名的按鈕，桌機上按下去會跳到一面
+   跟左欄內容一樣的卡牆——那正是她說不需要的東西。
+   手機不收：那是沒有左欄的人唯一的出口（S7-2 已經有守衛釘著頁首那顆）。
+   收整列而不是只收按鈕：只收按鈕的話 .actions 的外距還在，底下會多一塊空白。 */
+@media (min-width: 1024px) {
+  body[data-view="clientdetail"] #cd-back-row { display: none; }
+}
+
+/* ═══ R14-C（2026-09-06）視覺細項六項 ═══════════════════════════════
+   來源：`outputs/視覺對比_客戶頁細節_20260906.md`（唯讀 agent 對設計稿逐項實測）
+   ＋ Yi-En 從那份表裡**只挑了這六項**。
+   ⚠ 那份表列出的其他差異（六級比例級距／待補五條／「旅程中的議題」這個名字／
+     客戶頁副標清空／格子保留編號／職能覆蓋條兩段式填色）**都是她自己定的**，
+     看到它們「跟設計稿不一樣」不要順手改回去。
+   顏色一律用既有 token，不寫色碼；整塊放樣式表結尾，後出現者勝。 */
+
+/* C1 客戶頁付費籤補回邊框。設計稿量到 1px solid rgb(192,218,226)＝--cool-line。
+   下面三個 [data-p=...] 只換底色與字色，不碰 border，所以這一條對三種狀態都生效。 */
+.cd-paid { border: 1px solid var(--cool-line); }
+
+/* C2 職能覆蓋條圓角 5px → 7px（設計稿值）。
+   **不動 --r-pill**：那個 token 全站的小籤與進度條都在用，改它會一次動到很多地方。 */
+.cov-track { border-radius: 7px; }
+
+/* C3「下一場可以補這幾條」的例句改成青色（--cool-d＝rgb(15,90,109)，設計稿值）。
+   理由是撞色：例句原本是暖棕 --warm-ink，跟卡片其他暖色元素分不開；
+   C5 把整張卡換成暖底之後更明顯。只換顏色——15px/600 是「例句是每張卡最大的字」
+   那條決定，不在這次範圍。 */
+.todo-ex { color: var(--cool-d); }
+
+/* C4 八大職能卡 padding 四邊 16 → 16/18/18/18（設計稿值）。
+   box-sizing 是 border-box，所以卡片外寬不變（§45 T1 釘著 1440 的 372px）。 */
+#cum-card { padding: 16px 18px 18px; }
+
+/* C5「下一場可以補這幾條」從「白卡裡的一段」變回設計稿的暖色卡：
+   底 --warm-bg-2（rgb(251,238,230)）、框 --warm-line（rgb(232,210,199)）。
+   border 會蓋掉原本那條 border-top 的分隔線寫法；圓角與左右內距不是「配色」，
+   但沒有它們的話字會貼著新的邊框、看起來像壞掉，所以一起給
+   （13px 圓角與 13px 內距都照設計稿量到的值）。 */
+.cum-todo {
+  background: var(--warm-bg-2); border: 1px solid var(--warm-line);
+  border-radius: 13px; padding: 12px 13px 13px;
+}
+
+/* R14-C6 退回（2026-09-07）：這裡原本有 .cdrow-score 這條規則（R14-C6 於 2026-09-06 加入，
+   固定 flex 0 0 22px、13.5px／700／青，給「旅程中的議題」每列右側的推進感分數）。
+   Yi-En 09-07 裁決拿掉、回到 09-02 的決定（完整來龍去脈見上方 S5 區塊的註解）。
+   規則整條移除，不是註解掉：寬度不預留，跟「刪掉」這件事本身要一致。 */
+
 </style>
 </head>
 <body>
@@ -2796,7 +2873,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     <button type="button" class="nav-new" id="tabNew" onclick="startNewRecord()"><span class="t-full">＋ 新增紀錄</span><span class="t-short">＋ 記</span> <span class="nav-wip hidden" id="navWip">進行中</span></button>
     <span class="nav-group">日常</span>
     <button class="tab" id="tabHome" onclick="showView('home')"><span class="t-full">首頁</span><span class="t-short">首頁</span></button>
-    <button class="tab" id="tabClients" onclick="showView('clients')"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
+    <button class="tab" id="tabClients" onclick="goClients()"><span class="t-full">客戶</span><span class="t-short">客戶</span> <span class="nav-badge" id="clientCnt"></span></button>
     <button class="tab" id="tabHist" onclick="showView('hist')"><span class="t-full">歷史紀錄</span><span class="t-short">歷史</span> <span class="nav-badge" id="cnt"></span></button>
     <span class="nav-group">累積</span>
     <button class="tab" id="tabCred" onclick="showView('cred')"><span class="t-full">認證進度</span><span class="t-short">認證</span> <span class="nav-badge" id="credCnt"></span></button>
@@ -2842,7 +2919,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
           <div class="home-sect-head">
             <label style="margin:0">客戶</label>
             <span class="hint" id="home-cli-sub"></span>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="showView('clients')">客戶列表 →</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="goClients()">客戶列表 →</button>
           </div>
           <div class="home-cli" id="home-cli"></div>
         </section>
@@ -3436,7 +3513,10 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       </div>
     </div>
     <div class="card" id="client-info"></div>
-    <div class="actions">
+    <!-- B4（R14-B）：桌機（≥1024）已經沒有「客戶列表」這個獨立畫面了
+         （左欄就是清單），所以這一列在桌機收起來；手機一定要留著，
+         那是沒有左欄的人唯一的出口。CSS 在樣式表結尾 R14-B 那段。 -->
+    <div class="actions" id="cd-back-row">
       <button class="btn btn-ghost" onclick="showView('clients')">返回客戶列表</button>
     </div>
     <div style="height:24px"></div>
@@ -8883,9 +8963,55 @@ function copyClientRecap(id){
   const c = clientById(id); if (!c) return;
   copyText(clientRecapText(c, clientRecs(id)), 'recap 已複製');
 }
+/* ── R14-B（2026-09-06 Yi-En）：桌機不再把客戶卡牆當進入點 ──────────────
+   她的原話：「我希望左欄按客戶，就是這一頁就好了，不需要還有所有客戶的
+   一格一格、一張一張的卡片」。
+   桌機（≥1024）本來就有 master-detail 版面：左欄 280px 是同一份客戶清單、
+   右欄是詳情。卡牆那一頁在桌機上等於把同一份清單再看一次，多一次點擊。
+   所以**只換進入點**，其他一律不動：
+     · ≥1024 → 直接 openClient(某一位)，左欄清單照樣在（B1）
+     · <1024 → 維持現狀：先看清單、點一位進詳情（B2。她說手機沒偏好 → 選風險最低的）
+     · 卡牆 #view-clients **一個字都沒改**，手機還在用它（B3）
+     · showView() 的語意沒改、navPush／navRestore 沒改（B5）——
+       這裡只是換一個「誰去呼叫 showView」的入口
+     · 一位客戶都還沒有時仍然去卡牆：「＋ 新增客戶」那張卡只在那一頁
+
+   斷點寫成常數，因為它**必須**跟 CSS 那兩段 @media (min-width:1024px)
+   （L1 master-detail 版面、S7 頁首）同一個值；對不起來就會出現
+   「JS 以為是桌機、CSS 還在畫手機」的半套畫面。
+   §75-B3 用 1023／1024 兩個寬度把 JS 與 CSS 釘在一起：改了一邊沒改另一邊那條就紅。 */
+const WIDE_MQ = '(min-width: 1024px)';
+function isWideLayout(){
+  try { return !!(window.matchMedia && window.matchMedia(WIDE_MQ).matches); }
+  catch (e) { return false; }
+}
+/* 預設選哪一位：走**既有的** sortClientInfo()（進行中在前、最近一場新的在前），
+   不另寫一套排序——這樣「選中的那位」永遠是左欄清單的第一張卡，兩邊對得起來。 */
+function defaultClientId(){
+  const cs = loadC();
+  if (!cs.length) return '';
+  const info = sortClientInfo(cs.map(c => ({ c, st: clientStats(c.id) })));
+  return (info[0] && info[0].c.id) || '';
+}
+function goClients(){
+  /* 已經在看某一位、而且那位還在 → 留在他身上。
+     不然從首頁按一下「客戶」回來，會被丟到別人的頁面。 */
+  const keep = (currentClientId && clientById(currentClientId)) ? currentClientId : '';
+  const id = isWideLayout() ? (keep || defaultClientId()) : '';
+  if (id) openClient(id);
+  else showView('clients');
+}
 function openClient(id){
   currentClientId = id;
   const c = clientById(id); if (!c) return;
+  /* R14-B：桌機現在是**直接**進詳情的（不再先經過卡牆），而左欄那份清單
+     是 renderClients() 畫的、只有 showView('clients') 會呼叫它——
+     少了這一段，第一次按「客戶」會看到右邊有詳情、左欄一片空白。
+     只在「還沒有任何一張卡」時補畫一次，不是每次都重畫：
+     重畫會把她正在用的搜尋字／「顯示全部」的展開狀態一起洗掉。
+     同一段也順手修好 navRestore 直接還原到 clientdetail 的情況。 */
+  const _lst = document.getElementById('client-list');
+  if (_lst && !_lst.querySelector('.ccard')) renderClients();
   /* L1：讓左欄那張卡標出「現在看的是誰」。不另外渲染一份清單。 */
   markCurrentClientCard(id);
   const st = clientStats(id);                       // 與客戶列表同一份統計
@@ -8957,8 +9083,9 @@ function openClient(id){
 
   /* 2. 每一場：一列四格，每列可點進單場詳情（S5，照設計稿 isClient.html）
      日期 52px ｜ 第 N 次 52px ｜ 議題 1fr 單行省略號 ｜ N 條標記（籤）
-     設計稿最右邊本來還有第五格（一個沒有標籤的數字），**Yi-En 2026-09-02 裁決刪掉**，
-     連那 34px 都不預留——所以一列就是四格。
+     設計稿最右邊本來還有第五格（一個推進感分數），這格的命運反覆了三次，
+     完整紀錄見上方 CSS 裡 S5 區塊的註解（2026-09-02 刪 → R14-C6 09-06 補回 →
+     09-07 再次裁決刪掉，回到 09-02 那個決定）。現在＝一列四格，不預留第五格寬度。
      改版前是兩層（上層日期／第幾次／時長・到位／›，議題自己一層）：那是 2026-08-28 為了
      「五個東西擠一列，第四次會談被壓成『第…』」做的補救。現在一列只剩四格、
      議題吃掉所有剩餘寬度，擠壓的成因不在了。時長與「到位 N 項」照 S5-2 拿掉（設計稿沒有）。 */
