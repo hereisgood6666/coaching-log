@@ -11,37 +11,37 @@
    底色用有色調的白，不用純白純黑 */
 :root {
   color-scheme: light;          /* 深色系統下維持自家淺色配色，不讓瀏覽器反轉造成對比爆掉 */
-  --bg:        #EFEBE4;   /* 2026-09-01 第1批 S5：底色壓深，拉開卡片(--surface #FFFCF8)與背景的對比。--surface 不動 */
-  --surface:   #FFFCF8;
-  --surface-2: #F6F1EA;
-  --ink:       #2C2A28;
-  --ink-2:     #5F5850;
-  --ink-3:     #7C746A;
-  --ink-4:     #948B80;
-  --line:      #E0DBD2;
-  --line-2:    #ECE7DE;
-  --line-3:    #F0ECE5;
+  --bg:        #F3F1ED;   /* 2026-09-01 第1批 S5：底色壓深，拉開卡片(--surface #FFFCF8)與背景的對比。--surface 不動 */
+  --surface:   #FFFFFF;
+  --surface-2: #F7F5F1;
+  --ink:       #22201E;
+  --ink-2:     #56524D;
+  --ink-3:     #6E675F;
+  --ink-4:     #6E685F;
+  --line:      #E8E4DD;
+  --line-2:    #EFEDE8;
+  --line-3:    #F2F0EB;
   /* 2026-09-01 Yi-En：「整個版面除了最左欄以外，還分了三個顏色」。
      三個值全部照抄設計稿靜態版 isHome.html 的 inline style，不是我自己配的：
        header rgb(250,248,244) / aside rgb(246,242,236) / 兩條分隔線 rgb(228,223,214)
      中間那欄就是 --bg #EFEBE4（設計稿最外層），已經是現況，不動。 */
-  --head-bg:   #FAF8F4;
-  --side-bg:   #F6F2EC;
-  --zone-line: #E4DFD6;
-  --line-dash: #CDC5B8;
+  --head-bg:   #FCFBF9;
+  --side-bg:   #F8F6F3;
+  --zone-line: #EAE7E0;
+  --line-dash: #D2CCC2;
   --warm:      #A6604A;
-  --warm-2:    #C08A6E;
-  --warm-d:    #8A4630;   /* = 暖色深字，與 --warm-ink 同值，保留舊名避免大量改寫 */
-  --warm-ink:  #8A4630;
-  --warm-bg:   #FBEEE6;
-  --warm-bg-2: #FBEEE6;
-  --warm-line: #E8D2C7;
+  --warm-2:    #BE8467;
+  --warm-d:    #86432F;   /* = 暖色深字，與 --warm-ink 同值，保留舊名避免大量改寫 */
+  --warm-ink:  #86432F;
+  --warm-bg:   #F8F1EC;
+  --warm-bg-2: #F8F1EC;
+  --warm-line: #EBD9CF;
   --cool:      #16748C;
   --cool-2:    #7FB3C4;   /* 冷色圖表 */
-  --cool-d:    #0F5A6D;
-  --cool-ink:  #0F5A6D;
-  --cool-bg:   #E7F1F4;
-  --cool-line: #C0DAE2;
+  --cool-d:    #0E5A6C;
+  --cool-ink:  #0E5A6C;
+  --cool-bg:   #E9F2F5;
+  --cool-line: #C9DEE6;
   --ok:        #3F7A48;
   --ok-2:      #6FA675;
   --ok-bg:     #E9F2E9;
@@ -49,11 +49,11 @@
   --danger-soft: #C08080;
   /* 狀態五級（暖→冷，最少被觸及→最常被觸及）：熱圖與職能格子共用。
      到位＝冷色，不是綠色（先前的綠／紅配色已廢除）。 */
-  --st0-bg: #A6604A; --st0-fg: #FFFCF8; --st0-line: #8A4630;   /* 0 次   */
-  --st1-bg: #E8D2C7; --st1-fg: #8A4630; --st1-line: #DCBFB0;   /* 1–2 次 */
-  --st2-bg: #FBEEE6; --st2-fg: #8A4630; --st2-line: #E8D2C7;   /* 3–4 次 */
-  --st3-bg: #C0DAE2; --st3-fg: #0F5A6D; --st3-line: #A9CBD6;   /* 5–8 次 */
-  --st4-bg: #16748C; --st4-fg: #FFFCF8; --st4-line: #0F5A6D;   /* 9+ 次  */
+  --st0-bg: #A6604A; --st0-fg: #FFFFFF; --st0-line: #86432F;   /* 0 次   */
+  --st1-bg: #EBD9CF; --st1-fg: #86432F; --st1-line: #E3CBBF;   /* 1–2 次 */
+  --st2-bg: #FBF2EC; --st2-fg: #86432F; --st2-line: #EBD9CF;   /* 3–4 次 */
+  --st3-bg: #C9DEE6; --st3-fg: #0E5A6C; --st3-line: #B4D2DB;   /* 5–8 次 */
+  --st4-bg: #16748C; --st4-fg: #FFFFFF; --st4-line: #0E5A6C;   /* 9+ 次  */
   /* 四態的小字前景：10–12px 一律 ≥4.5:1，舊的 #C4BCB1 只有 1.7:1 */
   --st-none: #6B645C;   /* 未評   */
   --st-part: #735814;   /* 部分   */
@@ -88,6 +88,11 @@
   --r-card: 12px;   /* 卡片 */
   --r-btn:   8px;   /* 按鈕、導覽項目 */
   --r-pill:  5px;   /* 小籤、進度條 */
+  --r-xs:    3px;   /* 細條、進度軌 */
+  --r-lg:   20px;   /* 大圓角：藥丸籤、頭像方塊、彈窗 */
+  /* R15-A（2026-09-08）：這三個刻度 2026 年就定好了，但 137 處 border-radius 裡
+     只有 6 處在用，其餘散成 17 種數字。這一批把它們全部收回刻度上，
+     並加一條掃原始碼的守衛擋住以後再漂。最大位移 ±2px。 */
   --shadow-card: 0 1px 3px rgba(0,0,0,.04);
 }
 
@@ -107,7 +112,7 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .t-short { display: none; }   /* 只有 1024–1180px 的窄側欄才用短標籤 */
 .tab {
-  flex: 1 1 30%; min-width: 0; padding: 10px 6px; border: none; border-radius: 10px;
+  flex: 1 1 30%; min-width: 0; padding: 10px 6px; border: none; border-radius: var(--r-card);
   background: var(--line-3); color: var(--ink-2); font-size: 14px; font-weight: 600;
   cursor: pointer; transition: .15s; white-space: nowrap;
 }
@@ -126,7 +131,7 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .pb-name { font-weight: 600; color: var(--ink-2); }
 .pb-val { color: var(--cool-d); font-weight: 700; font-variant-numeric: tabular-nums; }
 .pb-val .done-tag { color: var(--ok); font-size: 12px; }
-.pb-track { height: 10px; background: var(--line-3); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
+.pb-track { height: 10px; background: var(--line-3); border-radius: var(--r-pill); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
 .pb-fill[data-seg="1"] { background: var(--seg1-bar); }
 .pb-fill[data-seg="2"] { background: var(--seg2-bar); }
 .pb-fill[data-seg="3"] { background: var(--seg3-bar); }
@@ -135,19 +140,19 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
 .pb-track[data-seg="2"] { background: var(--seg2-bg); }
 .pb-track[data-seg="3"] { background: var(--seg3-bg); }
 .pb-track[data-seg="4"] { background: var(--seg4-bg); }
-.pb-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cool-2), var(--cool)); transition: width .7s cubic-bezier(.22,.9,.35,1); }
+.pb-fill { height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--cool-2), var(--cool)); transition: width .7s cubic-bezier(.22,.9,.35,1); }
 .pb-fill.done { background: linear-gradient(90deg, var(--ok-2), var(--ok)); }
 .pb-note { color: var(--ink-4); font-size: 12px; margin-top: 8px; }
 /* mentor pack */
 .mentor-pre {
-  background: var(--surface-2); border: 1px solid var(--warm-line); border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--warm-line); border-radius: var(--r-card);
   padding: 12px 14px; font-size: 13px; line-height: 1.65; color: var(--ink);
   white-space: pre-wrap; word-break: break-word; max-height: 42vh; overflow-y: auto;
   font-family: inherit; margin: 4px 0 0;
 }
 /* reflect report */
 .reflect-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
-.pchip { border: 1px solid var(--warm-line); background: var(--surface); color: var(--ink-2); border-radius: 14px; padding: 3px 11px; font-size: 12px; cursor: pointer; }
+.pchip { border: 1px solid var(--warm-line); background: var(--surface); color: var(--ink-2); border-radius: var(--r-card); padding: 3px 11px; font-size: 12px; cursor: pointer; }
 /* R9-F1（2026-09-04 Yi-En：「一起收乾淨」）：磚紅從選中態收回來。
    **但 `.pchip` 有兩種語意，不能一視同仁**（SPEC 2026-09-04 逐一查過呼叫端）：
 
@@ -166,24 +171,24 @@ h1 { font-size: 20px; margin: 4px 0 2px; }
             border-color: var(--warm-2); font-weight: 700; }
 .pchip-in.on { background: var(--cool); color: var(--surface);
                border-color: var(--cool); font-weight: 700; }
-.reflect-score { flex: 1; background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 10px 4px; text-align: center; }
+.reflect-score { flex: 1; background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: var(--r-card); padding: 10px 4px; text-align: center; }
 .reflect-score .rs-num { font-size: 22px; font-weight: 700; color: var(--cool); }
 .reflect-score .rs-name { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 .reflect-line { font-size: 14px; margin: 12px 0 0; line-height: 1.7; }
 .reflect-line b { color: var(--cool-d); }
-.energy-tag { display: inline-block; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 700; margin-right: 6px; }
+.energy-tag { display: inline-block; border-radius: var(--r-pill); padding: 1px 8px; font-size: 12px; font-weight: 700; margin-right: 6px; }
 .energy-good { background: var(--ok-bg); color: var(--ok); }
 .energy-mid  { background: var(--warm-bg); color: var(--warm-d); }
 .energy-low  { background: var(--warm-bg-2); color: var(--warm-ink); }
 .card {
-  background: var(--surface); border-radius: 14px; padding: 16px;
+  background: var(--surface); border-radius: var(--r-card); padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px;
 }
 label { display: block; font-weight: 600; margin: 12px 0 5px; font-size: 14px; }
 label .hint { font-weight: 400; color: var(--ink-4); font-size: 12px; }
-.privacy-tip { margin-top: 6px; background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 8px; padding: 7px 10px; font-size: 12px; color: var(--warm-ink); line-height: 1.5; }
+.privacy-tip { margin-top: 6px; background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: var(--r-btn); padding: 7px 10px; font-size: 12px; color: var(--warm-ink); line-height: 1.5; }
 input[type=text], input[type=date], textarea, select {
-  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px;
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-btn);
   font-size: 16px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
 input[type=date] { -webkit-appearance: none; appearance: none; text-align: left; min-height: 42px; }
@@ -196,7 +201,7 @@ textarea { resize: vertical; min-height: 46px; }
 .sc10 { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
 .sc10-b {
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2);
-  border-radius: 9px; font-size: 14px; font-weight: 600; padding: 8px 0; cursor: pointer;
+  border-radius: var(--r-btn); font-size: 14px; font-weight: 600; padding: 8px 0; cursor: pointer;
   font-variant-numeric: tabular-nums;
 }
 .sc10-b.on { background: var(--warm); border-color: var(--warm); color: var(--surface); }
@@ -207,7 +212,7 @@ textarea { resize: vertical; min-height: 46px; }
                margin-top: 7px; min-height: 1em; }
 .score-state.unset, .score-state.legacy {
   display: inline-block; color: var(--ink); background: var(--line-3);
-  border-radius: 8px; padding: 3px 9px;
+  border-radius: var(--r-btn); padding: 3px 9px;
 }
 @media (max-width: 559.98px) {
   /* 375px 放不下十顆 ≥44px 的按鈕 → 折成兩排五顆（C5：換排法，不縮小按鈕） */
@@ -219,15 +224,15 @@ textarea { resize: vertical; min-height: 46px; }
 .multi-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
 .multi-item textarea { flex: 1; }
 .mini-btn {
-  border: none; background: var(--line-3); color: var(--ink-3); border-radius: 8px;
+  border: none; background: var(--line-3); color: var(--ink-3); border-radius: var(--r-btn);
   width: 34px; min-height: 40px; font-size: 18px; cursor: pointer; flex-shrink: 0;
 }
 .add-btn {
   border: 1px dashed var(--line-dash); background: transparent; color: var(--ink-2);
-  border-radius: 9px; padding: 8px; width: 100%; cursor: pointer; font-size: 14px; margin-top: 4px;
+  border-radius: var(--r-btn); padding: 8px; width: 100%; cursor: pointer; font-size: 14px; margin-top: 4px;
 }
 .acc-item {
-  border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--line-2); border-radius: var(--r-card); padding: 10px 12px; margin-bottom: 8px;
 }
 .acc-head { display: flex; align-items: flex-start; gap: 10px; }
 .acc-title { font-weight: 600; font-size: 14px; }
@@ -240,29 +245,29 @@ textarea { resize: vertical; min-height: 46px; }
 .seg { display: flex; gap: 5px; margin-top: 9px; }
 .seg button {
   flex: 1; padding: 7px 2px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-3);
-  border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap;
+  border-radius: var(--r-btn); font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap;
 }
 .seg button.on { color: var(--surface); border-color: transparent; font-weight: 600; }
 .seg button[data-v="-1"].on { background: var(--st-none); }
 .seg button[data-v="0"].on { background: var(--st-miss); }
 .seg button[data-v="1"].on { background: var(--st-part); }
 .seg button[data-v="2"].on { background: var(--st4-bg); }
-.acc-progress { font-size: 12.5px; color: var(--cool-d); background: var(--cool-bg); border-radius: 7px; padding: 6px 9px; margin-bottom: 10px; }
+.acc-progress { font-size: 12.5px; color: var(--cool-d); background: var(--cool-bg); border-radius: var(--r-btn); padding: 6px 9px; margin-bottom: 10px; }
 .acc-progress.done { color: var(--ok); background: var(--ok-bg); }
 .acc-field { margin-top: 9px; }
 .acc-flabel { font-size: 12px; color: var(--ink-2); margin-bottom: 4px; font-weight: 600; }
 .acc-field input, .acc-field textarea {
   width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--line);
-  border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--surface); color: var(--ink);
+  border-radius: var(--r-btn); font-size: 14px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
 .acc-field textarea { resize: vertical; min-height: 38px; }
 .mk-toggle {
   margin-top: 10px; width: 100%; padding: 7px; border: 1px dashed var(--line-dash); background: transparent;
-  color: var(--ink-2); border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit;
+  color: var(--ink-2); border-radius: var(--r-btn); font-size: 13px; cursor: pointer; font-family: inherit;
 }
 .mk-box { margin-top: 8px; border-top: 1px solid var(--line-2); padding-top: 8px; }
 .mk-box.hidden { display: none; }
-.mk-rule { font-size: 11.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 5px 8px; margin-bottom: 8px; }
+.mk-rule { font-size: 11.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: var(--r-pill); padding: 5px 8px; margin-bottom: 8px; }
 .mk-row { margin-bottom: 10px; }
 .mk-top { display: flex; align-items: flex-start; gap: 8px; }
 .mk-top input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--warm); flex-shrink: 0; }
@@ -272,7 +277,7 @@ textarea { resize: vertical; min-height: 46px; }
 .mk-ev { margin-top: 5px; padding-left: 25px; }
 .mk-ev input {
   width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid var(--line);
-  border-radius: 7px; font-size: 13px; font-family: inherit; background: var(--surface); color: var(--ink);
+  border-radius: var(--r-btn); font-size: 13px; font-family: inherit; background: var(--surface); color: var(--ink);
 }
 .mk-hint { font-size: 11.5px; color: var(--ink-4); margin-top: 3px; padding-left: 25px; }
 .mk-hint.warn { color: var(--warm-ink); }
@@ -280,9 +285,9 @@ textarea { resize: vertical; min-height: 46px; }
 .mk-plain { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.45; }
 .mk-badge {
   display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .3px;
-  background: var(--warm); color: var(--surface); border-radius: 4px; padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
+  background: var(--warm); color: var(--surface); border-radius: var(--r-xs); padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
 }
-.mk-warn, .mk-tip { font-size: 11.5px; line-height: 1.5; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+.mk-warn, .mk-tip { font-size: 11.5px; line-height: 1.5; border-radius: var(--r-pill); padding: 6px 8px; margin-bottom: 6px; }
 .mk-warn { color: var(--warm-ink); background: var(--warm-bg-2); }
 .mk-tip  { color: var(--ok); background: var(--ok-bg); }
 .mk-scope-row {
@@ -292,27 +297,27 @@ textarea { resize: vertical; min-height: 46px; }
 .mk-scope-row input { width: 17px; height: 17px; accent-color: var(--warm); }
 .actions { display: flex; gap: 10px; margin-top: 6px; }
 .btn {
-  flex: 1; padding: 12px; border: none; border-radius: 11px; font-size: 15px;
+  flex: 1; padding: 12px; border: none; border-radius: var(--r-card); font-size: 15px;
   font-weight: 600; cursor: pointer;
 }
 .btn-primary { background: var(--warm); color: var(--surface); }
 .btn-ghost { background: var(--line-3); color: var(--ink-2); }
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--ink); color: var(--surface); padding: 10px 20px; border-radius: 20px;
+  background: var(--ink); color: var(--surface); padding: 10px 20px; border-radius: var(--r-lg);
   font-size: 14px; opacity: 0; pointer-events: none; transition: .3s; z-index: 50;
 }
 .toast.show { opacity: 1; }
 /* history */
 .rec {
-  background: var(--surface); border-radius: 12px; padding: 13px 15px; margin-bottom: 10px;
+  background: var(--surface); border-radius: var(--r-card); padding: 13px 15px; margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05); cursor: pointer;
 }
 .rec-top { display: flex; justify-content: space-between; align-items: baseline; }
 .rec-client { font-weight: 700; font-size: 16px; }
 .rec-date { color: var(--ink-4); font-size: 13px; }
 .rec-meta { color: var(--ink-3); font-size: 13px; margin-top: 3px; }
-.badge { display: inline-block; background: var(--cool-bg); color: var(--cool-d); border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 6px; }
+.badge { display: inline-block; background: var(--cool-bg); color: var(--cool-d); border-radius: var(--r-pill); padding: 1px 7px; font-size: 12px; margin-left: 6px; }
 .empty { text-align: center; color: var(--ink-4); padding: 40px 0; }
 /* M2（2026-08-28）：單場詳情的標題與內文原本只差 13px 與 3px 下距，難以區分。
    拉開層級：標題轉成小型大寫標籤、內文加大行高、欄組之間加分隔。
@@ -326,7 +331,7 @@ textarea { resize: vertical; min-height: 46px; }
 .detail-val { white-space: pre-wrap; font-size: 15px; line-height: 1.85; color: var(--ink); }
 .detail-val ul { margin: 4px 0; padding-left: 20px; }
 .score-lines {
-  background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 12px;
+  background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: var(--r-card);
   padding: 13px 15px; margin: 12px 0 18px;
 }
 .score-line { font-size: 15px; margin-bottom: 6px; }
@@ -344,8 +349,32 @@ textarea { resize: vertical; min-height: 46px; }
 .acc-mark { font-weight: 700; margin-right: 6px; font-family: monospace; }
 .acc-detail-note { font-size: 13px; color: var(--ink-4); margin-top: 2px; padding-left: 22px; }
 .acc-none { color: var(--ink-4); font-size: 14px; }
+/* R15-B（2026-09-08，Yi-En 點頭）：單場詳情把 39 條標記畫成格子。
+   在這之前這一段只有 mkLines() 吐的純文字 ✓ / No / 反 / ·，沒有任何圖形，
+   而且**沒有資料的那些條根本不會出現**——看不到「這一場沒走到幾條」。
+   凹下去的槽在說「這裡可以放東西」，虛線要人猜，凹槽不用。
+   §七-9：沒走到 ≠ 做不到，所以空格子不能有任何失敗的顏色或符號。
+   mkLines() 一個字都沒動——詳情／PDF／匯出文字／督導包共用它，動它會一次影響四個出口。 */
+.mk-slots { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 0 22px; }
+.mk-slot {
+  width: 26px; height: 26px; border-radius: var(--r-pill); display: grid; place-items: center;
+  font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none;
+  background: var(--line-2); color: var(--ink-3);
+  box-shadow: inset 0 2px 4px rgba(120,100,70,.20);   /* 凹槽 */
+}
+.mk-slot[data-s="on"]   { background: var(--warm); color: var(--surface); box-shadow: none; }
+.mk-slot[data-s="no"]   { background: var(--line); color: var(--ink-2); box-shadow: none; text-decoration: line-through; }
+.mk-slot[data-s="ct"]   { background: var(--surface); color: var(--ink-2); box-shadow: inset 0 0 0 2px var(--warm-line); }
+.mk-slot[data-s="dot"]  { color: transparent; position: relative; }
+.mk-slot[data-s="dot"]::after {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3);
+}
+.mk-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; align-items: center;
+  font-size: 12px; color: var(--ink-3); margin: 2px 0 10px; }
+.mk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mk-legend .mk-slot { width: 17px; height: 17px; border-radius: var(--r-pill); font-size: 0; }
 /* mentor questions */
-.qcard { background:var(--surface); border:1px solid var(--line-2); border-radius:12px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.qcard { background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r-card); padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
 .qcard.done { background:var(--surface-2); }
 .qtext { font-weight:600; font-size:15px; white-space:pre-wrap; }
 .qctx { color:var(--ink-4); font-size:13px; margin-top:3px; }
@@ -386,7 +415,7 @@ textarea { resize: vertical; min-height: 46px; }
 .phrase-body.collapsed { display: none; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px; background: var(--surface);
-  border: 1px solid var(--warm-line); border-radius: 16px; padding: 5px 6px 5px 12px;
+  border: 1px solid var(--warm-line); border-radius: var(--r-lg); padding: 5px 6px 5px 12px;
   margin: 4px 5px 0 0; font-size: 14px; cursor: pointer;
 }
 .chip:hover { background: var(--warm-bg); }
@@ -394,12 +423,12 @@ textarea { resize: vertical; min-height: 46px; }
 .chip .del:hover { color: var(--danger); }
 .phrase-add { display: flex; gap: 8px; margin-top: 10px; }
 .phrase-add input { flex: 1; }
-.phrase-add button { border: none; background: var(--warm); color: var(--surface); border-radius: 8px; padding: 0 16px; font-size: 14px; cursor: pointer; }
+.phrase-add button { border: none; background: var(--warm); color: var(--surface); border-radius: var(--r-btn); padding: 0 16px; font-size: 14px; cursor: pointer; }
 /* chart */
 .chart-box { width: 100%; }
 /* auth */
 .auth-box {
-  max-width: 400px; margin: 7vh auto 0; background:var(--surface); border-radius:18px;
+  max-width: 400px; margin: 7vh auto 0; background:var(--surface); border-radius:var(--r-lg);
   padding:32px 26px 20px; text-align:center;
   box-shadow: 0 10px 40px rgba(176,137,104,.14), 0 1px 3px rgba(0,0,0,.05);
 }
@@ -410,23 +439,23 @@ textarea { resize: vertical; min-height: 46px; }
 .btn { transition: transform .1s, box-shadow .15s; }
 .btn:active { transform: scale(.98); }
 .btn-primary { box-shadow: 0 3px 10px rgba(176,137,104,.3); }
-.auth-hint { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:8px; padding:9px 11px; font-size:12px; color:var(--warm-ink); line-height:1.6; margin-top:8px; }
+.auth-hint { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:var(--r-btn); padding:9px 11px; font-size:12px; color:var(--warm-ink); line-height:1.6; margin-top:8px; }
 .auth-hint b { color:var(--warm-ink); }
-.acct-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border-radius:10px; padding:8px 12px; margin-bottom:14px; font-size:13px; color:var(--ink-2); }
+.acct-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border-radius:var(--r-card); padding:8px 12px; margin-bottom:14px; font-size:13px; color:var(--ink-2); }
 .acct-bar button { border:none; background:none; color:var(--warm-d); font-weight:600; cursor:pointer; font-size:13px; }
 /* footer + legal */
 .footer { text-align:center; color:var(--ink-4); font-size:12px; padding:22px 0 8px; }
 .footer a { color:var(--warm-d); cursor:pointer; text-decoration:underline; }
 #legal-modal { position:fixed; inset:0; background:rgba(44,42,40,.5); display:none; align-items:center; justify-content:center; padding:16px; z-index:100; }
 #legal-modal.show { display:flex; }
-.legal-box { background:var(--surface); border-radius:14px; max-width:640px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 26px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.legal-box { background:var(--surface); border-radius:var(--r-card); max-width:640px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 26px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,.25); }
 .legal-close { position:absolute; top:12px; right:14px; border:none; background:var(--line-3); color:var(--ink-3); width:34px; height:34px; border-radius:50%; font-size:20px; cursor:pointer; }
 .legal-box h3 { color:var(--warm-d); font-size:17px; margin:22px 0 8px; }
 .legal-box h3:first-of-type { margin-top:6px; }
 .legal-box h2 { font-size:20px; margin:0 0 2px; }
 .legal-box .lp-sub { color:var(--ink-3); font-size:13px; margin-bottom:8px; }
 .legal-box p { font-size:14px; line-height:1.7; color:var(--ink); margin:0 0 9px; }
-.legal-box .lp-note { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:10px; padding:10px 12px; color:var(--warm-ink); font-size:13px; line-height:1.6; margin-bottom:14px; }
+.legal-box .lp-note { background:var(--warm-bg-2); border:1px solid var(--warm-line); border-radius:var(--r-card); padding:10px 12px; color:var(--warm-ink); font-size:13px; line-height:1.6; margin-bottom:14px; }
 .legal-box b { color:var(--ink); }
 
 /* ===== §6 分段折疊、進度列、新欄位 ===== */
@@ -436,7 +465,7 @@ textarea { resize: vertical; min-height: 46px; }
 }
 .segb {
   flex: 1; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--ink-4);
-  background: var(--line-3); border-radius: 6px; padding: 4px 2px;
+  background: var(--line-3); border-radius: var(--r-pill); padding: 4px 2px;
   border-bottom: 3px solid transparent; white-space: nowrap;
 }
 .segb.seg-on { background: var(--cool-bg); color: var(--cool-d); border-bottom-color: var(--cool); }
@@ -473,7 +502,7 @@ textarea { resize: vertical; min-height: 46px; }
 .fr-btns { display: flex; gap: 6px; }
 .fr-btn {
   flex: 1; min-height: 44px; padding: 8px 2px; border: 1px solid var(--warm-line);
-  background: var(--surface); color: var(--ink-2); border-radius: 9px;
+  background: var(--surface); color: var(--ink-2); border-radius: var(--r-btn);
   font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap;
 }
 .fr-btn.on { background: var(--warm); border-color: var(--warm); color: var(--st0-fg); font-weight: 700; }
@@ -482,26 +511,26 @@ textarea { resize: vertical; min-height: 46px; }
 .legacy-txt { font-size: 13.5px; color: var(--ink-2); white-space: pre-wrap; }
 .submit-cand { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); margin-top: 12px; cursor: pointer; }
 .submit-cand input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--warm); flex-shrink: 0; }
-.mk-legend { font-size: 12px; line-height: 1.55; color: var(--cool-d); background: var(--cool-bg); border-radius: 7px; padding: 7px 9px; margin: 6px 0 10px; }
+.mk-legend { font-size: 12px; line-height: 1.55; color: var(--cool-d); background: var(--cool-bg); border-radius: var(--r-btn); padding: 7px 9px; margin: 6px 0 10px; }
 /* §4B marker 層級改善筆記 */
 .mk-btns { display: flex; gap: 8px; margin-top: 5px; padding-left: 25px; }
-.mk-addbtn { border: 1px dashed var(--line-dash); background: transparent; color: var(--ink-2); border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.mk-addbtn { border: 1px dashed var(--line-dash); background: transparent; color: var(--ink-2); border-radius: var(--r-btn); padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
 .mk-addbtn.on { border-style: solid; border-color: var(--warm); color: var(--warm-d); }
 .mk-imp { margin-top: 5px; padding-left: 25px; }
 .mk-imp textarea {
   width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid var(--line);
-  border-radius: 7px; font-size: 13px; font-family: inherit; background: var(--surface);
+  border-radius: var(--r-btn); font-size: 13px; font-family: inherit; background: var(--surface);
   color: var(--ink); resize: vertical; min-height: 38px;
 }
-.mk-tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-right: 5px; vertical-align: 1px; }
+.mk-tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: var(--r-xs); padding: 1px 5px; margin-right: 5px; vertical-align: 1px; }
 .mk-tag.acc { background: var(--cool); color: var(--st4-fg); }
 .mk-tag.pcc { background: var(--line-3); color: var(--ink-2); }
 .mk-tag.two { background: var(--cool-bg); color: var(--cool-d); border: 1px solid var(--cool-line); }
 /* §4C 認證進度 */
 .cred-wrap { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
 .cred-axis { margin: 6px 0 4px; }
-.cred-track { position: relative; height: 14px; background: var(--line-3); border-radius: 7px; overflow: hidden; }
-.cred-fill { height: 100%; background: linear-gradient(90deg, var(--cool-2), var(--cool)); border-radius: 7px; }
+.cred-track { position: relative; height: 14px; background: var(--line-3); border-radius: var(--r-btn); overflow: hidden; }
+.cred-fill { height: 100%; background: linear-gradient(90deg, var(--cool-2), var(--cool)); border-radius: var(--r-btn); }
 .cred-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--warm); }
 /* §12-3：軸上的文字標籤要用「該值的位置」定位。
    用 space-between 會把「ACC 100」推到中間（45%），但它的刻度其實在 20%。 */
@@ -512,7 +541,7 @@ textarea { resize: vertical; min-height: 46px; }
 .cred-line { font-size: 13.5px; line-height: 1.7; margin-top: 6px; }
 .cred-line b { color: var(--cool-d); }
 .cred-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.6; margin-top: 8px; }
-.warn-box { background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--warm-ink); line-height: 1.6; margin-top: 10px; }
+.warn-box { background: var(--warm-bg-2); border: 1px solid var(--warm-line); border-radius: var(--r-card); padding: 10px 12px; font-size: 13px; color: var(--warm-ink); line-height: 1.6; margin-top: 10px; }
 .cand-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 7px 0; border-bottom: 1px solid var(--line-2); }
 .cand-row:last-child { border-bottom: none; }
 .cand-row .cr-n { color: var(--cool-d); font-weight: 700; white-space: nowrap; }
@@ -538,9 +567,9 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .ab-burger {
   flex: 0 0 auto; width: 44px; height: 44px;      /* 觸控目標 44px */
   display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
-  background: none; border: none; cursor: pointer; border-radius: 9px; padding: 0;
+  background: none; border: none; cursor: pointer; border-radius: var(--r-btn); padding: 0;
 }
-.ab-burger span { display: block; width: 20px; height: 2px; background: var(--ink); border-radius: 2px; }
+.ab-burger span { display: block; width: 20px; height: 2px; background: var(--ink); border-radius: var(--r-xs); }
 .ab-burger:hover { background: var(--surface-2); }
 .ab-brand { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700; color: var(--ink);
             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -560,7 +589,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 .drawer-close {
   position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
   background: none; border: none; font-size: 26px; line-height: 1; color: var(--ink-3);
-  cursor: pointer; border-radius: 9px;
+  cursor: pointer; border-radius: var(--r-btn);
 }
 .drawer-close:hover { background: var(--surface-2); }
 body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景捲動 */
@@ -581,7 +610,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .tabs .tab {
     flex: 0 0 auto; width: 100%; min-height: 44px;
     text-align: left; padding: 11px 12px; white-space: normal;
-    background: none; color: var(--ink-2); font-size: 15px; border-radius: 9px;
+    background: none; color: var(--ink-2); font-size: 15px; border-radius: var(--r-btn);
   }
   .tabs .tab:hover { background: var(--surface-2); }
   .tabs .tab.active { background: var(--warm-bg); color: var(--warm-ink); }
@@ -688,7 +717,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .cum-col { display: grid; grid-template-rows: auto 58px auto; gap: 5px; min-width: 0; }
 .cum-name { font-size: 12px; line-height: 1.3; text-align: center; color: var(--ink-2); align-self: end; word-break: break-word; }
 .cum-box {
-  height: 58px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  height: 58px; border-radius: var(--r-btn); display: flex; align-items: center; justify-content: center;
   font-size: 27px; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid transparent;
 }
 .cum-box[data-lv="0"] { background: var(--st0-bg); color: var(--st0-fg); border-color: var(--st0-line); }
@@ -704,7 +733,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-sect { margin-top: 14px; }
 .hm-head { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink-3); margin-bottom: 6px; }
 .hm-note { font-size: 11.5px; line-height: 1.7; color: var(--ink-3); background: var(--surface-2);
-           border-radius: 7px; padding: 8px 10px; margin-bottom: 9px; }
+           border-radius: var(--r-btn); padding: 8px 10px; margin-bottom: 9px; }
 /* R10-6（2026-09-05）：三個東西排成**一行**。
    改版前分母自己佔一整行（`grid-column: 1 / -1`），列高 53px——那是 2026-08-29
    的補救：當時分母是一長串「4–7／7 場有逐條勾（這項共評估 27 場）樣本少…」，
@@ -721,7 +750,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    34×22／10.5px → 26×16／9px＋字重 400＋顏色降一階。
    底線是「還看得清楚」——她要的是小，不是看不到，所以沒有再往下壓。 */
 .hm-cell {
-  flex: 0 0 auto; min-width: 26px; height: 16px; border-radius: 4px;
+  flex: 0 0 auto; min-width: 26px; height: 16px; border-radius: var(--r-xs);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 9px; font-weight: 400; font-variant-numeric: tabular-nums;
   border: 1px solid var(--line); background: var(--surface);
@@ -752,7 +781,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .todo-short { font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .todo-acc { font-size: 11.5px; color: var(--ink-4); }
 /* ② 待補清單裡例句才是最大最重的元素，ACC 籤降成中性描邊，不跟例句搶 */
-.todo-l1 .mk-tag.acc { background: transparent; border: 1px solid #C0DAE2; color: #0F5A6D; font-size: 11px; }
+.todo-l1 .mk-tag.acc { background: transparent; border: 1px solid var(--cool-line); color: var(--cool-d); font-size: 11px; }
 .cum-seed { font-size: 14.5px; color: var(--ink-2); line-height: 1.7; padding: 18px 0 4px; }
 .todo-state { margin-left: auto; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
 /* 例句是每張卡最大的字 */
@@ -768,7 +797,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .cum-legend .lg-t { font-size: 11px; color: var(--ink-4); }
 .cell {
   display: inline-flex; align-items: center; justify-content: center;
-  flex: 1 1 0; max-width: 44px; height: 20px; border-radius: 4px;
+  flex: 1 1 0; max-width: 44px; height: 20px; border-radius: var(--r-xs);
   font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 .cell.lg { flex: 0 0 auto; width: 18px; }
@@ -806,7 +835,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .sess-scells { display: flex; gap: 3px; align-items: center; justify-content: flex-start; }
 /* 正方小格，標 1–8。色階與熱力圖共用同一組 data-lv，只有一份定義。 */
 .scell {
-  width: 20px; height: 20px; flex: 0 0 20px; border-radius: 4px;
+  width: 20px; height: 20px; flex: 0 0 20px; border-radius: var(--r-xs);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums;
   border: 1px solid transparent;
@@ -843,7 +872,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .sess-head .sh-meta { text-align: right; }
 .sess-head .sh-cells { text-align: center; white-space: nowrap; }
 .sess {
-  background: var(--surface); border: 1px solid #E8E2D8; border-radius: 9px;
+  background: var(--surface); border: 1px solid #E8E2D8; border-radius: var(--r-btn);
   padding: 13px 12px; margin-bottom: 7px; cursor: pointer; align-items: center;
   box-shadow: 0 1px 2px rgba(0,0,0,.04); transition: border-color .15s;
 }
@@ -873,7 +902,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .sess-cells { display: flex; gap: 3px; flex: 1 1 auto; min-width: 0; }
 .sess-gap { flex: 0 0 9px; }
 .sess-tag {
-  flex: 0 0 auto; font-size: 10.5px; font-weight: 700; border-radius: 4px;
+  flex: 0 0 auto; font-size: 10.5px; font-weight: 700; border-radius: var(--r-xs);
   padding: 0 8px; height: 18px; display: flex; align-items: center; white-space: nowrap;
   color: var(--ink-3); background: var(--line-3);
 }
@@ -908,14 +937,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .client-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
 @media (max-width: 700px) { .client-grid { grid-template-columns: minmax(0,1fr); } }
 .ccard {
-  background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-card);
   padding: 16px 18px; cursor: pointer; transition: background .15s, border-color .15s;
 }
 .ccard:hover { background: var(--surface-2); border-color: #B99C82; }
 .ccard-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ccard-id { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
 .ccard-code { font-size: 15px; font-weight: 650; color: var(--ink); }
-.ccard-st { flex: 0 0 auto; font-size: 11px; font-weight: 600; border-radius: 5px; padding: 1px 7px; white-space: nowrap; }
+.ccard-st { flex: 0 0 auto; font-size: 11px; font-weight: 600; border-radius: var(--r-pill); padding: 1px 7px; white-space: nowrap; }
 .ccard-st[data-s="active"] { color: var(--cool-d); background: var(--cool-bg); }
 .ccard-st[data-s="closed"] { color: var(--ink-3); background: var(--line-3); }
 .ccard-meta { font-size: 11.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -923,7 +952,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 2026-08-28：客戶卡上直接看得到付費別，不用點進去。
    「還沒選」用琥珀色提醒——ICF 時數表要分開列，漏一位就是漏一位。 */
 .ccard-paid { display: inline-block; margin-top: 7px; font-size: 11px; font-weight: 700;
-              border-radius: 5px; padding: 2px 8px;
+              border-radius: var(--r-pill); padding: 2px 8px;
               background: var(--line-3); color: var(--ink-3); }
 .ccard-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-d); }
 .ccard-paid[data-p="probono"] { background: var(--ok-bg);    color: var(--ok); }
@@ -931,8 +960,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .ctrend { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
 .ctrow { display: grid; grid-template-columns: 52px minmax(0,1fr) 64px; gap: 10px; align-items: center; }
 .ct-name { font-size: 11.5px; color: var(--ink-3); }
-.ct-track { height: 6px; background: var(--line-3); border-radius: 3px; overflow: hidden; }
-.ct-fill { height: 100%; border-radius: 3px; background: var(--line); }
+.ct-track { height: 6px; background: var(--line-3); border-radius: var(--r-xs); overflow: hidden; }
+.ct-fill { height: 100%; border-radius: var(--r-xs); background: var(--line); }
 /* 顏色講的是「跟上一場比」的方向，不是分數高低——分數高低看長度就好 */
 .ct-fill[data-lv="up"]   { background: var(--ok); }
 .ct-fill[data-lv="down"] { background: var(--warm-2); }
@@ -947,7 +976,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .prac-sub { font-size: 13.5px; font-weight: 700; color: var(--ink-2); margin: 12px 0 6px; }
 .prac-sub.ok { color: #2F6B45; }
 .prac-sub b { font-variant-numeric: tabular-nums; }
-.prac { border: 1px solid var(--line-2); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; background: var(--surface); }
+.prac { border: 1px solid var(--line-2); border-radius: var(--r-card); padding: 11px 13px; margin-bottom: 8px; background: var(--surface); }
 .prac.ok { background: #F4FAF4; border-color: #DCEBDD; }
 .prac-top { display: flex; align-items: baseline; gap: 10px; }
 .prac-text { flex: 1 1 auto; min-width: 0; font-size: 16.5px; font-weight: 600; color: var(--ink); line-height: 1.5; word-break: break-word; }
@@ -961,7 +990,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* ═══ §4 客戶頁 ═══ */
 .stat4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 9px; margin-top: 10px; }
-.stat1 { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 10px; padding: 11px 8px; text-align: center; min-width: 0; }
+.stat1 { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: var(--r-card); padding: 11px 8px; text-align: center; min-width: 0; }
 .stat-n { font-size: 24px; font-weight: 700; color: var(--cool-d); font-variant-numeric: tabular-nums; line-height: 1.2; }
 .stat-name { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
 .stat-note { font-size: 10.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.4; }
@@ -978,7 +1007,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .recap-copy {
   height: 28px; line-height: 1; padding: 0 12px; flex: 0 0 auto;
   border: 1px solid var(--cool-line); background: var(--cool-bg); color: var(--cool-d);
-  border-radius: 8px; font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+  border-radius: var(--r-btn); font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer;
 }
 .recap-row { margin-top: 11px; }
 .recap-label { font-size: 11.5px; font-weight: 700; color: var(--ink-3); margin-bottom: 2px; }
@@ -992,7 +1021,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .mk-row1 .mk-t { flex: 0 0 116px; }
 .mk-row1 .mk-x { flex: 1 1 auto; min-width: 0; }
 .mk-row1 input {
-  padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px;
+  padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--r-btn);
   font-size: 13px; font-family: inherit; background: var(--surface); color: var(--ink); min-height: 38px;
 }
 .mk-row1 .mk-del { width: 32px; min-height: 38px; font-size: 16px; flex: 0 0 auto; }
@@ -1022,7 +1051,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* 認證卡整張跟著進度換段：一張卡只讀 --cc-* 四個角色，
      四段的實際色票在 :root 的 --segN-*，這裡不重寫顏色。 */
   .credcard {
-    display: block; margin: 34px 0 0; padding: 14px 15px; border-radius: 11px;
+    display: block; margin: 34px 0 0; padding: 14px 15px; border-radius: var(--r-card);
     --cc-bg: var(--surface); --cc-line: var(--line-2); --cc-ink: var(--ink-2); --cc-bar: var(--cool);
     background: var(--cc-bg); border: 1px solid var(--cc-line);
   }
@@ -1089,7 +1118,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .jtagbar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .jtagbar:empty { display: none; }
 .jcard {
-  background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-card);
   padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 /* 標籤在左上角，刪除（左）編輯（右）在右上角 */
@@ -1098,7 +1127,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .j-acts { display: flex; gap: 12px; flex: 0 0 auto; white-space: nowrap; }
 .jtag {
   display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600;
-  background: var(--line-3); color: var(--ink-2); border-radius: 5px; padding: 2px 7px;
+  background: var(--line-3); color: var(--ink-2); border-radius: var(--r-pill); padding: 2px 7px;
 }
 .jtag-x { border: none; background: none; color: var(--ink-4); cursor: pointer; font-size: 13px; padding: 0 0 0 2px; line-height: 1; }
 .j-confirm { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
@@ -1109,7 +1138,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    現在：主句（提醒）＝唯一那塊粉底；為什麼與例子改成「小標籤＋純文字」，沒有底色也沒有邊框。
    數值全部來自設計稿 isJournal.html 的 inline style，顏色一律用既有 token
    （粉底 --warm-bg-2、主句字 --warm-d、為什麼 --ink-2、例子 --cool-d，四個都與設計稿逐位元組相同）。 */
-.j-note { background: var(--warm-bg-2); border-radius: 10px;
+.j-note { background: var(--warm-bg-2); border-radius: var(--r-card);
           padding: 11px 13px; margin-top: 9px; font-size: 14px; line-height: 1.75;
           color: var(--warm-d); white-space: pre-wrap; }
 .j-why  { margin-top: 11px; font-size: 13px; line-height: 1.75; color: var(--ink-2); white-space: pre-wrap; }
@@ -1130,11 +1159,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* ═══ §10 導師提問 ═══ */
 .qcat { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
 .qhead { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-.qcat-tag { font-size: 11px; font-weight: 700; background: var(--line-3); color: var(--ink-2); border-radius: 5px; padding: 2px 7px; }
+.qcat-tag { font-size: 11px; font-weight: 700; background: var(--line-3); color: var(--ink-2); border-radius: var(--r-pill); padding: 2px 7px; }
 .qstate { font-size: 11px; font-weight: 700; color: var(--cool-d); background: var(--cool-bg);
-          border: 1px solid var(--cool-line); border-radius: 5px; padding: 1px 7px; margin-left: auto; }
+          border: 1px solid var(--cool-line); border-radius: var(--r-pill); padding: 1px 7px; margin-left: auto; }
 /* 重複提問的琥珀提示卡 */
-.dupbox { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 10px;
+.dupbox { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--r-card);
           padding: 10px 12px; margin-top: 9px; }
 .dup-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); }
 .dup-sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; line-height: 1.55; }
@@ -1147,13 +1176,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* ═══ §11 匯出二段式的清單 ═══ */
 .expbox {
-  background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 10px;
+  background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--r-card);
   padding: 11px 13px; margin-top: 9px;
 }
 .exp-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); }
 .exp-sub { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.55; }
 .exp-list { margin: 8px 0 0; padding-left: 20px; font-size: 13px; color: var(--ink-2); line-height: 1.7; }
-.exp-warn { background: var(--surface); border: 1px solid var(--amber); border-radius: 8px;
+.exp-warn { background: var(--surface); border: 1px solid var(--amber); border-radius: var(--r-btn);
             padding: 8px 10px; margin-top: 9px; font-size: 12.5px; color: var(--warm-ink); line-height: 1.65; }
 .exp-note { font-size: 12px; color: var(--ink-3); margin-top: 8px; line-height: 1.6; }
 .exp-foot { font-size: 12px; color: var(--ink-3); margin-top: 8px; font-weight: 600; }
@@ -1171,6 +1200,17 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   white-space: nowrap; pointer-events: none;
 }
 .step-eyebrow:empty { display: none; }
+/* R15-C（2026-09-08）：右上角的「資料更新於」。
+   SKEY（coachingSyncedAt_v1）本來只在同步邏輯裡讀，畫面上從來沒有顯示過——
+   使用者沒有任何地方看得到「我看到的資料是什麼時候的」。
+   位置鏡射 .step-eyebrow（絕對定位、同高度），所以標題與副標的座標一格都沒動。
+   沒有同步過就是空的（:empty 收起來）——本機模式的人不該看到一句「還沒同步」。 */
+.head-sync {
+  position: absolute; top: 0; right: 0; height: 18px; line-height: 18px;
+  font-size: 11px; color: var(--ink-4); white-space: nowrap;
+  font-variant-numeric: tabular-nums; pointer-events: none;
+}
+.head-sync:empty { display: none; }
 .step-eyebrow-sub { color: var(--ink-3); font-weight: 600; }
 .step-eyebrow-sub.link { color: var(--ink-3); cursor: pointer; pointer-events: auto; text-decoration: none; }
 .step-eyebrow-sub.link:hover { color: var(--warm-d); text-decoration: underline; }
@@ -1196,7 +1236,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 切換籤與 tier 籤跟著進度分段換色。四段門檻是既有的 credSeg()，
    色票是既有的 --segN-bar / --segN-bg，沒有新增任何色票。
    設計稿的 tone[2]（較淺的邊框）與 seg4 深字沒有對應色票，改用該段主色。 */
-.cc-tier { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
+.cc-tier { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill);
            background: var(--surface); white-space: nowrap; }
 .credcard[data-seg="1"] .cc-tier, .credcard[data-seg="1"] .cc-pct { color: var(--seg1-bar); }
 .credcard[data-seg="2"] .cc-tier, .credcard[data-seg="2"] .cc-pct { color: var(--seg2-bar); }
@@ -1213,12 +1253,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .credcard[data-seg="4"] .cc-switch button.on { background: var(--seg4-bar); color: var(--st4-fg); }
 /* 側欄「進行中」籤：有未存檔草稿才出現 */
 .nav-wip { margin-left: auto; flex: 0 0 auto; font-size: 10.5px; font-weight: 700;
-           padding: 1px 7px; border-radius: 20px; letter-spacing: .02em; white-space: nowrap;
+           padding: 1px 7px; border-radius: var(--r-lg); letter-spacing: .02em; white-space: nowrap;
            background: #F6EBE5; color: var(--warm-d); }
 .tab.active .nav-wip.on { background: rgba(255,252,248,.22); color: var(--st4-fg); }
 /* 導師提問四籤 */
 .ask-tabs { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
-.ask-tab { padding: 8px 15px; border-radius: 8px; font-size: 13px; white-space: nowrap;
+.ask-tab { padding: 8px 15px; border-radius: var(--r-btn); font-size: 13px; white-space: nowrap;
            cursor: pointer; font-family: inherit; transition: .12s;
            background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); font-weight: 500; }
 .ask-tab:hover { background: var(--surface-2); }
@@ -1251,7 +1291,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .acc-navrow {
   display: flex; align-items: flex-start; gap: 9px; width: 100%; text-align: left;
   border: none; background: none; font-family: inherit; cursor: pointer;
-  padding: 8px 9px; border-radius: 8px; color: var(--ink);
+  padding: 8px 9px; border-radius: var(--r-btn); color: var(--ink);
 }
 .acc-navrow:hover { background: var(--surface-2); }
 .acc-navrow.on { background: var(--cool-bg); }
@@ -1266,7 +1306,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .an-name { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
 .an-meta { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
 /* 左欄 AI 卡 */
-.ai-card { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: 12px; padding: 16px 17px; }
+.ai-card { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: var(--r-card); padding: 16px 17px; }
 .ai-eyebrow { font-size: 11px; font-weight: 700; color: var(--cool); letter-spacing: .06em; margin-bottom: 5px; }
 .ai-title { font-size: 14.5px; font-weight: 650; margin: 0 0 7px; letter-spacing: -.01em; color: var(--cool-d); line-height: 1.45; }
 .ai-sub { font-size: 11.5px; color: var(--cool-d); margin: 0 0 12px; line-height: 1.7; }
@@ -1325,11 +1365,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .acc-cur-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 .acc-cur-num { font-size: 13px; font-weight: 700; color: var(--ink-3); letter-spacing: .04em; }
 .acc-cur-name { font-size: 20px; font-weight: 650; margin: 0; letter-spacing: -.01em; }
-.acc-cur-alt { font-size: 13px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: 6px; padding: 2px 9px; }
+.acc-cur-alt { font-size: 13px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: var(--r-pill); padding: 2px 9px; }
 .acc-cur-alt:empty { display: none; }
 .acc-cur-desc { font-size: 13px; color: var(--ink-3); margin: 0 0 16px; line-height: 1.75; }
 .acc-meters { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
-.acc-meter { border-radius: 10px; padding: 12px 14px; }
+.acc-meter { border-radius: var(--r-card); padding: 12px 14px; }
 .acc-meter[data-lv="acc"] { background: var(--warm-bg-2); border: 1px solid var(--warm-line); }
 .acc-meter[data-lv="pcc"] { background: var(--cool-bg); border: 1px solid var(--cool-line); }
 .am-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
@@ -1339,28 +1379,28 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .acc-meter[data-lv="acc"] .am-n   { color: var(--warm-d); }
 .acc-meter[data-lv="pcc"] .am-lbl { color: var(--cool-d); }
 .acc-meter[data-lv="pcc"] .am-n   { color: var(--cool); }
-.am-track { height: 5px; border-radius: 3px; overflow: hidden; }
+.am-track { height: 5px; border-radius: var(--r-xs); overflow: hidden; }
 .acc-meter[data-lv="acc"] .am-track { background: var(--warm-line); }
 .acc-meter[data-lv="pcc"] .am-track { background: var(--cool-line); }
-.am-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+.am-fill { height: 100%; border-radius: var(--r-xs); transition: width .4s ease; }
 .acc-meter[data-lv="acc"] .am-fill { background: var(--warm-d); }
 .acc-meter[data-lv="pcc"] .am-fill { background: var(--cool); }
 /* 面板頭已經帶了編號／名稱／官方名／說明，acc-item 自己那份就不用再出現一次。
    只藏顯示，buildAcc() 產生的結構與 id 一個都沒動。 */
 #acc-list .acc-head { display: none; }
 /* 中性的「還缺什麼」卡 */
-.acc-gap { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: 11px; padding: 14px 16px; margin-top: 16px; }
+.acc-gap { background: var(--amber-bg); border: 1px solid var(--amber); border-radius: var(--r-card); padding: 14px 16px; margin-top: 16px; }
 .acc-gap-head { font-size: 13.5px; font-weight: 700; color: var(--amber-ink); margin-bottom: 3px; }
 .acc-gap-sub { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-bottom: 8px; }
 .acc-gap-row { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
 .acc-gap-code { font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: var(--ink-2);
-                background: var(--surface); border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+                background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 1px 6px; white-space: nowrap; }
 /* 上一項／下一項 */
 .acc-steps { display: flex; justify-content: space-between; gap: 12px; }
 .acc-step-btn { background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-size: 13.5px; }
 .acc-step-btn:disabled { opacity: .4; cursor: not-allowed; }
 /* 頁首右上的 ACC／PCC 計數卡 */
-.hd-count { border-radius: 8px; padding: 5px 11px; text-align: center; min-width: 62px;
+.hd-count { border-radius: var(--r-btn); padding: 5px 11px; text-align: center; min-width: 62px;
             display: flex; flex-direction: column; justify-content: center; }
 .hd-count[data-lv="acc"] { background: var(--warm-bg-2); border: 1px solid var(--warm-line); }
 .hd-count[data-lv="pcc"] { background: var(--cool-bg); border: 1px solid var(--cool-line); }
@@ -1376,7 +1416,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .navrow {
   display: flex; align-items: center; gap: 8px; width: 100%;
   border: none; background: none; font-family: inherit; cursor: pointer;
-  padding: 7px 8px; border-radius: 8px; text-align: left; color: var(--ink-2);
+  padding: 7px 8px; border-radius: var(--r-btn); text-align: left; color: var(--ink-2);
 }
 .navrow:hover { background: var(--surface-2); }
 .navrow.on { background: var(--cool-bg); color: var(--ink); font-weight: 600; }
@@ -1393,7 +1433,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 }
 /* 下一步：深藍實心卡 */
 .nextcard {
-  background: var(--cool-d); border-radius: 12px; padding: 14px 15px 15px; margin-top: 12px;
+  background: var(--cool-d); border-radius: var(--r-card); padding: 14px 15px 15px; margin-top: 12px;
 }
 .next-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .4px; color: var(--st4-fg); opacity: .75; }
 .next-title { font-size: 19px; font-weight: 700; color: var(--st4-fg); margin-top: 3px; }
@@ -1463,6 +1503,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    眉標高度從 18→19px 是為了對上設計稿的 top:-19px。 */
 .page-head { padding-top: 19px; }
 .step-eyebrow { height: 19px; line-height: 19px; font-size: 11.5px; letter-spacing: .06em; color: var(--warm); }
+  .head-sync { height: 19px; line-height: 19px; font-size: 11.5px; }
 .step-eyebrow-sub, .step-eyebrow-sub.link { font-size: 11.5px; font-weight: 400; letter-spacing: 0; color: var(--ink-4); }
 #page-sub { font-size: 13.5px; color: var(--ink-3); }
 /* 沒有副標的頁面（首頁）必須整塊消失：.sub 帶 margin-bottom:14px，
@@ -1475,7 +1516,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* ── A1／A2／A3：卡片外觀、內距、卡間距 ───────────────────────── */
 #form-step1 .card, #form-side .card {
-  border: 1px solid var(--line-2); border-radius: 12px; box-shadow: none;
+  border: 1px solid var(--line-2); border-radius: var(--r-card); box-shadow: none;
 }
 #form-step1 .card { padding: 20px 22px; margin-bottom: 22px; }
 #form-step1 .review-card  { padding: 18px 22px; }
@@ -1509,7 +1550,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* ── A10：輸入框（font-size 維持 16px，見規格 §4-2 註記）─────────── */
 #form-step1 input[type=text], #form-step1 input[type=date],
-#form-step1 textarea, #form-step1 select { padding: 10px 12px; border-radius: 8px; }
+#form-step1 textarea, #form-step1 select { padding: 10px 12px; border-radius: var(--r-btn); }
 #form-step1 #sec-basic .row input { padding: 9px 11px; }
 
 /* ── A11：卡內分隔線 ────────────────────────────────────────── */
@@ -1528,7 +1569,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* ── B8：送審勾選框包進有邊框的 label，點擊區更大 ─────────────────── */
 #form-step1 .submit-cand {
   align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; margin-top: 0;
-  border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-btn); background: var(--surface);
   font-size: 13.5px; font-weight: 400; color: var(--ink);
 }
 #form-step1 .submit-cand input { width: 17px; height: 17px; margin-top: 0; }
@@ -1542,7 +1583,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 #form-step1 .review-card { border: 1px solid var(--warm-line); }
 #form-step1 .fr-date {
   font-size: 11.5px; color: var(--warm); background: #F6EBE5;
-  border-radius: 20px; padding: 2px 9px; line-height: 1.5;
+  border-radius: var(--r-lg); padding: 2px 9px; line-height: 1.5;
 }
 #form-step1 .fr-row {
   display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 12px;
@@ -1567,7 +1608,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   font-size: 11px; font-weight: 700; letter-spacing: .06em;
   color: var(--ink-4); margin-bottom: 11px;
 }
-#form-side .navrow { padding: 7px 9px; border-radius: 7px; }
+#form-side .navrow { padding: 7px 9px; border-radius: var(--r-btn); }
 #form-side .navname { font-size: 13px; }
 #form-side .navrow.on { background: var(--surface-2); color: var(--ink); font-weight: 650; }
 #form-side .navrow:hover { background: var(--surface-2); }
@@ -1590,11 +1631,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 #form-side .next-eyebrow { letter-spacing: .08em; color: #A9D3DF; opacity: 1; }
 #form-side .next-title { letter-spacing: -.01em; opacity: 1; }
 #form-side .next-sub { color: #C7E1E9; opacity: 1; margin-top: 7px; }
-#form-side .next-btn { padding: 13px; border-radius: 9px; font-size: 15px; font-weight: 700; margin-top: 15px; }
+#form-side .next-btn { padding: 13px; border-radius: var(--r-btn); font-size: 15px; font-weight: 700; margin-top: 15px; }
 #form-side .next-btn:hover { background: var(--cool-bg); }
 #form-side .savelater-btn {
   margin-top: 14px; padding: 12px; border: 1px solid var(--line);
-  border-radius: 9px; font-size: 13.5px; font-weight: 600; color: var(--ink-2);
+  border-radius: var(--r-btn); font-size: 13.5px; font-weight: 600; color: var(--ink-2);
 }
 #form-side .savelater-btn:hover { background: var(--surface-2); }
 
@@ -1607,7 +1648,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 @media (min-width: 1024px) {
   #form-step1 .fr-btns { flex-wrap: wrap; }
   #form-step1 .fr-btn {
-    flex: 0 0 auto; min-height: 0; padding: 5px 13px; border-radius: 7px;
+    flex: 0 0 auto; min-height: 0; padding: 5px 13px; border-radius: var(--r-btn);
     font-size: 12.5px; font-weight: 500; color: var(--warm-ink);
     /* 只讓顏色過渡。不指定屬性的 transition 等於 all，會把 flex／font-size／padding
        也動畫化——任何一次樣式重算都會看到 120ms 的寬度抽動。 */
@@ -1763,7 +1804,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
     border-right: 1px solid rgba(239,235,228,.12);
   }
   /* S1 站名與次要文字 */
-  .nav-brand-name { color: #EFEBE4; }
+  .nav-brand-name { color: var(--bg); }
   .nav-brand-user { color: rgba(239,235,228,.60); }
   /* §46-R：站名下方的版本行與底部的帳號行是新元素，一定要一起進深色側欄的配色，
      否則會是 --ink-3 的深字落在 #2C2A28 上（實測對比 ~2.5:1，§41 那條會紅）。 */
@@ -1814,7 +1855,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      等同設計稿留給「＋新增紀錄」主鈕的位置——產品沒有那顆獨立主鈕） */
   .tab { color: rgba(239,235,228,.72); }
   .tab:hover { background: rgba(239,235,228,.09); }
-  .tab.active { background: var(--warm); color: #FFFCF8; }
+  .tab.active { background: var(--warm); color: var(--surface); }
   .tab.active:hover { background: var(--warm); }
 
   /* S4 徽章：跟著深色底調整；選中列沿用既有規則吃分頁文字色 */
@@ -1824,7 +1865,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .nav-foot { border-top: 1px solid rgba(239,235,228,.12); }
   .nav-foot-ver { color: rgba(239,235,228,.60); }
   .nav-foot-links a { color: rgba(239,235,228,.60); }
-  .nav-foot-links a:hover { color: #EFEBE4; }
+  .nav-foot-links a:hover { color: var(--bg); }
 }
 
 /* ── S6（R2 追加）：手機／平板的抽屜也用同一套深色 ──
@@ -1841,13 +1882,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .tabs .tab { color: rgba(239,235,228,.72); }
   .tabs .tab:hover { background: rgba(239,235,228,.09); }
   /* 選中列跟桌機同一個處理：陶土底＋淺字（手機原本是淺陶土底＋深陶土字，在深底上會糊） */
-  .tabs .tab.active { background: var(--warm); color: #FFFCF8; }
+  .tabs .tab.active { background: var(--warm); color: var(--surface); }
   .tabs .nav-group { color: rgba(239,235,228,.55); }
   .tabs .nav-badge { color: rgba(239,235,228,.55); }
   .tabs .nav-foot-ver { color: rgba(239,235,228,.60); }
   .tabs .nav-brand-sub, .tabs .nav-foot-user { color: rgba(239,235,228,.60); }
   .tabs .nav-foot-links a { color: rgba(239,235,228,.60); }
-  .tabs .nav-foot-links a:hover { color: #EFEBE4; }
+  .tabs .nav-foot-links a:hover { color: var(--bg); }
   /* 關閉鈕原本吃 --ink-3（深灰），在深底上等於看不見 */
   .drawer-close { color: rgba(239,235,228,.72); }
   .drawer-close:hover { background: rgba(239,235,228,.09); }
@@ -1981,7 +2022,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    1440 是 Yi-En 看過並同意的那張圖的寬度。1360 也可行（議題 223px），
    要放寬只需要改這一個數字。 */
 .scell {
-  width: 6px; height: 6px; flex: 0 0 6px; border-radius: 2px;
+  width: 6px; height: 6px; flex: 0 0 6px; border-radius: var(--r-xs);
   font-size: 0; color: transparent;
 }
 /* 格線欄寬跟著走：8×6 ＋ 7×3 ＝ 69px。標題列與資料列共用同一份欄寬，
@@ -2016,15 +2057,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .miss-card { background: var(--warm-bg); border-color: var(--warm-line); }
 .miss-head:not(.hidden) { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 .miss-head label { color: var(--warm-ink); font-size: 15px; font-weight: 700; }
-.miss-n { padding: 2px 9px; border-radius: 20px; background: var(--warm);
+.miss-n { padding: 2px 9px; border-radius: var(--r-lg); background: var(--warm);
           color: var(--surface); font-size: 11px; font-weight: 700; }
 .miss-hint { margin-left: auto; font-size: 12px; color: var(--warm-ink); }
 /* 一場一列（2026-09-01 Yi-En）。左：頭像＋代號／第 N 場　右：一顆「記這一場」。
    頭像沿用首頁客戶卡 .hcli-av 的尺寸與圓角，兩張卡在同一欄裡不會看起來像兩套東西。 */
 .miss-row { display: flex; align-items: center; gap: 11px;
             margin-top: 10px; padding: 11px 13px; background: var(--surface);
-            border: 1px solid var(--warm-line); border-radius: 10px; }
-.miss-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+            border: 1px solid var(--warm-line); border-radius: var(--r-card); }
+.miss-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: var(--r-btn);
            background: var(--warm-bg); color: var(--warm-ink);
            display: flex; align-items: center; justify-content: center;
            font-size: 13px; font-weight: 700; }
@@ -2038,7 +2079,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    刻意不重用 .btn——.btn 的 flex:1 會讓它跟主鈕平分寬度，那就是平起平坐了。 */
 .miss-skip { flex: 0 0 auto; padding: 6px 8px; border: none; background: none;
              color: var(--ink-3); font: inherit; font-size: 12.5px; cursor: pointer;
-             border-radius: 8px; }
+             border-radius: var(--r-btn); }
 .miss-skip:hover { color: var(--ink-2); background: var(--line-3); }
 /* P2-8 還原入口：卡片最下面一行，預設收起來，展開後逐筆還原。 */
 .miss-skipped { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--warm-line); }
@@ -2049,7 +2090,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .miss-slist { margin-top: 8px; display: grid; gap: 8px; }
 .miss-srow { display: flex; align-items: center; gap: 11px;
              padding: 9px 13px; background: var(--surface);
-             border: 1px dashed var(--warm-line); border-radius: 10px; }
+             border: 1px dashed var(--warm-line); border-radius: var(--r-card); }
 .miss-sid { flex: 1 1 0; min-width: 0; display: block; }
 .miss-scode { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink-2);
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2073,11 +2114,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    哪天再有別的選填欄位就原地重演。這跟第 5 批「首頁右側空白」是同一族。 */
 .hcli { display: flex; flex-direction: column; align-items: stretch;
         width: 100%; text-align: left; cursor: pointer;
-        background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
         padding: 13px 14px; font: inherit; color: inherit; }
 .hcli:hover { border-color: var(--warm-2); }
 .hcli-top { display: flex; align-items: center; gap: 9px; }
-.hcli-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+.hcli-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: var(--r-btn);
            background: var(--warm-bg); color: var(--warm-ink);
            display: flex; align-items: center; justify-content: center;
            font-size: 13px; font-weight: 700; }
@@ -2086,7 +2127,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hcli-meta { display: block; font-size: 11.5px; color: var(--ink-3); }
 .hcli .ccard-paid { margin: 0; }
 .hcli-topic { display: block; margin-top: 9px; margin-bottom: 11px;
-              padding: 7px 9px; border-radius: 8px;
+              padding: 7px 9px; border-radius: var(--r-btn);
               background: var(--warm-bg); color: var(--warm-ink); font-size: 12.5px;
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* R4-1：沒有議題時放一個同尺寸的虛線框（Yi-En 指定的做法）。
@@ -2118,7 +2159,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* H2 三個統計 */
 .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hstat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+.hstat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
          padding: 13px 14px; min-width: 0; }
 .hstat-l { font-size: 11.5px; color: var(--ink-2); }
 .hstat-b { margin-top: 2px; font-size: 25px; font-weight: 700; line-height: 1.15; }
@@ -2129,10 +2170,10 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hcard-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .hcard-head label { font-size: 14px; font-weight: 700; }
 .hcard-head .mini-link { margin-left: auto; }
-.hpct { padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700;
+.hpct { padding: 2px 8px; border-radius: var(--r-lg); font-size: 11px; font-weight: 700;
         background: var(--warm-bg); color: var(--warm-ink); }
 .hq { margin-top: 8px; padding: 9px 11px; background: var(--surface-2);
-      border: 1px solid var(--line-2); border-radius: 9px; }
+      border: 1px solid var(--line-2); border-radius: var(--r-btn); }
 .hq-t { font-size: 13px; color: var(--ink); }
 .hq-c { margin-top: 3px; font-size: 11.5px; color: var(--ink-3); }
 .htodo { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
@@ -2168,7 +2209,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 「＋ 新增紀錄」主鈕：設計稿把它放在最上面，不是導覽項 */
 .nav-new {
   display: flex; align-items: center; gap: 6px; width: 100%;
-  margin: 14px 0 4px; padding: 11px 12px; border: none; border-radius: 9px;
+  margin: 14px 0 4px; padding: 11px 12px; border: none; border-radius: var(--r-btn);
   background: var(--warm); color: var(--surface);
   font-family: inherit; font-size: 13.5px; font-weight: 700; text-align: left; cursor: pointer;
 }
@@ -2185,13 +2226,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 #credcard[data-seg="4"] { --hc-ink: var(--seg4-ink); --hc-bar: var(--seg4-bar); }
 .hc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .hc-title { font-size: 14px; font-weight: 700; }
-.hc-pct { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+.hc-pct { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-lg);
           background: var(--warm-bg); color: var(--hc-ink); font-variant-numeric: tabular-nums; }
 .hc-more { margin-left: auto; }
 .hc-switch { display: flex; gap: 3px; }
 .hc-switch button {
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
-  border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: 700;
+  border-radius: var(--r-lg); padding: 2px 8px; font-size: 10px; font-weight: 700;
   font-family: inherit; cursor: pointer; min-height: 28px;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -2201,7 +2242,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hc-sum .hc-switch { margin-left: auto; }
 .hc-foot { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
 .hc-tier { font-size: 10.5px; font-weight: 700; white-space: nowrap; padding: 2px 8px;
-           border-radius: 20px; background: var(--surface-2); color: var(--hc-ink); }
+           border-radius: var(--r-lg); background: var(--surface-2); color: var(--hc-ink); }
 .hc-miss { flex: 1 1 0; min-width: 0; font-size: 11px; color: var(--hc-bar); line-height: 1.55; }
 
 @media (min-width: 1024px) and (max-width: 1099.98px) {
@@ -2261,16 +2302,16 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    560px 以下維持既有的兩欄（.stat4 前面那條 @media 不動），四張卡在手機上排成 2×2。 */
 .stat4 { gap: 12px; margin-top: 20px; }
 .stat1 {
-  background: #FAF8F4; border: 1px solid #E4DFD6; border-radius: 12px;
-  padding: 14px 15px; color: #2C2A28; text-align: left;
+  background: var(--head-bg); border: 1px solid var(--zone-line); border-radius: var(--r-card);
+  padding: 14px 15px; color: var(--ink); text-align: left;
 }
-.stat1 .stat-name { font-size: 11.5px; color: #5F5850; margin-top: 0; }
+.stat1 .stat-name { font-size: 11.5px; color: var(--ink-2); margin-top: 0; }
 .stat1 .stat-n {
   margin-top: 3px; font-size: 27px; font-weight: 700; color: inherit;
   font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1.2;
 }
-.stat1 .stat-note { font-size: 11.5px; color: #5F5850; margin-top: 3px; }
-.stat1.cool { background: #E7F1F4; border-color: #C0DAE2; color: #0F5A6D; }
+.stat1 .stat-note { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; }
+.stat1.cool { background: var(--cool-bg); border-color: var(--cool-line); color: var(--cool-d); }
 
 /* ═══ S2（2026-09-02）客戶詳情標題列：照設計稿 isClient.html 的 inline style ═══
      整列   flex／align-items:flex-start／gap 14px
@@ -2284,21 +2325,21 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .cd-idrow { display: flex; align-items: flex-start; gap: 14px; min-width: 0; flex: 1 1 0; }
 .cd-av {
   display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
-  width: 54px; height: 54px; border-radius: 18px;
-  font-size: 23px; font-weight: 700; background: #E7F1F4; color: #0F5A6D;
+  width: 54px; height: 54px; border-radius: var(--r-lg);
+  font-size: 23px; font-weight: 700; background: var(--cool-bg); color: var(--cool-d);
 }
 .cd-idmain { flex: 1 1 0; min-width: 0; }
 .cd-nameline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-width: 0; }
 .cd-name { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -0.015em; }
 .cd-paid {
-  padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: var(--r-lg); font-size: 11px; font-weight: 700;
   white-space: nowrap; background: var(--line-3); color: var(--ink-3);
 }
 .cd-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-d); }
 .cd-paid[data-p="probono"] { background: var(--ok-bg);    color: var(--ok); }
 .cd-paid[data-p=""]        { background: var(--amber-bg); color: var(--amber-ink); }
 /* 沒有紀錄時 innerHTML 是空字串，:empty 讓那一行連同上邊距一起消失（S2-4） */
-.cd-sub { margin-top: 4px; font-size: 12.5px; color: #5F5850; }
+.cd-sub { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); }
 .cd-sub:empty { display: none; }
 
 /* ═══ S5（2026-09-02）「每一場」一列四格：照設計稿 isClient.html 的 inline style ═══
@@ -2320,9 +2361,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   display: flex; align-items: center; gap: 14px;
   padding: 12px 18px; border-top: 1px solid #EFEAE2; cursor: pointer;
 }
-.cdrow:hover { background: var(--line-4, #F6F2EC); }
-.cdrow-date { flex: 0 0 52px; font-size: 12px; color: #5F5850; font-variant-numeric: tabular-nums; }
-.cdrow-n    { flex: 0 0 52px; font-size: 12px; color: #5F5850; }
+.cdrow:hover { background: var(--line-4, var(--side-bg)); }
+.cdrow-date { flex: 0 0 52px; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cdrow-n    { flex: 0 0 52px; font-size: 12px; color: var(--ink-2); }
 .cdrow-topic {
   flex: 1 1 0; min-width: 0; font-size: 13.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -2330,8 +2371,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .cdrow-topic.none { color: var(--ink-4); }
 .cdrow-mk:empty { padding: 0; background: none; border: 0; }
 .cdrow-mk {
-  flex: 0 0 auto; padding: 2px 9px; border-radius: 20px;
-  background: #E7F1F4; color: #0F5A6D;
+  flex: 0 0 auto; padding: 2px 9px; border-radius: var(--r-lg);
+  background: var(--cool-bg); color: var(--cool-d);
   font-size: 11.5px; font-weight: 700; white-space: nowrap;
 }
 /* 手機：52px 兩格 ＋ 14px 間距會把議題壓到剩沒幾個字，所以次數與標記籤讓位，
@@ -2375,13 +2416,13 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .clist-wall { display: none; }
   body[data-view="clientdetail"] .clist-side {
     display: block; font-size: 10.5px; font-weight: 700;
-    letter-spacing: 0.09em; color: #5F5850;
+    letter-spacing: 0.09em; color: var(--ink-2);
   }
   body[data-view="clientdetail"] .clist-head { padding: 0 0 12px; }
   body[data-view="clientdetail"] .clist-head .clist-new {
     display: inline-block; margin-left: auto; padding: 5px 11px;
-    border: 1px solid #E0DBD2; background: #FAF8F4; border-radius: 8px;
-    color: #8A4630; font-size: 12px; cursor: pointer; white-space: nowrap;
+    border: 1px solid var(--line); background: var(--head-bg); border-radius: var(--r-btn);
+    color: var(--warm-ink); font-size: 12px; cursor: pointer; white-space: nowrap;
   }
   /* 卡片精簡（S6-2）：頭像與短 meta 出場，卡牆用的長 meta、目標、兩條 bar 收起來。
      「目標」全文正是使用者回饋裡把 280px 撐爆的那一段。 */
@@ -2389,7 +2430,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      .ccard-goal 與 .ctrend 已收起，所以這一列就是設計稿那三樣東西。 */
   body[data-view="clientdetail"] .ccard {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 10px; border-radius: 9px;
+    padding: 9px 10px; border-radius: var(--r-btn);
   }
   /* 代號與 meta 要**上下疊**、頭像在左邊跨兩列（設計稿 tpl 558 就是這個結構）。
      它們在 HTML 裡是平行的兄弟節點，所以用 grid template areas 排，不能用 flex：
@@ -2405,8 +2446,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .ccard-av {
     grid-area: av; align-self: center;
     display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border-radius: 11px;
-    font-size: 13px; font-weight: 700; background: #E7F1F4; color: #0F5A6D;
+    width: 32px; height: 32px; border-radius: var(--r-card);
+    font-size: 13px; font-weight: 700; background: var(--cool-bg); color: var(--cool-d);
   }
   /* 代號與「已結案」同一列；代號長就用省略號，不換行也不把卡片撐開 */
   body[data-view="clientdetail"] .ccard-id {
@@ -2420,7 +2461,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .ccard-st { flex: 0 0 auto; }
   body[data-view="clientdetail"] .ccard-meta      { display: none; }
   body[data-view="clientdetail"] .ccard-meta-side {
-    grid-area: meta; display: block; font-size: 11px; color: #5F5850;
+    grid-area: meta; display: block; font-size: 11px; color: var(--ink-2);
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   body[data-view="clientdetail"] .ccard-goal,
@@ -2428,7 +2469,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   /* 付費籤變成這一列最右邊的膠囊（設計稿的形狀），三態配色沿用既有變數 */
   body[data-view="clientdetail"] .ccard-paid {
     flex: 0 0 auto; margin-top: 0;
-    padding: 3px 9px; border-radius: 20px; font-size: 11px; white-space: nowrap;
+    padding: 3px 9px; border-radius: var(--r-lg); font-size: 11px; white-space: nowrap;
   }
   /* 「進行中」是預設狀態，在 280px 裡是噪音；「已結案」是真的要知道的事，留著。
      設計稿的精簡卡兩個都沒有，但把「已結案」也藏起來等於讓她看不出這位已經結案了。 */
@@ -2539,7 +2580,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .j-foot { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line-2);
           display: flex; gap: 6px; flex-wrap: wrap; }
 .j-foot .j-tags { gap: 6px; }
-.j-foot .jtag { padding: 3px 9px; border-radius: 20px; font-size: 11.5px; }
+.j-foot .jtag { padding: 3px 9px; border-radius: var(--r-lg); font-size: 11.5px; }
 /* 籤搬走之後，檢視卡的頁首只剩右上角那兩顆（R5-4：它們刻意留在原位，
    搬到底部會跟籤搶位置，而且刪除鈕靠近籤很容易誤點）。
    `space-between` 在只剩一個子元素時會把它推到左邊，所以這裡改成靠右。
@@ -2617,7 +2658,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
              grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .pick-card { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit;
              color: inherit; background: var(--surface); border: 1px solid var(--line);
-             border-radius: 12px; padding: 14px 15px; }
+             border-radius: var(--r-card); padding: 14px 15px; }
 .pick-card:hover { border-color: var(--warm-2); }
 /* flex-wrap：付費籤放不下時掉到第二行，而不是把代號與 meta 擠成兩行。
    「還沒選付費別」是三種籤裡最長的，240px 的卡片剛好裝不下（實測 R 那張）。
@@ -2625,7 +2666,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    這一段的 flex-wrap 因此不再是為了它而存在——**但仍然保留**：
    代號可以很長，換行防禦跟付費籤的字數無關。 */
 .pick-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.pick-av { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+.pick-av { flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--r-card);
            background: var(--warm-bg); color: var(--warm-ink);
            display: flex; align-items: center; justify-content: center;
            font-size: 14px; font-weight: 700; }
@@ -2634,7 +2675,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick-meta { display: block; margin-top: 1px; font-size: 12px; color: var(--ink-3); }
 .pick-paid { flex: 0 0 auto; margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 8px;
-             border-radius: 20px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+             border-radius: var(--r-lg); background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
 .pick-paid[data-p="paid"]    { background: var(--cool-bg);  color: var(--cool-ink); }
 .pick-paid[data-p="probono"] { background: var(--warm-bg);  color: var(--warm-ink); }
 .pick-focus { display: block; margin-top: 9px; font-size: 12.5px; color: var(--ink-2);
@@ -2645,8 +2686,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .pick-new-s { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-3); }
 /* 步驟 1 的已選客戶摘要 */
 .cpick { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-         background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; }
-.cpick-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+         background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r-card); }
+.cpick-av { flex: 0 0 auto; width: 30px; height: 30px; border-radius: var(--r-btn);
             background: var(--warm-bg); color: var(--warm-ink);
             display: flex; align-items: center; justify-content: center;
             font-size: 13px; font-weight: 700; }
@@ -2655,7 +2696,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cpick-meta { display: block; margin-top: 1px; font-size: 12px; color: var(--ink-3); }
 .cpick-paid { flex: 0 0 auto; font-size: 11px; font-weight: 700; padding: 2px 8px;
-              border-radius: 20px; background: var(--surface); color: var(--ink-2); white-space: nowrap; }
+              border-radius: var(--r-lg); background: var(--surface); color: var(--ink-2); white-space: nowrap; }
 .cpick-paid[data-p="paid"]    { background: var(--cool-bg); color: var(--cool-ink); }
 .cpick-paid[data-p="probono"] { background: var(--warm-bg); color: var(--warm-ink); }
 .cpick-swap { flex: 0 0 auto; }
@@ -2691,7 +2732,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   font-size: 11.5px; color: var(--ink-2);
 }
 .bchart-key { display: flex; align-items: center; gap: 5px; }
-.bchart-key i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+.bchart-key i { width: 9px; height: 9px; border-radius: var(--r-xs); display: block; }
 .bchart-key i[data-s="progress"] { background: var(--cool); }
 .bchart-key i[data-s="perf"]     { background: var(--cool-line); }
 /* 放不下就整條捲，不丟資料也不用寫死「最近 N 筆」（K4） */
@@ -2794,7 +2835,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* C2 職能覆蓋條圓角 5px → 7px（設計稿值）。
    **不動 --r-pill**：那個 token 全站的小籤與進度條都在用，改它會一次動到很多地方。 */
-.cov-track { border-radius: 7px; }
+.cov-track { border-radius: var(--r-btn); }
 
 /* C3「下一場可以補這幾條」的例句改成青色（--cool-d＝rgb(15,90,109)，設計稿值）。
    理由是撞色：例句原本是暖棕 --warm-ink，跟卡片其他暖色元素分不開；
@@ -2813,7 +2854,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    （13px 圓角與 13px 內距都照設計稿量到的值）。 */
 .cum-todo {
   background: var(--warm-bg-2); border: 1px solid var(--warm-line);
-  border-radius: 13px; padding: 12px 13px 13px;
+  border-radius: var(--r-card); padding: 12px 13px 13px;
 }
 
 /* R14-C6 退回（2026-09-07）：這裡原本有 .cdrow-score 這條規則（R14-C6 於 2026-09-06 加入，
@@ -2843,6 +2884,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
          總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。
          步驟 2 的第二格是「← 回會談記錄」，所以它是連結不是純文字。 -->
     <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"><span id="step-eyebrow-n"></span><a class="step-eyebrow-sub" id="step-eyebrow-sub"></a></span>
+    <span class="head-sync" id="head-sync"></span>
     <!-- §14-1 每一頁自己的標題、副標與右上角一顆主要動作，全部由 VIEW_HEAD 決定 -->
     <div class="head-row">
       <div class="head-main">
@@ -4277,6 +4319,7 @@ async function syncPull(){
          先前這裡是直接 setItem，離線期間在這台裝置上寫的東西會在下次登入時整批消失。 */
       mergeCloud(JSON.parse(snap.data().payload));
       localStorage.setItem(SKEY, String(snap.data().updated_at || Date.now()));
+      renderHeadSync();
       pulled = true;
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
@@ -4373,6 +4416,7 @@ function pushCloudKeepalive(){
   return req.then(res=>{
     if (!res.ok) throw new Error('Firestore REST ' + res.status);
     localStorage.setItem(SKEY, String(now));
+    renderHeadSync();
     if (cloudPayloadJSON() === payload) cloudDirty = false;
     pushFailed = false;
     return true;
@@ -4399,6 +4443,7 @@ async function pushCloud(){
     const payload = cloudPayloadJSON();
     await fb.fsMod.setDoc(ref, { payload, updated_at: now }, { merge: true });
     localStorage.setItem(SKEY, String(now));
+    renderHeadSync();
     if (cloudPayloadJSON() === payload) cloudDirty = false;
     pushFailed = false;
   } catch(e){
@@ -4918,7 +4963,7 @@ const PRINT_CSS = `
 #print-root .topic{ color:var(--warm-ink); font-weight:bold; font-size:12.5pt; margin:2pt 0 0; }
 #print-root .acc-page-head{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 4pt; }
 #print-root .date{ color:var(--ink-3); font-size:10.5pt; font-weight:normal; }
-#print-root .scorebox{ background:var(--cool-bg); border:1px solid var(--cool-line); border-radius:8px; padding:10pt 12pt; margin:10pt 0 14pt; }
+#print-root .scorebox{ background:var(--cool-bg); border:1px solid var(--cool-line); border-radius:var(--r-btn); padding:10pt 12pt; margin:10pt 0 14pt; }
 #print-root .score{ margin:0 0 6pt; }
 #print-root .score:last-child{ margin-bottom:0; }
 #print-root .score b{ color:var(--cool); }
@@ -6286,6 +6331,36 @@ function getAcc() {
    只勾了「做到」卻一個時間戳都沒有的，標「送審前要補」但不擋。
    詳情頁、PDF、匯出文字、督導包共用這一個函式，改一次四處都會帶到。
    縮排用全形空白，HTML 不會把它折疊掉。 */
+/* R15-B：一條 marker 在這一場的狀態，判定順序跟 mkLines() 的 sym 一模一樣。
+   多一個 mkLines() 沒有的狀態：完全沒有資料 = 'none'（這一場沒走到）。 */
+function mkSlotState(v){
+  if (!v) return 'none';
+  if (mkOn(v)) return 'on';
+  const neg = mkNeg(v);
+  if (neg === NEG_NO) return 'no';
+  if (neg === NEG_CT) return 'ct';
+  const rows = mkRows(v).filter(r=>String(r.t||'').trim() || String(r.x||'').trim());
+  if (rows.length || mkImp(v)) return 'dot';
+  return 'none';
+}
+const MK_SLOT_TXT = { on:'有做到', no:'看了，沒出現', ct:'出現了相反的', dot:'記了，還沒判定', none:'這一場沒走到' };
+/* 格子上的數字＝代碼的後半（3.2 的第 2 格就是 2）。滑過去看得到代碼與白話。 */
+function mkSlots(x, i){
+  const mk = (x && x.mk) || {};
+  const cells = (MK[i]||[]).map(m=>{
+    const st = mkSlotState(mk[m.c]);
+    const n  = String(m.c).split('.')[1] || '';
+    const tip = m.c + (MK_SHORT[m.c] ? '　' + MK_SHORT[m.c] : '') + '　' + MK_SLOT_TXT[st];
+    return '<span class="mk-slot" data-s="' + st + '" title="' + esc(tip) + '">' + esc(n) + '</span>';
+  });
+  return cells.length ? '<div class="mk-slots">' + cells.join('') + '</div>' : '';
+}
+function mkLegendHTML(){
+  return '<div class="mk-legend">'
+    + ['on','no','ct','dot','none'].map(k =>
+        '<span><span class="mk-slot" data-s="' + k + '"></span>' + MK_SLOT_TXT[k] + '</span>').join('')
+    + '</div>';
+}
 function mkLines(x, i){
   const mk = (x && x.mk) || {};
   const out = [];
@@ -6360,6 +6435,23 @@ function histHeadSub(){
   if (!c.n) return '還沒有紀錄。記完第一場就會出現在這裡。';
   return c.n + ' 場紀錄 · ' + c.clients + ' 位客戶'
        + (c.last ? ' · 最近一場 ' + c.last : '');
+}
+/* R15-C：SKEY 存的是 epoch 毫秒——pullCloud 寫的是雲端 updated_at、pushCloud 寫 Date.now()，
+   兩處都已核對過是 Date.now() 的單位。沒有值就回空字串，本機模式的人看不到任何一句話。 */
+function syncedAtText(){
+  const t = parseInt(localStorage.getItem(SKEY), 10) || 0;
+  if (!t) return '';
+  const d = new Date(t), now = new Date();
+  const hm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const key = x => x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  if (key(d) === key(now))  return '資料更新於 今天 ' + hm;
+  if (key(d) === key(yest)) return '資料更新於 昨天 ' + hm;
+  return '資料更新於 ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+}
+function renderHeadSync(){
+  const el = document.getElementById('head-sync');
+  if (el) el.textContent = syncedAtText();
 }
 function detailHead(){
   const r = load().find(x=>x.id === currentId);
@@ -6506,6 +6598,7 @@ function syncActionBarH(){
   document.documentElement.style.setProperty('--ab-h', h + 'px');
 }
 function applyPageHead(v){
+  renderHeadSync();
   const key = v === 'new' ? (formStep === 2 ? 'new2' : formStep === 0 ? 'new0' : 'new1') : v;
   const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
   const h1 = document.getElementById('page-h1');
@@ -8272,6 +8365,7 @@ function openDetail(id, from) {
         <div class="acc-detail-title"><span class="acc-mark">${stMark(st)}</span>核心職能 ${ACC[i][0]}</div>
         ${x.note?`<div class="acc-detail-note">${esc(x.note)}</div>`:''}
         ${x.imp?`<div class="acc-detail-note" style="color:var(--warm-ink)">需要改善：${esc(x.imp)}</div>`:''}
+        ${mkSlots(x, i)}
         ${mkl.length?`<div class="acc-detail-note">${mkl.map(esc).join('<br>')}</div>`:''}
       </div>`;
     groups[st].push(html);
@@ -8295,6 +8389,7 @@ function openDetail(id, from) {
     ${listBlock('這次的特殊狀況', r.special)}
     <div class="detail-field">
       <div class="detail-label">ACC 標記</div>
+      ${mkLegendHTML()}
       ${[2,1,0,ST_NE].map(s=>`
       <div class="acc-sub">${stLabel(s)}（${groups[s].length}）</div>
       <div class="acc-group">${groups[s].length?groups[s].join(''):'<div class="acc-none">—</div>'}</div>`).join('')}
