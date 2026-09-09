@@ -770,17 +770,24 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    84px 的欄位加 nowrap 會把列撐爆。**R10-1 把那串縮成「4 / 7」之後，
    撐爆的成因不在了**，所以可以收回同一行。 */
 /* R12（2026-09-06）：三欄 → 兩欄（名稱｜格子）。右邊那 44px 的場次數字整欄拿掉。 */
-.hm-row { display: grid; grid-template-columns: 132px minmax(0,1fr);
-          gap: 0 10px; align-items: center; padding: 2px 0; }
+/* R23（2026-09-09，Yi-En 圈實機截圖）：「每一個項目的間隔應該要一樣大」。
+   實測（修改前，1440px）：卡片 372／內容 336 ＝ 名稱 132 ＋ gap 10 ＋ 格子 194。
+   格子 26px＋gap 3 的話 194px 只放得下 6 個，所以 7／8／9 條的那三列折行，
+   列高變成 22 22 22 22 22 **39 39 39**——五列一種高度、三列另一種。
+   改法：名稱欄 132→104、欄距 10→8、格子 26→22、格距 3→2，
+   讓最長的那一列（9 條）也放得進同一行：104+8+(9×22+8×2=214)=326 ≤ 336，還剩 10px。
+   八列因此都是同一個高度，列距也從 4px 放寬到 12px（她說「太擁擠」）。 */
+.hm-row { display: grid; grid-template-columns: 104px minmax(0,1fr);
+          gap: 0 8px; align-items: center; padding: 6px 0; }
 .hm-name { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; min-width: 0;
            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hm-name b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.hm-cells { display: flex; flex-wrap: wrap; gap: 3px; min-width: 0; }
+.hm-cells { display: flex; flex-wrap: wrap; gap: 2px; min-width: 0; }
 /* R10-5：編號留著，但**更小更細**（她：「保留編號，但字小一點、細一點」）。
    34×22／10.5px → 26×16／9px＋字重 400＋顏色降一階。
    底線是「還看得清楚」——她要的是小，不是看不到，所以沒有再往下壓。 */
 .hm-cell {
-  flex: 0 0 auto; min-width: 26px; height: 16px; border-radius: var(--r-xs);
+  flex: 0 0 auto; min-width: 22px; height: 16px; border-radius: var(--r-xs);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 9px; font-weight: 400; font-variant-numeric: tabular-nums;
   border: 1px solid var(--line); background: var(--surface);
@@ -795,7 +802,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px;
              margin-top: 12px; font-size: 11px; color: var(--ink-3); }
 .hm-caveat { font-size: 11px; line-height: 1.7; color: var(--ink-4); margin-top: 7px; }
-.hm-legend .hm-cell { min-width: 22px; }
+.hm-legend .hm-cell { min-width: 20px; }
 /* 圖例尾巴那句分母：比色票標籤再淡一階，讀得到但不搶戲 */
 .hm-legend-den { color: var(--ink-4); }
 @media (max-width: 700px) {
@@ -1233,17 +1240,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   white-space: nowrap; pointer-events: none;
 }
 .step-eyebrow:empty { display: none; }
-/* R15-C（2026-09-08）：右上角的「資料更新於」。
-   SKEY（coachingSyncedAt_v1）本來只在同步邏輯裡讀，畫面上從來沒有顯示過——
-   使用者沒有任何地方看得到「我看到的資料是什麼時候的」。
-   位置鏡射 .step-eyebrow（絕對定位、同高度），所以標題與副標的座標一格都沒動。
-   沒有同步過就是空的（:empty 收起來）——本機模式的人不該看到一句「還沒同步」。 */
-.head-sync {
-  position: absolute; top: 0; right: 0; height: 18px; line-height: 18px;
-  font-size: 11px; color: var(--ink-4); white-space: nowrap;
-  font-variant-numeric: tabular-nums; pointer-events: none;
-}
-.head-sync:empty { display: none; }
 .step-eyebrow-sub { color: var(--ink-3); font-weight: 600; }
 .step-eyebrow-sub.link { color: var(--ink-3); cursor: pointer; pointer-events: auto; text-decoration: none; }
 .step-eyebrow-sub.link:hover { color: var(--warm-d); text-decoration: underline; }
@@ -1335,9 +1331,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .an-dot[data-st="0"]  { background: var(--st1-bg); }
 .an-dot[data-st="1"]  { background: var(--st2-bg); }
 .an-dot[data-st="2"]  { background: var(--cool); }
+/* R27（2026-09-09，Yi-En 實機截圖）：原本名稱與 ACC／PCC 是兩個並列的 flex item，
+   兩邊會互搶寬度，因此有些名稱折行、有些數字折行；圖示又會跟兩行名稱置中，八列看起來
+   沒有共同欄線。改成同一個 body 的上下兩行：名稱永遠一行，數字從名稱文字左緣起。 */
 .an-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-.an-name { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
-.an-meta { font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.an-name { font-size: 13.5px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+.an-meta {
+  margin-left: 25px; white-space: nowrap; line-height: 1.4; /* 18px 圖示＋7px 間距 */
+  font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums;
+}
 /* 左欄 AI 卡 */
 .ai-card { background: var(--cool-bg); border: 1px solid var(--cool-line); border-radius: var(--r-card); padding: 16px 17px; }
 .ai-eyebrow { font-size: 11px; font-weight: 700; color: var(--cool); letter-spacing: .06em; margin-bottom: 5px; }
@@ -1540,7 +1542,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    眉標高度從 18→19px 是為了對上設計稿的 top:-19px。 */
 .page-head { padding-top: 19px; }
 .step-eyebrow { height: 19px; line-height: 19px; font-size: 11.5px; letter-spacing: .06em; color: var(--warm); }
-  .head-sync { height: 19px; line-height: 19px; font-size: 11.5px; }
 .step-eyebrow-sub, .step-eyebrow-sub.link { font-size: 11.5px; font-weight: 400; letter-spacing: 0; color: var(--ink-4); }
 #page-sub { font-size: 13.5px; color: var(--ink-3); }
 /* 沒有副標的頁面（首頁）必須整塊消失：.sub 帶 margin-bottom:14px，
@@ -2393,31 +2394,48 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      現在＝一列四格，沒有第五格，也不預留寬度。CSS 規則與渲染程式碼都已移除，
      不是「隱藏」——見本檔搜尋「R14-C6 退回」。
    卡片本身左右各有 padding，所以列的 18px 用負邊距拉到卡片邊緣，分隔線才會通到底。 */
-#client-sess-card #client-recs { margin: 0 -14px -14px; }
+#client-sess-card {
+  /* R29／R31：本卡三種重複資訊都用同一組「日期｜第幾次｜內容」欄位。
+     欄寬、間距、水平內距只在這裡定義；各次會談多出的標記與箭頭排在第三欄之後。
+     兩種列不再各自切換 padding，避免某個響應式區間悄悄錯開。 */
+  --journey-date-col: 52px;
+  --journey-session-col: 52px;
+  --journey-col-gap: 14px;
+  --journey-row-padding-inline: 18px;
+}
+#client-sess-card #client-recs { margin: 8px -14px -14px; }
+.cd-sess-tip { margin: 2px 0 0; }
 .cdrow {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 18px; border-top: 1px solid #EFEAE2; cursor: pointer;
+  display: grid; align-items: start;
+  grid-template-columns: var(--journey-date-col) var(--journey-session-col) minmax(0, 1fr) auto 12px;
+  column-gap: var(--journey-col-gap);
+  width: 100%; padding: 12px var(--journey-row-padding-inline); border: 0; border-top: 1px solid #EFEAE2;
+  background: transparent; color: inherit; font: inherit; text-align: left;
+  cursor: pointer; appearance: none;
 }
 .cdrow:hover { background: var(--line-4, var(--side-bg)); }
-.cdrow-date { flex: 0 0 52px; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.cdrow-n    { flex: 0 0 52px; font-size: 12px; color: var(--ink-2); }
+.cdrow-date { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cdrow-n    { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
 .cdrow-topic {
-  flex: 1 1 0; min-width: 0; font-size: 13.5px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; font-size: 13.5px; line-height: 1.55;
+  white-space: normal; overflow-wrap: anywhere;
 }
 .cdrow-topic.none { color: var(--ink-4); }
 .cdrow-mk:empty { padding: 0; background: none; border: 0; }
 .cdrow-mk {
-  flex: 0 0 auto; padding: 2px 9px; border-radius: var(--r-lg);
+  padding: 2px 9px; border-radius: var(--r-lg);
   background: var(--cool-bg); color: var(--cool-d);
-  font-size: 11.5px; font-weight: 700; white-space: nowrap;
+  font-size: 11.5px; font-weight: 700; white-space: nowrap; align-self: start;
 }
-/* 手機：52px 兩格 ＋ 14px 間距會把議題壓到剩沒幾個字，所以次數與標記籤讓位，
-   議題永遠是這一列的主角（跟 2026-08-28 那次改兩層是同一個判斷）。 */
+.cdrow-arrow {
+  color: var(--ink-4); font-size: 15px; line-height: 1; text-align: right; align-self: start;
+}
+/* R29：手機仍維持同一組三欄。長內容只在第三欄裡換行，不再掉到日期欄下。 */
 @media (max-width: 560px) {
-  .cdrow { gap: 10px; padding: 12px 14px; flex-wrap: wrap; }
-  .cdrow-topic { flex: 1 1 100%; order: 3; }
-  .cdrow-mk { order: 2; margin-left: auto; }
+  #client-sess-card {
+    --journey-col-gap: 10px;
+    --journey-row-padding-inline: 14px;
+  }
 }
 
 /* ═══ S7（2026-09-02）客戶詳情頁首 ═══
@@ -2821,7 +2839,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 沒填議題就留白，不寫「（沒填議題）」——右欄是掃一眼用的 */
 #form-side .p3-topic.none::before { content: ''; }
 
-/* ── E（2026-09-04 Yi-En）：客戶頁「旅程中的議題」下面兩個收合區 ──
+/* ── E（2026-09-04 Yi-En）：客戶頁原「旅程中的議題」下面兩個收合區 ──
    她的原話：「客戶自己說的那句話」以及「旅程上我對客戶的認可」，
    「這兩個是原本可以收著，要看再點開」。
    E5：收合狀態**不進 localStorage**，不新增任何鍵。每次進客戶頁重新收起來才對，
@@ -2829,19 +2847,38 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .jsec { margin-top: 10px; }
 .jsec-head {
   width: 100%; display: flex; align-items: center; gap: 8px;
-  background: none; border: none; padding: 10px 0; cursor: pointer;
+  /* R22：內距跟 .jrow／.cdrow 一致，標題與底下的列共用同一條左緣 */
+  background: none; border: none; padding: 10px 18px; cursor: pointer;
   font-size: 14px; font-weight: 700; color: var(--ink); text-align: left;
 }
-.jsec-arrow { color: var(--ink-4); font-size: 12px; }
+.jsec-arrow {
+  /* R30：▸ 與 ▾ 的字形寬度不同；固定一個 1em 槽，展開時標題才不會水平跳動。 */
+  flex: 0 0 1em; text-align: center; color: var(--ink-4); font-size: 12px;
+}
 .jsec-n { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--ink-4); }
 .jsec-body.collapsed { display: none; }
-.jrow { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px;
-        align-items: start; padding: 7px 0; border-top: 1px solid var(--zone-line); }
-.jrow-when { font-size: 12px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
-.jrow-txt { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+/* R22（2026-09-09，Yi-En 圈實機截圖）：使用者回報「客戶頁很難找到特定的會談」。
+   量出來的成因不是名字，是這兩個收合區的左欄跟上面那一區對不齊：
+     各次會談（.cdrow）　　　padding-left 18px｜日期 52 ＋ 第N次 52 ＋ gap 14
+     這裡（.jrow，修改前）　 padding-left  0px｜日期與第N次擠在同一個 76px 欄
+   76px 裝不下「8/25　第 1 次」，「次」被折到第二行；整塊又比上面往左凸 18px。
+   左邊緣是鋸齒的，用日期掃就掃不了。
+   現在改成跟 .cdrow **同一份欄寬與內距**，並且兩欄都不換行。 */
+.jrow { display: grid;
+        grid-template-columns: var(--journey-date-col) var(--journey-session-col) minmax(0, 1fr);
+        column-gap: var(--journey-col-gap);
+        /* R28：#client-recs 用左右 -14px 把 .cdrow 拉到卡片邊緣；.jrow 原本沒有
+           同一層父容器位移，所以即使兩邊 padding／欄寬相同，實際日期與場次仍差 14px。
+           只補父容器造成的位移，不動欄寬、資料或手機排列。 */
+        align-items: start; margin-inline: -14px;
+        padding: 9px var(--journey-row-padding-inline);
+        border-top: 1px solid var(--zone-line); }
+.jrow-d, .jrow-n { font-size: 12px; color: var(--ink-4); white-space: nowrap; }
+.jrow-d { font-variant-numeric: tabular-nums; }
+.jrow-txt { min-width: 0; font-size: 13.5px; color: var(--ink); line-height: 1.55;
+            white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 1023.98px) {
   .jsec-head { min-height: 44px; }        /* §55 觸控下限 */
-  .jrow { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 
 /* ── R14-A（2026-09-06 Yi-En 手機上發現）：直條圖在 1440 以下柱高是 0 ──────
@@ -2937,7 +2974,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
          總步數是常數 STEP_TOTAL；目前第幾步讀 formStep。
          步驟 2 的第二格是「← 回會談記錄」，所以它是連結不是純文字。 -->
     <span class="step-eyebrow" id="step-eyebrow" title="先填內容，再標職能"><span id="step-eyebrow-n"></span><a class="step-eyebrow-sub" id="step-eyebrow-sub"></a></span>
-    <span class="head-sync" id="head-sync"></span>
     <!-- §14-1 每一頁自己的標題、副標與右上角一顆主要動作，全部由 VIEW_HEAD 決定 -->
     <div class="head-row">
       <div class="head-main">
@@ -3014,7 +3050,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
           <div class="home-sect-head">
             <label style="margin:0">客戶</label>
             <span class="hint" id="home-cli-sub"></span>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="goClients()">客戶列表 →</button>
+            <!-- R24：原本寫「客戶列表 →」，但 goClients() 在桌機是直接開某一位客戶的頁面，
+                 標籤跟行為對不上。改成「客戶 →」，兩種版面都說得通。 -->
+            <button type="button" class="btn btn-ghost btn-sm" onclick="goClients()">客戶 →</button>
           </div>
           <div class="home-cli" id="home-cli"></div>
         </section>
@@ -3452,17 +3490,6 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <input type="file" id="restoreFile" accept="application/json" class="hidden" onchange="restoreJSON(event)">
       </div>
     </div>
-    <!-- R9d（2026-09-05）：一次性補值。**管理者限定**，整張卡非管理者看不到。
-         走跟 backupAllUsers() 同一個 isAdmin() 判定，不新增權限機制。 -->
-    <div class="card hidden" id="fill-card">
-      <label style="margin-top:0">一次性維護：把沒有推進感分數的舊紀錄補成 7</label>
-      <div class="sub-note" id="fill-note"></div>
-      <div class="actions" style="margin-top:10px">
-        <button class="btn btn-ghost" onclick="previewFillScores()">先看看會改幾筆</button>
-        <button class="btn btn-ghost hidden" id="fill-go" onclick="fillMissingScores()">補上去（一次性，會先下載備份）</button>
-      </div>
-      <div id="fill-out"></div>
-    </div>
   </div>
 
   <!-- ===== S7 帳號與權限（第 8 批）=====
@@ -3563,33 +3590,15 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       </div>
       <div class="stat4" id="client-stats"></div>
     </div>
-    <!-- S4（2026-09-02）區塊順序照設計稿：統計卡 → 自評趨勢＋職能覆蓋（兩欄）→ 每一場。
-         「每一場」原本排在統計卡後面，現在移到兩欄那組的下面（見本檔後段）。
-         桌機兩欄是既有的 `#view-client-detail` grid（1.35fr / 1fr）在排，
-         這裡**只動 DOM 順序**，那段 CSS 一個字都沒改。 -->
-    <!-- 2. 自評趨勢（M2 2026-08-28：原本與 recap 卡並排兩欄，recap 撤下後改為整欄，
-         否則第二欄會留一塊空白——跟 #acc-list 同一種殘留） -->
-    <div class="card" id="client-chart-card">
-      <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
-      <div class="chart-box" id="clientChart"></div>
-    </div>
-    <!-- L4（V3 第 4 批）：這位客戶的職能覆蓋。八列橫條，照設計稿 isClient。
-         R9-J（2026-09-04）換指標：現在是「做到的場次／評估過的場次」，
-         資料走 clientCompetencyRate()＋accSt()，不再走 markerHitStats()。
-         舊指標（標到幾條／39 條）幾乎永遠滿格，那張圖沒有訊號。 -->
-    <div class="card" id="client-cov-card">
-      <label style="margin-top:0">這位客戶的職能覆蓋</label>
-      <div class="sub-note" id="cov-sub"></div>
-      <div id="cov-rows"></div>
-    </div>
-    <!-- 4. 每一場（S4：搬到兩欄那組下面。S5：一列四格，每列可點進單場詳情） -->
+    <!-- R26（2026-09-09，Yi-En）：各次會談原本排在兩張分析卡之後，標題又叫
+         「旅程中的議題」，整列雖可點卻沒有任何進入提示，使用者一眼找不到入口。
+         這張卡移到客戶資料正下方，先讓人找到紀錄；資料與排序完全不動。 -->
     <div class="card" id="client-sess-card">
-      <!-- E1（2026-09-04 Yi-En）：「每一場」改名「旅程中的議題」。 -->
-      <label style="margin-top:0">旅程中的議題 <span class="hint" id="cd-sess-count"></span></label>
+      <label style="margin-top:0">各次會談 <span class="hint" id="cd-sess-count"></span></label>
+      <div class="sub-note cd-sess-tip">點一場查看完整記錄</div>
       <div id="client-recs"></div>
-      <!-- E2：兩個預設收合的區塊，資料分別是既有的 clientQuote 與 v14 的 affirm。
-           放在同一張卡裡而不是各開一張：它們講的是同一段旅程的三個面向
-           （談了什麼／他說了什麼／我看見他什麼）。 -->
+      <!-- 兩個預設收合的區塊，資料分別是既有的 clientQuote 與 affirm。
+           放在同一張卡裡，仍然是這段旅程的三個面向。 -->
       <div class="jsec">
         <button type="button" class="jsec-head" onclick="toggleJSec('quote')">
           <span class="jsec-arrow" id="jsec-quote-arrow">▸</span>
@@ -3606,6 +3615,25 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         </button>
         <div class="jsec-body collapsed" id="jsec-affirm-body"></div>
       </div>
+    </div>
+    <!-- S4（2026-09-02）區塊順序照設計稿：統計卡 → 自評趨勢＋職能覆蓋（兩欄）→ 每一場。
+         R26 已由 Yi-En 改為：統計卡 → 各次會談 → 自評趨勢＋職能覆蓋。
+         桌機兩欄是既有的 `#view-client-detail` grid（1.35fr / 1fr）在排，
+         這裡**只動 DOM 順序**，那段 CSS 一個字都沒改。 -->
+    <!-- 2. 自評趨勢（M2 2026-08-28：原本與 recap 卡並排兩欄，recap 撤下後改為整欄，
+         否則第二欄會留一塊空白——跟 #acc-list 同一種殘留） -->
+    <div class="card" id="client-chart-card">
+      <label style="margin-top:0">自評趨勢 <span class="hint">依會談時間排序</span></label>
+      <div class="chart-box" id="clientChart"></div>
+    </div>
+    <!-- L4（V3 第 4 批）：這位客戶的職能覆蓋。八列橫條，照設計稿 isClient。
+         R9-J（2026-09-04）換指標：現在是「做到的場次／評估過的場次」，
+         資料走 clientCompetencyRate()＋accSt()，不再走 markerHitStats()。
+         舊指標（標到幾條／39 條）幾乎永遠滿格，那張圖沒有訊號。 -->
+    <div class="card" id="client-cov-card">
+      <label style="margin-top:0">這位客戶的職能覆蓋</label>
+      <div class="sub-note" id="cov-sub"></div>
+      <div id="cov-rows"></div>
     </div>
     <div class="card" id="client-info"></div>
     <!-- B4（R14-B）：桌機（≥1024）已經沒有「客戶列表」這個獨立畫面了
@@ -4372,7 +4400,6 @@ async function syncPull(){
          先前這裡是直接 setItem，離線期間在這台裝置上寫的東西會在下次登入時整批消失。 */
       mergeCloud(JSON.parse(snap.data().payload));
       localStorage.setItem(SKEY, String(snap.data().updated_at || Date.now()));
-      renderHeadSync();
       pulled = true;
     } else {
       await pushCloud(); // 雲端還沒資料，把本機的推上去
@@ -4469,7 +4496,6 @@ function pushCloudKeepalive(){
   return req.then(res=>{
     if (!res.ok) throw new Error('Firestore REST ' + res.status);
     localStorage.setItem(SKEY, String(now));
-    renderHeadSync();
     if (cloudPayloadJSON() === payload) cloudDirty = false;
     pushFailed = false;
     return true;
@@ -4496,7 +4522,6 @@ async function pushCloud(){
     const payload = cloudPayloadJSON();
     await fb.fsMod.setDoc(ref, { payload, updated_at: now }, { merge: true });
     localStorage.setItem(SKEY, String(now));
-    renderHeadSync();
     if (cloudPayloadJSON() === payload) cloudDirty = false;
     pushFailed = false;
   } catch(e){
@@ -5619,110 +5644,6 @@ function renderAdminBackup(){
   document.querySelectorAll('.js-admin-backup').forEach(el => { el.innerHTML = html; });
   const card = document.getElementById('acct-admin');
   if (card) card.classList.toggle('hidden', !isAdmin());
-  /* R9d 那張卡跟這裡同一個判定、同一個更新點——兩個地方各自判定 isAdmin()
-     遲早會有一邊忘了更新（S7 那次寫死 id 就是這樣踩的）。 */
-  renderFillCard();
-}
-/* ═══ R9d（2026-09-05）一次性補值：把沒有推進感分數的舊紀錄補成 7 ═══
-   **來由**：她原本說「舊紀錄要補，我沒發現原來沒有預設七分，都要補」。
-   查了程式才發現缺值**不是**因為改掉預設值——`progress` 是 2026-08-24 才有的欄位，
-   在那之前的場次**記錄當下根本沒有這一題**。把這件事告訴她之後，
-   她的裁決是「**只補我自己的**」。
-
-   所以這裡有三條刻意的限制，改動前請先讀懂為什麼：
-   1. **不是遷移。** 不進 runMigrations()、不動 SCHEMA_VER（payload 形狀沒變）。
-      遷移會在每一台裝置上跑，等於連帶改到其他 17 位教練的資料——那正是她排除掉的做法。
-   2. **管理者限定。** 走既有的 isAdmin()，不新增權限機制。
-   3. **兩步驟，不合併成一鍵。** 先只讀地看會改幾筆，確認之後才寫；
-      而且寫之前一定先下載一份備份，備份不成功就中止。
-
-   **不加任何標記欄位**：她要的就是「這些場次就是 7」。加一個「這是補的」欄位
-   等於新增鍵名（§七-8），也讓她的資料多一個她沒要的東西。
-   做了什麼、哪一天做的，寫在按鈕旁邊的說明文字裡。 */
-const FILL_KEYS = ['progress', 'perf'];
-const FILL_VALUE = '7';
-/* 缺值的判定只有這一份，預覽與實補共用——兩邊各寫一次，遲早會不一致。
-   ⚠ `0` 不算缺值：那是她給的分數。`'' `／null／undefined／整個沒有這個鍵才算。 */
-function fillMissing(recs, k){
-  return (recs || []).filter(r => {
-    const v = r[k];
-    return v === undefined || v === null || String(v).trim() === '';
-  });
-}
-function fillStats(){
-  const recs = load();
-  const out = { total: recs.length };
-  FILL_KEYS.forEach(k => { out[k] = fillMissing(recs, k); });
-  return out;
-}
-function previewFillScores(){
-  if (!isAdmin()) { toast('只有管理者可以用這個'); return; }
-  const st = fillStats();
-  const box = document.getElementById('fill-out');
-  const go  = document.getElementById('fill-go');
-  /* 數字一律從結果推導，不手寫（§七-10）。 */
-  const line = k => {
-    const rs = st[k];
-    const name = k === 'progress' ? '推進感' : '專注程度';
-    if (!rs.length) return '<div class="jrow"><span class="jrow-when">' + name
-      + '</span><span class="jrow-txt">一筆都不缺，不需要補。</span></div>';
-    const days = rs.map(r => String(r.date || '（沒有日期）'))
-                   .sort().join('、');
-    return '<div class="jrow"><span class="jrow-when">' + name + '</span>'
-      + '<span class="jrow-txt">' + rs.length + ' 筆缺值（共 ' + st.total + ' 筆）：'
-      + esc(days) + '</span></div>';
-  };
-  box.innerHTML = '<div class="sub-note" style="margin-top:10px">'
-    + '這一步只有讀取，什麼都沒有改。</div>' + FILL_KEYS.map(line).join('');
-  const n = FILL_KEYS.reduce((a, k) => a + st[k].length, 0);
-  /* 一筆都不缺就不要給她一顆會寫入的按鈕 */
-  if (go) go.classList.toggle('hidden', n === 0);
-}
-function fillMissingScores(){
-  if (!isAdmin()) { toast('只有管理者可以用這個'); return; }
-  const before = fillStats();
-  const n = FILL_KEYS.reduce((a, k) => a + before[k].length, 0);
-  if (!n) { toast('沒有需要補的紀錄'); return; }
-  if (!confirm('會把 ' + n + ' 個缺值補成 ' + FILL_VALUE
-    + '。\n按下確定會先下載一份備份，再開始補。')) return;
-  /* D4：先備份。走既有的 backupJSON()，不另寫一套匯出——
-     另寫一套的話，備份格式會跟正式的那份漂移，還原時才發現就來不及了。
-     **備份丟例外就中止，一個位元組都不寫。** */
-  try { backupJSON(); }
-  catch (e) { toast('備份沒有成功，所以沒有補任何東西'); return; }
-  const arr = load();
-  let done = 0;
-  FILL_KEYS.forEach(k => {
-    /* 重新從 arr 上判定，不用 before 存的參考——中途若有同步進來的變動，
-       以當下磁碟上的為準。已經有值的一律不碰，包含值是 0 的。 */
-    fillMissing(arr, k).forEach(r => { r[k] = FILL_VALUE; done++; });
-  });
-  store(arr);
-  updateCount();
-  toast('補好了，共 ' + done + ' 個值');   /* D7：數字從結果推導 */
-  previewFillScores();
-}
-/* 管理者才看得到整張卡（非管理者連 DOM 都不會有內容），
-   說明文字寫清楚它做了什麼、哪一天做的。 */
-function renderFillCard(){
-  const card = document.getElementById('fill-card');
-  if (!card) return;
-  card.classList.toggle('hidden', !isAdmin());
-  const note = document.getElementById('fill-note');
-  /* 這段字**她自己會讀到**，所以有兩件事不可以再犯（2026-09-05 SPEC 指出）：
-     1. 不要用第三人稱轉述她（「她要的就是…」）——那是寫給看程式的人的話，
-        跑到她的畫面上就變成在她面前討論她。要說的話對她說。
-     2. 不要寫「只改這台」——補完會同步上雲端，其他裝置也會拿到。
-        講範圍要講**帳號**，不是裝置。
-     排序也照她最需要先知道的：發生了什麼 → 這顆會做什麼 → 這是一次性的。 */
-  if (note) note.textContent = [
-    '2026-08-24 以前的場次沒有「推進感」這一題，所以那些紀錄的分數是空的——不是 0，是沒有。',
-    '',
-    '這顆會把空的補成 7。已經有分數的一律不動，包含 0。'
-      + '只動你自己的帳號，其他使用者不受影響。補完之後看不出哪些是補的。',
-    '',
-    '這是一次性的維護動作，做過一次就不用再做。'
-  ].join('\n');
 }
 
 /* S7 帳號與權限：**四樣全部是既有功能搬過來**，一個新機制都沒有。
@@ -6302,7 +6223,7 @@ function renderAccNav(){
     return '<button type="button" class="acc-navrow' + (i === _curAcc ? ' on' : '') + '"'
       + ' data-i="' + i + '" onclick="showAccItem(' + i + ')">'
       + '<span class="an-dot" data-st="' + st + '" title="' + esc(stLabel(st)) + '"></span>'
-      + '<span class="an-body"><span class="an-name">' + accIconHTML(i) + '<span class="acc-label">' + esc(accName(i)) + '</span></span></span>'
+      + '<span class="an-body"><span class="an-name">' + accIconHTML(i) + '<span class="acc-label">' + esc(accName(i)) + '</span></span>'
       + '<span class="an-meta">ACC ' + c.accOn + '/' + c.accTotal
       + ' · PCC ' + c.pccOn + '/' + c.pccTotal + '</span></span></button>';
   }).join('');
@@ -6521,23 +6442,6 @@ function histHeadSub(){
   return c.n + ' 場紀錄 · ' + c.clients + ' 位客戶'
        + (c.last ? ' · 最近一場 ' + c.last : '');
 }
-/* R15-C：SKEY 存的是 epoch 毫秒——pullCloud 寫的是雲端 updated_at、pushCloud 寫 Date.now()，
-   兩處都已核對過是 Date.now() 的單位。沒有值就回空字串，本機模式的人看不到任何一句話。 */
-function syncedAtText(){
-  const t = parseInt(localStorage.getItem(SKEY), 10) || 0;
-  if (!t) return '';
-  const d = new Date(t), now = new Date();
-  const hm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-  const key = x => x.getFullYear() + '-' + x.getMonth() + '-' + x.getDate();
-  const yest = new Date(now); yest.setDate(now.getDate() - 1);
-  if (key(d) === key(now))  return '資料更新於 今天 ' + hm;
-  if (key(d) === key(yest)) return '資料更新於 昨天 ' + hm;
-  return '資料更新於 ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
-}
-function renderHeadSync(){
-  const el = document.getElementById('head-sync');
-  if (el) el.textContent = syncedAtText();
-}
 function detailHead(){
   const r = load().find(x=>x.id === currentId);
   if (!r) return '這一場';
@@ -6683,7 +6587,6 @@ function syncActionBarH(){
   document.documentElement.style.setProperty('--ab-h', h + 'px');
 }
 function applyPageHead(v){
-  renderHeadSync();
   const key = v === 'new' ? (formStep === 2 ? 'new2' : formStep === 0 ? 'new0' : 'new1') : v;
   const cfg = VIEW_HEAD[key] || VIEW_HEAD.new1;
   const h1 = document.getElementById('page-h1');
@@ -8104,7 +8007,7 @@ function renderAccCum(){
          「分母」這個詞沒有可指的東西了——照原字留著反而不符合她當初要的效果。
          改成直接講顏色在比什麼。**她 09-05 裁決的是「要有一個說明解釋顏色」這件事，
          不是那 12 個字**；換句話是讓那個決定繼續成立，不是推翻它。 */
-      + '<span class="hm-legend-den">顏色比的是你評估過那一項的場次</span>'
+
     + '</div>'
     /* R10-2（2026-09-05 Yi-En：「不需要分基礎跟會談中，直接 1 到 8 列出來就對了」）：
        兩個分區標題拿掉，八列連續。MK_BASE_COUNT 沒有刪——它是 ICF 的分組事實，
@@ -9280,7 +9183,7 @@ function openClient(id){
         const num = parseSessionNum(r.session);
         const numTxt = num ? '第 ' + num + ' 次' : (String(r.session || '').trim());
         const tp = topicText(r);
-        return '<div class="cdrow" onclick="openDetail(' + r.id + ',\'client\')">'
+        return '<button type="button" class="cdrow" onclick="openDetail(' + r.id + ',\'client\')">'
           + '<span class="cdrow-date">' + esc(mdStr(r.date) || '—') + '</span>'
           + '<span class="cdrow-n">' + esc(numTxt) + '</span>'
           + '<span class="cdrow-topic' + (tp ? '' : ' none') + '">'
@@ -9289,7 +9192,8 @@ function openClient(id){
              有標記與沒標記的兩列議題欄寬度不一樣，看起來像壞掉。
              沒有標記時留空（由 .cdrow-mk:empty 收起來），不寫「0 條標記」。 */
           + '<span class="cdrow-mk">' + (mk.total ? mk.total + ' 條標記' : '') + '</span>'
-        + '</div>';
+          + '<span class="cdrow-arrow" aria-hidden="true">›</span>'
+        + '</button>';
       }).join('')
     : '<div class="acc-none">這位客戶還沒有紀錄。</div>';
 
@@ -9297,7 +9201,7 @@ function openClient(id){
      clientRecapRows()／copyClientRecap() 暫留在相容層，等確認無其他依賴再清死碼。 */
 
   renderClientCoverage(rs);
-  /* E：兩個收合區跟「旅程中的議題」同一份 rs（舊→新），不另外查一次。
+  /* E：兩個收合區跟「各次會談」同一份 rs（舊→新），不另外查一次。
      每次進客戶頁都重新渲染＝重新收起來，這是 E5 要的（狀態不留存）。 */
   Object.keys(JSECS).forEach(k => {
     renderJSec(k, rs);
@@ -9377,8 +9281,10 @@ function renderJSec(kind, rs){
         const n = sessionNum(r.session);
         /* 日期格式與首頁客戶卡、右欄旅程一致，不另外長一種 */
         const d = String(r.date || '').slice(5).replace('-', '/').replace(/^0/, '');
-        return '<div class="jrow"><span class="jrow-when">' + esc(d)
-          + (n != null ? '　第 ' + n + ' 次' : '') + '</span>'
+        /* R22：日期與「第 N 次」拆成兩格，欄寬跟「各次會談」那一區完全一樣。
+           擠在一格裡的話 76px 裝不下，「次」會被折到第二行。 */
+        return '<div class="jrow"><span class="jrow-d">' + esc(d) + '</span>'
+          + '<span class="jrow-n">' + (n != null ? '第 ' + n + ' 次' : '') + '</span>'
           + '<span class="jrow-txt">' + esc(v) + '</span></div>';
       }).join('')
     : '<div class="acc-none">' + empty + '</div>';
@@ -10134,7 +10040,11 @@ function startClientRecord(cid){
   if (d) d.focus();
   if (c) toast('已帶入 ' + c.code + '，日期與場次先填好了');
 }
-const HOME_CLIENT_N = 6;      /* 首頁只放前 6 位（設計稿就是 6 張）；看全部走客戶頁 */
+/* R24（2026-09-09，Yi-En）：「這一頁的格子要排出所有正在進行中的客戶」。
+   原本截前 6 位（設計稿的張數），底下再掛一顆「還有 N 位，看客戶列表 →」——
+   而那顆去的是 showView('clients') 的卡牆，正是她 R14-B 從桌機拿掉的那一面。
+   現在改成：進行中的全部列出來，已結案的不列（走側欄「客戶」看）。 */
+const HOME_CLIENT_N = 6;      /* 已不再用來截斷，保留常數避免其他引用點壞掉 */
 const HOME_BAR_N    = 6;      /* 每張客戶卡的迷你長條：最近 6 場的推進感 */
 function homeStatCard(label, big, foot){
   return '<div class="hstat"><div class="hstat-l">' + esc(label) + '</div>'
@@ -10235,8 +10145,11 @@ function renderHomeClients(){
   const sub = document.getElementById('home-cli-sub');
   if (!box) return;
   const cs = loadC();
+  /* R24：這句的數字要跟畫面上真的排出來的張數一致，不能再用 clientCount()（那是全部）。
+     算法只有一個來源：下面 info 的長度。 */
+  const activeN = cs.filter(c => c.status !== 'closed').length;
   if (sub) sub.textContent = cs.length
-    ? clientCount() + ' 位 · 點一位進去看他的所有場次' : '';
+    ? activeN + ' 位進行中 · 點一位進去看他的所有場次' : '';
   if (!cs.length){
     box.innerHTML = '<div class="acc-none">還沒有客戶。記下第一場的時候可以順手建一位（用代號就好）。</div>';
     return;
@@ -10244,9 +10157,10 @@ function renderHomeClients(){
   /* 排序跟客戶頁一致（進行中在前、最近一場新的在前），不另訂一套。
      R3-1a：這句話以前是假的——這裡曾經複製了一份一模一樣的 sort。
      現在兩處都呼叫 sortClientInfo()，改一處兩頁一起動。 */
-  const info = sortClientInfo(cs.map(c => ({ c: c, st: clientStats(c.id) })));
-  const more = info.length - Math.min(info.length, HOME_CLIENT_N);
-  box.innerHTML = info.slice(0, HOME_CLIENT_N).map(x => {
+  /* R24：只留進行中的。sortClientInfo 本來就把結案的排到最後，這裡直接濾掉。 */
+  const info = sortClientInfo(cs.filter(c => c.status !== 'closed')
+                                .map(c => ({ c: c, st: clientStats(c.id) })));
+  box.innerHTML = info.map(x => {
     const rs = x.st.rs;                     /* clientStats 已經照日期新到舊排好 */
     const last = rs[0] || null;
     const sn = last ? sessionNum(last.session) : null;
@@ -10284,9 +10198,7 @@ function renderHomeClients(){
           + (ap === null ? '' : ' · 推進感 ' + ap.toFixed(1)) + '</span>'
       + '</span>'
     + '</button>';
-  }).join('')
-  + (more > 0 ? '<div class="hcli-more"><button type="button" class="btn btn-ghost btn-sm" '
-      + 'onclick="showView(\'clients\')">還有 ' + more + ' 位，看客戶列表 →</button></div>' : '');
+  }).join('');
 }
 function renderHomeSide(){
   const recs = load();
