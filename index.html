@@ -566,7 +566,8 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
    問題成因：DOM 先畫 .page-head 再畫含 .nav-brand 的 .tabs，手機自然把站名塞在頁標題下面；
    而七個頁面連結用 flex-wrap 鋪成多排大按鈕，佔掉整個首屏。
    做法照 Material 3 自適應導覽：小螢幕用 modal drawer，大螢幕保留 permanent sidebar。
-   桌機（≥1024px）整組手機件隱藏，側欄與版面完全不動。 */
+   R34：一般 Mac 非全螢幕視窗約 966px，不應被當成手機。
+   外殼改為 ≥900px 保留窄側欄；內容頁原有 1024px 排版斷點不一律改動。 */
 .appbar {
   position: sticky; top: 0; z-index: 60;
   /* 拉出 #app 的左右與上方內距，讓頂欄貼滿螢幕寬度（負 margin 對應 #app 的 padding） */
@@ -606,7 +607,7 @@ input:not([type=checkbox]):not([type=radio]), textarea, select { width: 100%; mi
 body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景捲動 */
 
 /* 手機：.tabs 變成 modal drawer，預設收在畫面外 */
-@media (max-width: 1023.98px) {
+@media (max-width: 899.98px) {
   .tabs {
     position: fixed; top: 0; bottom: 0; left: 0; z-index: 80;
     width: min(84vw, 300px); margin: 0; padding: 20px 14px 24px;
@@ -636,14 +637,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .nav-foot { display: block; margin-top: auto; padding-top: 14px; }
 }
 /* 桌機：手機件全部不存在 */
-@media (max-width: 1023.98px) {
+@media (max-width: 899.98px) {
   /* 頂欄是 sticky（min-height 52px ＋ 1px 框線）。步驟 1 右欄導覽用 scrollToSeg() 捲過去時，
      段落標題會剛好落在頂欄底下（實測 top=23 vs 頂欄底 61），所以留一個頂欄的高度。
      桌機沒有頂欄，不需要這個位移。
      抽屜的「資料與備份」是頁尾最後一張卡，捲到底就停住、蓋不到，不必也不能靠這條。 */
   [data-fold] { scroll-margin-top: 64px; }
 }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .appbar, .nav-scrim, .drawer-close { display: none !important; }
 }
 
@@ -659,8 +660,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   }
 }
 
-/* ===== §6 桌機版與三個斷點（1180 / 1024 / 以下走手機版） ===== */
-@media (min-width: 1024px) {
+/* ===== §6 桌機外殼與三個斷點（1180 / 1100 / 900） ===== */
+@media (min-width: 900px) {
   body { font-size: 16px; }
   /* 側欄是 fixed，主內容用左內距讓出它的寬度。外框寬取「內容最大寬＋側欄寬」，
      margin:0 auto 之後，內容在側欄右側那塊區域裡置中——等同設計稿的
@@ -723,7 +724,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   #acc-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 9px; align-items: stretch; }
   #acc-list .acc-item { margin-bottom: 0; display: flex; flex-direction: column; }
 }
-@media (min-width: 1024px) and (max-width: 1099.98px) {
+@media (min-width: 900px) and (max-width: 1099.98px) {
   /* ICF 改 1 欄，側欄收成短標籤（不用 emoji 當功能圖示） */
   #app { --app-pt: 24px; --app-px: 20px;
          max-width: none; margin: 0; padding: var(--app-pt) var(--app-px) 60px calc(var(--nav-w-narrow) + var(--app-px)); }
@@ -1081,7 +1082,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .nav-group { display: none; }
 .credcard { display: none; }
 .tab-soon { opacity: .45; cursor: not-allowed; }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .tabs { align-items: stretch; }
   /* 群組之間 26px、群組內 2px（.tabs 的 gap）——設計稿側欄的節奏 */
   .nav-group {
@@ -1138,7 +1139,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .cc-miss { font-size: 11px; color: var(--cc-bar); line-height: 1.55; margin-top: 6px; }
   .cc-miss:empty { display: none; }
 }
-@media (min-width: 1024px) and (max-width: 1099.98px) {
+@media (min-width: 900px) and (max-width: 1099.98px) {
   /* 側欄收成 76px，卡片只留時數與進度條。
      ACC／PCC 兩顆並排會超出 76px 的內容寬，這裡改成上下疊。 */
   .credcard { padding: 7px 5px 8px; }
@@ -1490,7 +1491,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .nav-ico svg { width: 100%; height: 100%; display: block; }
 /* 選中的分頁是深底，徽章跟著吃分頁的文字色，否則灰字在深底上讀不到 */
 .tab.active .nav-badge { color: var(--surface); opacity: 1; }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   /* 手機版的 flex:1 1 100% 是為了換行版面；在直向側欄裡 grow:1 會把品牌區
      撐成一大塊，把認證卡與導覽整個往下推。桌機一律不長不縮。 */
   .nav-brand { display: block; flex: 0 0 auto; padding: 0 8px; }
@@ -1505,7 +1506,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .nav-foot-links a { color: var(--ink-3); font-weight: 400; cursor: pointer; }
   .nav-foot-links a:hover { color: var(--ink-2); }
 }
-@media (min-width: 1024px) and (max-width: 1099.98px) {
+@media (min-width: 900px) and (max-width: 1099.98px) {
   .nav-brand, .nav-foot-links { display: none; }
   .nav-foot { padding: 10px 4px 4px; text-align: center; }
   /* 76px 寬放不下「v5.0 · 本機模式」一整行，拆兩行，中間那個點就不需要了 */
@@ -1541,7 +1542,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 /* 沒有副標的頁面（首頁）必須整塊消失：.sub 帶 margin-bottom:14px，
    只是文字空的話仍會撐出 14px＋head-main 的 5px gap，h1 與右上按鈕就對不齊。 */
 #page-sub:empty { display: none; }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   /* 26px 只在桌機套用：設計稿只畫 1440px，手機沿用既有 20px，避免窄螢幕標題換行破版 */
   #page-h1 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.3; }
 }
@@ -1717,12 +1718,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 
 /* ═══ C 類：手機的底部固定操作列 ══════════════════════════
    2026-08-28（Yi-En：「像 Facebook 那樣，最下面一排是固定的」）。
-   桌機（≥1024px）整條隱藏，頁首右上照舊——桌機沒有「拇指搆不到頂端」的問題，
+   桌機外殼（≥900px）整條隱藏，頁首右上照舊——桌機沒有「拇指搆不到頂端」的問題，
    固定列反而吃掉版面高度。
    env(safe-area-inset-bottom) 是為了 iPhone 底部那條 home indicator，
    不加的話最後一顆鈕會被它蓋住一半。 */
 .action-bar { display: none; }
-@media (max-width: 1023.98px) {
+@media (max-width: 899.98px) {
   .action-bar {
     /* 2026-08-29：職能標記頁那條有四個東西（ACC 籤／PCC 籤／儲存／回會談記錄），
        在 375px 內容寬 386px，最後一顆被切掉 11px。按鈕是 white-space: nowrap，
@@ -1765,12 +1766,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    實測各區塊：群組標題 4 個共 193px（每個高 24 卻帶 24 上邊距，是最大的一塊）、
    分頁鈕 8 個 296px、認證卡 177px、側欄 padding 56px、頁尾 71px、站名 25px。
    只在螢幕矮的時候收緊，高螢幕維持原本的舒適間距。 */
-@media (min-width: 1024px) and (max-height: 900px) {
+@media (min-width: 900px) and (max-height: 900px) {
   .tabs { padding-top: 22px; padding-bottom: 16px; }
   .nav-group { margin-top: 12px; }
   #credcard { margin-top: 18px; }
 }
-@media (min-width: 1024px) and (max-height: 860px) {
+@media (min-width: 900px) and (max-height: 860px) {
   /* 這一段涵蓋最常見的 MacBook 瀏覽器視窗高（約 789px）。實測只收緊間距還差 30px，
      所以把認證卡的大數字與頁尾也一起壓，剛好塞得下，八個分頁與頁尾全部看得到。 */
   .tabs .tab { padding-top: 7px; padding-bottom: 7px; }
@@ -1821,7 +1822,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    要蓋掉前面 §7（.nav-group）、§13-E（.nav-foot/.nav-badge）與 575 行起的 .tabs/.tab。
    同特異性時後出現者勝——寫在前面會被蓋掉（lessons 2026-08-29 一天踩四次那條）。
 
-   全部包在 min-width:1024px：手機的側欄是抽屜（530 行那一段），
+   R34 起外殼包在 min-width:900px：手機的側欄才是抽屜，
    深色會蓋掉底部固定列，所以手機一個字都不動。
 
    ── 對比度：設計稿有三個值達不到交接包自己要求的 4.5:1 ──
@@ -1833,7 +1834,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    並保留三階層次（項目 .72 ＞ 品牌與底部 .60 ＞ 分組標題與徽章 .55）。
    **這是唯一偏離設計稿的地方，R2 請 Yi-En 看一眼再決定要不要退回設計值。**
    ═══════════════════════════════════════════════════════════════════ */
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .tabs {
     background: #2C2A28;
     border-right: 1px solid rgba(239,235,228,.12);
@@ -1909,7 +1910,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    抽屜「開著的時候」蓋住底部列是 modal 本來就該有的行為，不是缺陷；
    抽屜收起來時 transform: translateX(-100%) 整個在畫面外，蓋不到任何東西。
    這裡只換顏色，不動 z-index、不動 transform、不動 --ab-h 那套實測高度。 */
-@media (max-width: 1023.98px) {
+@media (max-width: 899.98px) {
   .tabs {
     background: #2C2A28;
     border-right: 1px solid rgba(239,235,228,.12);
@@ -1980,7 +1981,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums;
   white-space: nowrap; min-width: 54px; text-align: right;
 }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   /* L2：客戶詳情桌機兩欄 1.35fr 1fr（設計稿 isClient 唯一那個 1.35fr 1fr，
      底下裝的就是「自評趨勢 ｜ 職能覆蓋」）。
      右欄同樣不寫死（第 2 批的教訓），只給比例。 */
@@ -1998,7 +1999,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
        · `showView()` 的語意沒有改（仍然一次一個 view）
        · 導覽堆疊沒有改 → §31 的 navPush／navRestore 八條不受影響
        · 在客戶詳情按上一頁 → 照舊回到「客戶列表」（卡牆），行為與現在完全相同
-     手機（<1024）整段不生效：仍然整頁換詳情、按「返回客戶列表」才換人。
+     R34 起手機（<900）整段不生效：仍然整頁換詳情、按「返回客戶列表」才換人。
 
      `.hidden` 帶 `!important`，所以這裡也要 `!important` 才蓋得掉；
      選擇器特異性 (0,2,1) 高於 `.hidden` 的 (0,1,0)，加上寫在樣式表尾端，兩層都贏。 */
@@ -2022,6 +2023,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   body[data-view="clientdetail"] .ccard.on {
     border-color: var(--warm); box-shadow: inset 3px 0 0 var(--warm);
   }
+}
+/* R34：900–1023px 保留左清單＋右詳情，但右欄內部不再分兩層。
+   這段的右欄實測只剩約 486px，再把趨勢與職能覆蓋並排會太擠。 */
+@media (min-width: 900px) and (max-width: 1023.98px) {
+  body[data-view="clientdetail"] #view-client-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body[data-view="clientdetail"] #view-client-detail > * { grid-column: 1; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2424,26 +2433,26 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 }
 
 /* ═══ S7（2026-09-02）客戶詳情頁首 ═══
-   桌機（≥1024，＝左欄清單存在的那個斷點）：眉標「客戶」、h1「客戶與進展」，
+   桌機外殼（≥900，＝左欄清單存在的那個斷點）：眉標「客戶」、h1「客戶與進展」，
      沒有「← 回客戶列表」（左欄本身就是列表），副標也不重複（S7-3：那串已經在 S2 標題列）。
-   手機（<1024）：**維持現況**——h1 是客戶代號、返回連結在、副標在。
+   手機（<900）：**維持現況**——h1 是客戶代號、返回連結在、副標在。
      這一條是硬要求：手機沒有左欄，拿掉返回連結會讓人出不去。
-   斷點刻意跟 L1 master-detail 那段（min-width:1024）用同一個值：
+   斷點刻意跟 L1 master-detail 那段（min-width:900）用同一個值：
      左欄在不在，決定的就是「還需不需要返回連結」。 */
 .ph-wide { display: none; }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   body[data-view="clientdetail"] .ph-narrow { display: none; }
   body[data-view="clientdetail"] .ph-wide   { display: inline; }
   body[data-view="clientdetail"] #page-back { display: none; }
   body[data-view="clientdetail"] #page-sub  { display: none; }
 }
-@media (max-width: 1023px) {
+@media (max-width: 899px) {
   /* 手機的眉標「客戶」不顯示：h1 已經是客戶代號，再寫一行「客戶」是重複的 */
   body[data-view="clientdetail"] .step-eyebrow { display: none; }
 }
 
 /* ═══ S6（2026-09-02）兩欄模式的左欄清單 ═══
-   **只在 body[data-view="clientdetail"] 且 ≥1024 生效**（S6-3）。
+   **只在 body[data-view="clientdetail"] 且 ≥900 生效**（S6-3）。
    卡牆那一頁（沒選人時）是第 4 批做的，這一段一個選擇器都碰不到它——
    多渲染的 .ccard-av／.ccard-meta-side／.clist-side 預設就是 display:none。
    設計稿值：頭像 32×32 radius 11px 13px/700；代號 14px/700；meta 11px rgb(95,88,80)；
@@ -2452,7 +2461,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .ccard-av, .ccard-meta-side, .clist-side { display: none; }
 .clist-head { display: flex; align-items: center; gap: 8px; }
 .clist-head .clist-new { display: none; }
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   body[data-view="clientdetail"] .clist-wall { display: none; }
   body[data-view="clientdetail"] .clist-side {
     display: block; font-size: 10.5px; font-weight: 700;
@@ -2892,7 +2901,7 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    跟左欄內容一樣的卡牆——那正是她說不需要的東西。
    手機不收：那是沒有左欄的人唯一的出口（S7-2 已經有守衛釘著頁首那顆）。
    收整列而不是只收按鈕：只收按鈕的話 .actions 的外距還在，底下會多一塊空白。 */
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   body[data-view="clientdetail"] #cd-back-row { display: none; }
 }
 
@@ -9046,21 +9055,21 @@ function copyClientRecap(id){
 /* ── R14-B（2026-09-06 Yi-En）：桌機不再把客戶卡牆當進入點 ──────────────
    她的原話：「我希望左欄按客戶，就是這一頁就好了，不需要還有所有客戶的
    一格一格、一張一張的卡片」。
-   桌機（≥1024）本來就有 master-detail 版面：左欄 280px 是同一份客戶清單、
+   桌機外殼（≥900）有 master-detail 版面：左欄 280px 是同一份客戶清單、
    右欄是詳情。卡牆那一頁在桌機上等於把同一份清單再看一次，多一次點擊。
    所以**只換進入點**，其他一律不動：
-     · ≥1024 → 直接 openClient(某一位)，左欄清單照樣在（B1）
-     · <1024 → 維持現狀：先看清單、點一位進詳情（B2。她說手機沒偏好 → 選風險最低的）
+     · ≥900 → 直接 openClient(某一位)，左欄清單照樣在（B1）
+     · <900 → 維持現狀：先看清單、點一位進詳情（B2）
      · 卡牆 #view-clients **一個字都沒改**，手機還在用它（B3）
      · showView() 的語意沒改、navPush／navRestore 沒改（B5）——
        這裡只是換一個「誰去呼叫 showView」的入口
      · 一位客戶都還沒有時仍然去卡牆：「＋ 新增客戶」那張卡只在那一頁
 
-   斷點寫成常數，因為它**必須**跟 CSS 那兩段 @media (min-width:1024px)
+   斷點寫成常數，因為它**必須**跟 CSS 那兩段 @media (min-width:900px)
    （L1 master-detail 版面、S7 頁首）同一個值；對不起來就會出現
    「JS 以為是桌機、CSS 還在畫手機」的半套畫面。
-   §75-B3 用 1023／1024 兩個寬度把 JS 與 CSS 釘在一起：改了一邊沒改另一邊那條就紅。 */
-const WIDE_MQ = '(min-width: 1024px)';
+   R34 用 899／900 兩個寬度把 JS 與 CSS 釘在一起：改了一邊沒改另一邊那條就紅。 */
+const WIDE_MQ = '(min-width: 900px)';
 function isWideLayout(){
   try { return !!(window.matchMedia && window.matchMedia(WIDE_MQ).matches); }
   catch (e) { return false; }
