@@ -281,7 +281,7 @@ textarea { resize: vertical; min-height: 46px; }
 .mk-box.hidden { display: none; }
 .mk-rule { font-size: 11.5px; color: var(--warm-ink); background: var(--warm-bg-2); border-radius: var(--r-pill); padding: 5px 8px; margin-bottom: 8px; }
 .mk-row { margin-bottom: 10px; }
-.mk-top { display: flex; align-items: flex-start; gap: 8px; }
+.mk-top { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
 .mk-top input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--warm); flex-shrink: 0; }
 .mk-top input[type=checkbox]:disabled { opacity: .4; }
 .mk-code { font-family: monospace; font-weight: 700; font-size: 13px; color: var(--ink-2); margin-right: 5px; }
@@ -294,7 +294,7 @@ textarea { resize: vertical; min-height: 46px; }
 .mk-hint { font-size: 11.5px; color: var(--ink-4); margin-top: 3px; padding-left: 25px; }
 .mk-hint.warn { color: var(--warm-ink); }
 .mk-row.hidden { display: none; }
-.mk-plain { font-size: 11.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.45; }
+.mk-plain { display: block; font-size: 11.5px; color: var(--ink-4); margin-top: 2px; line-height: 1.45; }
 .mk-badge {
   display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .3px;
   background: var(--warm); color: var(--surface); border-radius: var(--r-xs); padding: 1px 4px; margin-right: 5px; vertical-align: 1px;
@@ -934,8 +934,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .sess-date { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sess-client { font-size: 12.5px; color: var(--ink-2); min-width: 0; overflow: hidden;
                text-overflow: ellipsis; white-space: nowrap; }
-/* 議題永遠有完整寬度：兩層列就是為了這件事 */
-.sess-topic { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* 議題保留完整資料，但清單最多顯示兩行，避免單筆把列表撐得太高。 */
+.sess-topic { min-width: 0; overflow: hidden; white-space: normal;
+              display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
               font-size: 14px; font-weight: 600; color: var(--warm-ink); }
 .sess-topic.none { color: var(--ink-4); font-weight: 400; }
 .sess-arrow { color: var(--ink-4); font-size: 15px; line-height: 1; text-align: right; }
@@ -1360,19 +1361,9 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
    設計稿（桌機版設計稿.dc.html）@media 命中 0 次——它從來沒有規範過手機。
    所以手機的尺寸沒有基準可以違反，以下由 Yi-En 2026-08-27 定案。 */
 
-/* C2：AI 卡的收合開關。純 CSS（隱藏 checkbox ＋ label），不需要 JS。
-   2026-08-28（Yi-En 要求）：原本只有手機收合、桌機強制展開。改成**所有寬度都可收合、
-   預設收起來**——這張卡是「選用」的輔助功能，不該在每次記錄時都佔掉左欄一大塊。 */
-.ai-open-cb { position: absolute; opacity: 0; pointer-events: none; }
-.ai-toggle { display: flex; align-items: center; justify-content: space-between;
-             gap: 10px; cursor: pointer; }
-.ai-toggle .ai-title { margin-bottom: 0; }
-.ai-chev { display: inline-block; color: var(--cool-d); font-size: 12px;
-           transition: transform .15s ease; }
-.ai-body { display: none; }
-.ai-open-cb:checked ~ .ai-toggle .ai-chev { transform: rotate(180deg); }
-.ai-open-cb:checked ~ .ai-body { display: block; }
-.ai-open-cb:focus-visible ~ .ai-toggle { outline: 2px solid var(--cool); outline-offset: 2px; }
+/* R32：用途與複製鈕常駐；步驟與隱私提醒由具 ARIA 狀態的按鈕展開。 */
+.ai-privacy { font-size: 11.5px; font-weight: 650; color: var(--cool-d); margin: 10px 0 0; line-height: 1.6; }
+.ai-details { margin-top: 10px; }
 
 @media (max-width: 1023px) {
   /* C1：八項導覽從直式清單收成一列可橫向捲動的籤。
@@ -1388,7 +1379,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
   .an-name { white-space: nowrap; font-size: 12.5px; }
   .an-meta { display: none; }
 
-  /* C2 的收合規則已移到基礎層（2026-08-28 起桌機也收合），這裡不再重複。 */
+  .mk-guide summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+  .mk-guide .mk-legend { margin-top: 0; }
+  .acc-judge-note .judge-link-note { display: none; }
+
+  /* R32：兩個操作固定在底部列後，頁尾不再重複同一組入口。 */
+  #form-side .nextcard, #form-side .savelater-btn { display: none; }
 }
 /* 右欄面板 */
 /* C3＋C4（Yi-En 2026-08-29 決定「收成兩層」）：原本編號 11.5／名稱 20／徽章 12.5／說明 13.5
@@ -1599,9 +1595,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 #form-step1 .f2col { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
 #form-step1 .f2col-cell { min-width: 0; display: flex; flex-direction: column; }
 #form-step1 .f2col-cell > label:first-child { margin-top: 0; }
+#form-step1 #sec-basic .f2col > .f2col-cell:only-child { grid-column: 1 / -1; }
+#form-step1 #f-client-newbox { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; margin-top: 8px; }
 @media (min-width: 1024px) {
   #form-step1 .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 14px; }
   #form-step1 .f2col { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  #form-step1 #f-client-newbox { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 /* ── B8：送審勾選框包進有邊框的 label，點擊區更大 ─────────────────── */
@@ -2164,10 +2163,11 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .hcli-code { display: block; font-size: 14px; font-weight: 700; }
 .hcli-meta { display: block; font-size: 11.5px; color: var(--ink-3); }
 .hcli .ccard-paid { margin: 0; }
-.hcli-topic { display: block; margin-top: 9px; margin-bottom: 11px;
+.hcli-topic { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+              margin-top: 9px; margin-bottom: 11px;
               padding: 7px 9px; border-radius: var(--r-btn);
               background: var(--warm-bg); color: var(--warm-ink); font-size: 12.5px;
-              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+              line-height: 1.45; overflow: hidden; white-space: normal; }
 /* R4-1：沒有議題時放一個同尺寸的虛線框（Yi-En 指定的做法）。
    **框裡不放任何字**——「沒有寫議題」那類文字會讀成指認失敗（CLAUDE.md §七-9）。
    內距補回 1px：邊框佔掉的 2px 從 padding 扣回來，總高才跟有議題那張一模一樣（R4-4）。
@@ -2181,19 +2181,16 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
      ② `.hcli` 是 flex column（R4-2）→ 內容仍然靠上，不會被垂直置中
      ③ `.hcli-foot { margin-top: auto }`（R4-3）→ 底列仍然貼齊卡底
    `::before` 的零寬空格拿掉了——高度改用 min-height 給，不再靠行框撐。 */
-.hcli-topic-none { background: none; border: 1px dashed var(--warm-line);
+.hcli-topic-none { display: block; background: none; border: 1px dashed var(--warm-line);
                    padding: 0; min-height: 18px; color: transparent; }
 /* R4-3：底列永遠貼齊卡底。11px 的間距移到 .hcli-topic 的 margin-bottom——
    留在這裡的話，`margin-top: auto` 會在沒有多餘空間時解析成 0，那 11px 就沒了。 */
 .hcli-foot { display: flex; align-items: flex-end; gap: 10px; margin-top: auto; }
-.hbars { display: flex; align-items: flex-end; gap: 3px; height: 34px; }
-.hbar { width: 9px; border-radius: 3px 3px 0 0; background: var(--cool-2); display: inline-block; }
 .hcli-num { flex: 1 1 0; min-width: 0; text-align: right; font-size: 11.5px; color: var(--ink-2); }
 .hcli-more { grid-column: 1 / -1; }
 /* 既有的 .actions .btn 是 flex:1 1 0（整列平分），首頁這兩處要維持按鈕原寸，
    否則「客戶列表 →」會被拉到一半寬、「補記第 N 場」會撐成三條大長條。 */
 .home-sect-head .btn, .miss-acts .btn { flex: 0 0 auto; }
-.hbar[data-v="na"] { height: 3px; background: var(--line-dash); }
 
 /* H2 三個統計 */
 .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2419,6 +2416,8 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
 .cdrow-topic {
   min-width: 0; font-size: 13.5px; line-height: 1.55;
   white-space: normal; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; overflow: hidden;
 }
 .cdrow-topic.none { color: var(--ink-4); }
 .cdrow-mk:empty { padding: 0; background: none; border: 0; }
@@ -3141,9 +3140,14 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
             </div>
           </div>
           <div id="f-client-newbox" class="hidden">
-            <input type="text" id="f-client-new" style="margin-top:8px" placeholder="新客戶代號，例：Tom、A 小姐">
-            <label style="margin-top:8px">之前已談過幾次？ <span class="hint">用這工具之前已談的次數，第一次合作填 0</span></label>
-            <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
+            <div class="f2col-cell">
+              <label for="f-client-new">新客戶代號</label>
+              <input type="text" id="f-client-new" placeholder="例：Tom、A 小姐">
+            </div>
+            <div class="f2col-cell">
+              <label for="f-client-pre">之前已談過幾次？ <span class="hint">第一次合作填 0</span></label>
+              <input type="text" id="f-client-pre" inputmode="numeric" value="0" onchange="newClientPreChange()">
+            </div>
           </div>
           <div class="privacy-tip">🔒 為保護客戶隱私，客戶一律使用代號，不要輸入真實姓名或可辨識的細節。</div>
         </div>
@@ -3358,24 +3362,17 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
       <aside class="acc-side">
         <nav class="card acc-nav" id="acc-nav"></nav>
         <section class="ai-card">
-          <!-- C2：手機上這張卡預設收合。用 checkbox＋label 做純 CSS 的收合，
-               不加 JS、不動任何既有 id（#ai-steps／#ai-steps-btn 都還在原位）。
-               桌機上 .ai-toggle 隱藏、.ai-body 強制展開，維持設計稿原樣。 -->
-          <input type="checkbox" id="ai-open" class="ai-open-cb">
           <div class="ai-eyebrow">選用</div>
-          <label for="ai-open" class="ai-toggle">
-            <h2 class="ai-title">想看得更客觀？用 AI 分析逐字稿</h2>
-            <span class="ai-chev" aria-hidden="true">▾</span>
-          </label>
-          <div class="ai-body">
-          <p class="ai-sub">自己評容易全給到位。提示詞依 ICF ACC 績效評估標準寫，會要 AI 逐項引原文當證據，看不出來就標「無法從逐字稿判斷」，不猜。</p>
+          <h2 class="ai-title">給外部 AI 的分析提示詞</h2>
+          <p class="ai-sub">複製提示詞，貼到你自己使用的 AI 工具，協助對照 ICF ACC 標準。</p>
           <div class="ai-btns">
             <button type="button" class="btn ai-primary" onclick="copyAccPrompt()">複製分析提示詞</button>
-            <button type="button" class="btn ai-ghost" id="ai-steps-btn" onclick="toggleAiSteps()">三步驟怎麼做 ▾</button>
           </div>
+          <p class="ai-privacy">本工具不接收、不儲存逐字稿。</p>
+          <button type="button" class="btn ai-ghost ai-details" id="ai-steps-btn"
+                  aria-expanded="false" aria-controls="ai-steps" onclick="toggleAiSteps()">步驟與隱私提醒 ▾</button>
           <div class="ai-steps hidden" id="ai-steps"></div>
-          <div class="ai-warn">錄音先取得同意；貼給 AI 前先去辨識；<b>逐字稿不要存進本工具</b>。</div>
-          </div>
+          <div class="ai-warn hidden" id="ai-warn">錄音先取得同意；貼給外部 AI 前先移除姓名與可識別資訊。</div>
         </section>
       </aside>
 
@@ -3390,9 +3387,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
           <!-- M3（2026-08-28）：撤下每項職能的 ACC／PCC 迷你比較區。
                資訊量過高，而且容易被讀成分數。acc、marker、四態與所有計算資料完全保留，
                只移除這組比較 UI；渲染端的 am-* 寫入已改為安全存取。 -->
-          <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
-          <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
-            先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
+          <details class="mk-guide">
+            <summary>ACC／PCC 標記說明</summary>
+            <div class="mk-legend">39 條全部都是 PCC 評量會看的。其中 20 條 ACC 也會看——那 20 條沒有比較簡單，只是比較早被要求。</div>
+            <label class="mk-scope-row"><input type="checkbox" id="mk-scope" onchange="toggleMkScope()">
+              先看少一點：只顯示 ACC 也會看的 20 條<span class="hint" id="mk-scope-hint"></span></label>
+          </details>
           <div class="acc-progress" id="acc-progress"></div>
           <div id="acc-list"></div>
           <!-- 中性的「還缺什麼」卡：只列這一項裡勾了做到、但還沒有時間戳的 ACC 必評條目。
@@ -5867,11 +5867,11 @@ function buildAcc() {
     item.dataset.st = '0';
     const mkRows = (MK[i]||[]).map(m=>`
       <div class="mk-row${m.acc?' is-acc':''}" id="mk-row-${mkId(i,m.c)}">
-        <div class="mk-top">
-          <input type="checkbox" id="mk-chk-${mkId(i,m.c)}">
-          <div class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${MK_SHORT[m.c]?`<span class="mk-short">${MK_SHORT[m.c]}</span>`:''}${m.acc?'<span class="mk-tag acc">ACC 必備</span>':'<span class="mk-tag pcc">PCC 才要求</span>'}${m.acc&&MK_TWO[i]?'<span class="mk-tag two">PCC 建議 2 個證據</span>':''}${m.t}
-            ${m.p?`<div class="mk-plain">${m.p}</div>`:''}</div>
-        </div>
+        <label class="mk-top" for="mk-chk-${mkId(i,m.c)}">
+          <input type="checkbox" id="mk-chk-${mkId(i,m.c)}"${m.p?` aria-describedby="mk-plain-${mkId(i,m.c)}"`:''}>
+          <span class="mk-txt"><span class="mk-code">${m.d||m.c}</span>${MK_SHORT[m.c]?`<span class="mk-short">${MK_SHORT[m.c]}</span>`:''}${m.acc?'<span class="mk-tag acc">ACC 必備</span>':'<span class="mk-tag pcc">PCC 才要求</span>'}${m.acc&&MK_TWO[i]?'<span class="mk-tag two">PCC 建議 2 個證據</span>':''}${m.t}
+            ${m.p?`<span class="mk-plain" id="mk-plain-${mkId(i,m.c)}">${m.p}</span>`:''}</span>
+        </label>
         <div class="mk-rows" id="mk-rows-${mkId(i,m.c)}"></div>
         <div class="mk-neg" id="mk-neg-${mkId(i,m.c)}" data-neg="">
           <span class="mk-neg-lb">這一場：</span>
@@ -5910,7 +5910,7 @@ function buildAcc() {
             <button type="button" data-v="1">部分到位</button>
             <button type="button" data-v="2">到位</button>
           </div>
-          <div class="acc-judge-note">「尚未評估」和「未到位」是兩件事：沒填不等於沒做到。按「到位」會把底下沒標過的標記一起勾起來，不會覆蓋已標成 No／反 的那幾條。</div>
+          <div class="acc-judge-note">「尚未評估」和「未到位」是兩件事：沒填不等於沒做到。<span class="judge-link-note">按「到位」會把底下沒標過的標記一起勾起來，不會覆蓋已標成 No／反 的那幾條。</span></div>
         </div>
         <div class="acc-fields">
           <div class="acc-field">
@@ -5923,7 +5923,8 @@ function buildAcc() {
           </div>
         </div>
       </div>
-      <button type="button" class="mk-toggle" id="mk-tog-${i}" onclick="toggleMk(${i})">
+      <button type="button" class="mk-toggle" id="mk-tog-${i}" aria-expanded="true"
+              aria-controls="mk-box-${i}" onclick="toggleMk(${i})">
         收合 ACC 標記 ▴</button>
       <div class="mk-box" id="mk-box-${i}">
         ${noteHTML}
@@ -6053,8 +6054,9 @@ function toggleMk(i){
   const box = document.getElementById('mk-box-'+i);
   const open = box.classList.toggle('hidden') === false;
   const n = mkAccOnly ? (MK[i]||[]).filter(m=>m.acc).length : (MK[i]||[]).length;
-  document.getElementById('mk-tog-'+i).textContent =
-    (open ? '收合 ACC 標記 ▴' : '展開 ACC 標記（'+n+' 條）▾');
+  const btn = document.getElementById('mk-tog-'+i);
+  btn.textContent = (open ? '收合 ACC 標記 ▴' : '展開 ACC 標記（'+n+' 條）▾');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 /* 兩個證據的規則：不擋輸入，只擋勾選 */
 /* §6：每條標記可以加多列「時間戳＋實例」，每列可刪。
@@ -6175,17 +6177,22 @@ function refreshMk(i, code){
 let _curAcc = 0;
 const AI_STEPS = [
   '把錄音轉成逐字稿（手機備忘錄、Whisper、或任何你慣用的工具都可以）。',
-  '在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。',
+  '按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。',
   '對照 AI 的判斷回來標——它說的不算數，你才是那個在場的人。'
 ];
 function toggleAiSteps(){
-  const box = document.getElementById('ai-steps'), btn = document.getElementById('ai-steps-btn');
+  const box = document.getElementById('ai-steps'), btn = document.getElementById('ai-steps-btn'),
+        warn = document.getElementById('ai-warn');
   if (!box) return;
   const open = box.classList.toggle('hidden') === false;
   if (open && !box.innerHTML) box.innerHTML = AI_STEPS.map((t,i)=>
     '<div class="ai-step"><span class="ai-step-n">' + (i+1) + '</span>'
     + '<span class="ai-step-t">' + esc(t) + '</span></div>').join('');
-  if (btn) btn.textContent = open ? '三步驟怎麼做 ▴' : '三步驟怎麼做 ▾';
+  if (warn) warn.classList.toggle('hidden', !open);
+  if (btn){
+    btn.textContent = open ? '收起步驟與隱私提醒 ▴' : '步驟與隱私提醒 ▾';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
 }
 /* 這一場勾起來的標記數。全部從 DOM 現況推導，不寫死。 */
 function accItemCounts(i){
@@ -6463,6 +6470,8 @@ const ACTION_BAR_EXTRA = {
   clients: () => '<input type="search" class="ab-search" id="ab-client-q" placeholder="搜尋客戶代號"'
                  + ' value="' + esc(clientQuery) + '" oninput="onClientSearch()">'
                  + '<button class="btn btn-ghost ab-icon" onclick="onClientSearch()" aria-label="搜尋">搜尋</button>',
+  new1: () => '<button class="btn btn-ghost" id="ab-save-later" onclick="saveRecord(true)">先存起來</button>'
+              + '<button class="btn btn-primary" id="ab-go-acc" onclick="goStep(2)">去標職能 →</button>',
   /* 職能標記：回會談記錄。儲存與 ACC／PCC 計數本來就在 VIEW_HEAD.actions 裡，會自動進來 */
   new2: () => '<button class="btn btn-ghost" onclick="goStep(1)">← 回會談記錄</button>',
   /* 單場詳情：匯出 PDF／複製提示詞／刪除，本來寫在畫面中間，移到底部列 */
@@ -7503,7 +7512,7 @@ function renderCredCard(){
   const tier = (p.pct >= 100) ? '達標' : pace.text;
   card.innerHTML =
     '<div class="hc-head">'
-      + '<span class="hc-title" id="cc-title">' + esc(p.c.name) + ' 門檻</span>'
+      + '<span class="hc-title" id="cc-title">' + esc(p.c.name) + ' 時數與客戶</span>'
       + '<span class="hc-pct" id="cc-pct">' + p.pct + '%</span>'
       + '<button type="button" class="mini-link hc-more" onclick="showView(\'cred\')">看全部 →</button>'
     + '</div>'
@@ -8064,7 +8073,7 @@ const HIST_RECENT_N = 7;
 function histSource(){ return load(); }
 let _histEmpty = true;
 function setHistQuick(q){ histQuick = q; onHistFilter(); }
-function histFiltered(){
+function histFilteredBase(){
   const el = document.getElementById('hist-q');
   const kw = (el ? el.value : '').trim().toLowerCase();
   const cut7 = (()=>{ const d = new Date(Date.now() - 7*86400000);
@@ -8079,6 +8088,12 @@ function histFiltered(){
     }
     return true;
   }).sort(recNewestFirst);
+  return out;
+}
+function histFiltered(){
+  const out = histFilteredBase();
+  const el = document.getElementById('hist-q');
+  const kw = (el ? el.value : '').trim();
   /* 「最近 7 場」是**截取**不是過濾，所以在排序之後做。
      有搜尋關鍵字時不截——她打字就是要找特定那一場，截掉會讓她以為沒有。 */
   if (histQuick === 'recent' && !kw) return out.slice(0, HIST_RECENT_N);
@@ -8157,8 +8172,9 @@ function renderHistLegend(){
 function renderHist() {
   const list = document.getElementById('hist-list');
   const arr = histFiltered();
+  const allMatching = histFilteredBase();
   const cntEl = document.getElementById('hist-count');
-  if (cntEl) cntEl.textContent = arr.length + ' 場';   // 與清單同一份來源
+  if (cntEl) cntEl.textContent = '顯示 ' + arr.length + ' 場／共 ' + allMatching.length + ' 場';
   renderHistLegend();
   /* ④ 一場都沒有時沒有東西可篩，搜尋框／客戶下拉／三顆快篩整組一起隱藏（做法一致）。
      注意：這裡看的是「有沒有紀錄」，不是「篩出幾場」——
@@ -8934,8 +8950,9 @@ function renderClients(){
        （第 4 批做的）渲染結果一個像素都沒變（S6-3）。
        不改既有的 .ccard-meta 文案，就是為了不動卡牆。 */
     const avatar = Array.from(String(x.c.code || '').trim())[0] || '';
-    const metaSide = [x.st.n + ' 場', x.st.hours + ' 小時',
-                      x.st.last ? '最近 ' + mdStr(x.st.last) : '還沒有紀錄'].join(' · ');
+    const metaSide = [x.st.n + ' 場',
+                      x.st.last ? '最近 ' + mdStr(x.st.last) : '還沒有紀錄',
+                      x.st.hours + ' 小時'].join(' · ');
     return `<div class="ccard" data-cid="${x.c.id}" onclick="openClient('${x.c.id}')">
     <div class="ccard-top">
       <span class="ccard-av">${esc(avatar)}</span>
@@ -9529,7 +9546,7 @@ const HELP_HTML = `
 <p><b>ACC 標記：</b>每項職能下方按「展開 ACC 標記」，裡面是 ICF PCC Markers（2021 官方版）完整 39 條，每條可填證據時間戳，編號跟導師回饋表對得起來。標了 <b>ACC</b> 徽章的 20 條是 ACC 評量會直接看的最低標準技能；其餘是 PCC 才要求的，先填著當練功地圖。上方勾「只顯示 ACC 必備標記」可以把畫面收成 20 條——只是隱藏，已填的資料不會不見。</p>
 <p><b>兩個證據的規則：</b>培養信任(4)、保持臨在(5)、喚起覺察(7) 這三項的 ACC 必備標記，ICF 規定每條要有 2 個以上證據才能勾選，工具會自動數——證據不足時勾選鍵鎖住，但文字欄位一直都能打字。沒有證據就照導師的寫法填 No（No 不計入證據數）。</p>
 <p><b>紅字綠字：</b>展開後每項職能上方會列出「直接扣分」的行為和導師提醒，錄音送評前掃一遍。</p>
-<p><b>想評得更客觀？</b>在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。<b>注意：</b>錄音請先取得客戶同意；逐字稿不要存進本工具。</p>
+<p><b>想評得更客觀？</b>按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。<b>注意：</b>錄音請先取得客戶同意；本工具不接收、不儲存逐字稿。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
@@ -9543,15 +9560,15 @@ function openModal(html){
   document.getElementById('legal-modal').classList.add('show');
 }
 const ACC_AI_HTML = `
-<h2>用 AI 分析逐字稿</h2>
-<div class="lp-sub">讓 AI 依 ACC 八項職能判斷哪些到位，比自己勾更客觀</div>
+<h2>給外部 AI 的分析提示詞</h2>
+<div class="lp-sub">複製提示詞，貼到你自己使用的 AI 工具，協助對照 ACC 八項職能</div>
 
 <h3>怎麼用（3 步驟）</h3>
 <p><b>1. 準備逐字稿：</b>轉成文字，客戶名字與公司改成代號。</p>
-<p><b>2. 開始分析：</b>在「AI 逐字稿」區塊按「複製分析提示詞」，貼到你使用的 AI 工具；送出前先移除姓名與可識別資訊。</p>
+<p><b>2. 開始分析：</b>按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。</p>
 <p><b>3. 回來標記：</b>照 AI 的判定選狀態，佐證抄進「證據」，要練的寫進「要改的」。</p>
 
-<div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；逐字稿只貼給 AI 分析，請勿存入本工具。</div>
+<div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；本工具不接收、不儲存逐字稿。</div>
 <p class="lp-sub">提示詞是一份依 ICF ACC 績效評估標準寫的長指令，按下面這顆按鈕直接複製，不用在這裡讀完。</p>
 <button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製分析提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
@@ -9847,7 +9864,7 @@ function updateSideFoot(){
       const touched = clientCoverage(recs).reduce((t, x) => t + x.accTouched, 0);
       sum.innerHTML = '<span class="js-side-hours">累計 ' + esc(String(credStats(recs).totalH))
         + ' 小時 · ' + recs.length + ' 場</span><br>'
-        + '<span class="js-side-acc">ACC 進度 ' + touched + ' / ' + ACC_MK_N + ' 條已點到</span>';
+        + '<span class="js-side-acc">職能已點到 ' + touched + ' / ' + ACC_MK_N + ' 條</span>';
     }
   }
 }
@@ -10045,7 +10062,6 @@ function startClientRecord(cid){
    而那顆去的是 showView('clients') 的卡牆，正是她 R14-B 從桌機拿掉的那一面。
    現在改成：進行中的全部列出來，已結案的不列（走側欄「客戶」看）。 */
 const HOME_CLIENT_N = 6;      /* 已不再用來截斷，保留常數避免其他引用點壞掉 */
-const HOME_BAR_N    = 6;      /* 每張客戶卡的迷你長條：最近 6 場的推進感 */
 function homeStatCard(label, big, foot){
   return '<div class="hstat"><div class="hstat-l">' + esc(label) + '</div>'
     + '<div class="hstat-b">' + esc(big) + '</div>'
@@ -10169,16 +10185,6 @@ function renderHomeClients(){
       sn != null ? '第 ' + sn + ' 次' : ''
     ].filter(Boolean).join(' · ');
     const topic = last && String(last.topic || '').trim();
-    /* 迷你長條＝最近幾場的推進感。沒填推進感的那幾場不畫，不用 0 頂替。 */
-    const bars = rs.slice(0, HOME_BAR_N).reverse().map(r => {
-      const v = scoreNum(r, 'progress');
-      /* 沒填推進感的那一場畫成灰色短樁＋tooltip，**不是 0，也不是不畫**——
-         全部濾掉的話「6 場只剩 1 根」看起來像壞掉；畫成 0 高又等於替她說「這場沒推進」。 */
-      return v === null
-        ? '<span class="hbar" data-v="na" title="這一場沒有填推進感"></span>'
-        : '<span class="hbar" title="推進感 ' + v + '" style="height:'
-          + Math.max(4, Math.round(v / 10 * 34)) + 'px"></span>';
-    }).join('');
     const ap = avgProgress(rs);
     return '<button type="button" class="hcli" onclick="openClient(' + "'" + x.c.id + "'" + ')">'
       + '<span class="hcli-top">'
@@ -10193,9 +10199,8 @@ function renderHomeClients(){
       + (topic ? '<span class="hcli-topic">' + esc(topic) + '</span>'
                : '<span class="hcli-topic hcli-topic-none" aria-hidden="true"></span>')
       + '<span class="hcli-foot">'
-        + '<span class="hbars">' + bars + '</span>'
         + '<span class="hcli-num">' + x.st.hours + ' 小時'
-          + (ap === null ? '' : ' · 推進感 ' + ap.toFixed(1)) + '</span>'
+          + (ap === null ? '' : ' · 平均推進感 ' + ap.toFixed(1)) + '</span>'
       + '</span>'
     + '</button>';
   }).join('');
