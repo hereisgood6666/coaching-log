@@ -3360,9 +3360,12 @@ body.drawer-open { overflow: hidden; }          /* 抽屜開啟時鎖住背景�
         <section class="ai-card">
           <div class="ai-eyebrow">選用</div>
           <h2 class="ai-title">給外部 AI 的分析提示詞</h2>
-          <p class="ai-sub">複製提示詞，貼到你自己使用的 AI 工具，協助對照 ICF ACC 標準。</p>
+          <p class="ai-sub">複製提示詞，貼到你自己使用的 AI 工具。ACC 看八項職能有沒有到位，PCC 逐條數標記。</p>
           <div class="ai-btns">
-            <button type="button" class="btn ai-primary" onclick="copyAccPrompt()">複製分析提示詞</button>
+            <button type="button" class="btn ai-primary" onclick="copyAccPrompt()">複製 ACC 提示詞</button>
+            <!-- R36：PCC 那顆的點數門檻是康妮課堂口述的學院計分口徑，不是 ICF 明文，
+                 提示詞內文已明寫，不要在這裡簡寫成「ICF 標準」。 -->
+            <button type="button" class="btn ai-primary" onclick="copyPccPrompt()">複製 PCC 提示詞</button>
           </div>
           <p class="ai-privacy">本工具不接收、不儲存逐字稿。</p>
           <button type="button" class="btn ai-ghost ai-details" id="ai-steps-btn"
@@ -6178,7 +6181,7 @@ function refreshMk(i, code){
 let _curAcc = 0;
 const AI_STEPS = [
   '把錄音轉成逐字稿（手機備忘錄、Whisper、或任何你慣用的工具都可以）。',
-  '按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。',
+  '按「複製 ACC 提示詞」或「複製 PCC 提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。',
   '對照 AI 的判斷回來標——它說的不算數，你才是那個在場的人。'
 ];
 function toggleAiSteps(){
@@ -9554,7 +9557,7 @@ const HELP_HTML = `
 <p><b>ACC 標記：</b>每項職能下方按「展開 ACC 標記」，裡面是 37 條官方 PCC 標記＋2 條本工具自訂合格項（共 39 條），每條可填證據時間戳，編號跟導師回饋表對得起來。標了 <b>ACC</b> 徽章的 20 條是 ACC 評量會直接看的最低標準技能；其餘是 PCC 才要求的，先填著當練功地圖。上方勾「只顯示 ACC 必備標記」可以把畫面收成 20 條——只是隱藏，已填的資料不會不見。</p>
 <p><b>兩個證據的規則：</b>培養信任(4)、保持臨在(5)、喚起覺察(7) 這三項的 ACC 必備標記，ICF 規定每條要有 2 個以上證據才能勾選，工具會自動數——證據不足時勾選鍵鎖住，但文字欄位一直都能打字。沒有證據就照導師的寫法填 No（No 不計入證據數）。</p>
 <p><b>直接扣分：</b>展開後，部分職能會列出錄音送評時需要留意的行為。</p>
-<p><b>想評得更客觀？</b>按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。<b>注意：</b>錄音請先取得客戶同意；本工具不接收、不儲存逐字稿。</p>
+<p><b>想評得更客觀？</b>按「複製 ACC 提示詞」或「複製 PCC 提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。<b>注意：</b>錄音請先取得客戶同意；本工具不接收、不儲存逐字稿。</p>
 
 <h3>記得備份</h3>
 <p>偶爾到「歷史紀錄 → 備份全部（下載檔）」存一份，換裝置或需要時可用「還原備份」讀回來。</p>
@@ -9567,18 +9570,106 @@ function openModal(html){
   document.getElementById('legal-content').innerHTML = html;
   document.getElementById('legal-modal').classList.add('show');
 }
+/* ═══ R36（2026-10-03）PCC 核心職能細項審查的提示詞 ═══════════════════
+   Yi-En：「我和同學們要開始準備 PCC 的考試了…要再增加一個按鈕可以讓 AI 幫忙審查
+   PCC 核心職能細項。」原本那顆 copyAccPrompt() 是 ACC 標準，兩顆並存。
+
+   ⚠ 下面這些數字是**康妮 2026-09-30 在馨晤 Level 2 課堂口述的學院計分口徑**，
+     不在講義裡，也不是 ICF 明文（F3 p67 只寫「必須達到最低門檻數量」，沒有數字）。
+     所以提示詞一律寫「照學院的計分口徑」，**不准寫成「ICF 規定」**。
+     出處：docs/decisions/0124（Yi-En 2026-10-02 核過）＋課堂逐字稿 09-30
+     00:18:30–00:18:54（逐項門檻）、02:45:04–02:45:51（幾個證據）、02:59:25（全場 25）。
+
+   刻意沒有寫死的東西：37 條標記的清單從 MK 推導、職能名稱從 ACC 推導。
+   手抄一份的話，標記改了而提示詞沒改，AI 會照一份過期的清單判。 */
+const PCC_MIN = { 2: 3, 3: 3, 4: 4, 5: 5, 6: 6, 7: 6 };   /* ACC 索引 2–7 ＝ 核心職能 3–8 */
+/* 固定要兩個證據的標記（康妮 02:45:12、02:45:51 逐一點名）。
+   CC5 與 CC7 是「每一點都要兩個」（02:45:25、02:45:35），所以用索引整項套用。 */
+const PCC_TWO_CODES = ['4.1', '4.2', '4.3', '6.4', '6.7'];
+const PCC_TWO_WHOLE = [4, 6];                              /* 核心職能 5 與 7 整項 */
+/* 4.4 康妮沒有講，決定 0124 寫明「暫時用 1 個算，並在報告裡標未確認」。 */
+const PCC_UNSURE = ['4.4'];
+/* 全場合計的參考值（02:59:25「計算機就至少要拿到二十五個標記」）。
+   決定 0124：降為參考列，不作判定依據。推導不出來，只能寫死——所以只准寫在這一處。 */
+const PCC_REF_TOTAL = 25;
+function pccNeed(i, code){
+  if (PCC_TWO_WHOLE.indexOf(i) >= 0) return 2;
+  return PCC_TWO_CODES.indexOf(code) >= 0 ? 2 : 1;
+}
+function pccMarkerLines(){
+  const out = [];
+  ACC.forEach((a, i) => {
+    if (i < 2) return;                                     /* CC1／CC2 是合格項，不計點 */
+    const mk = MK[i] || [];
+    out.push('');
+    out.push('核心職能 ' + a[0] + '　至少要 ' + PCC_MIN[i] + ' 點（共 ' + mk.length + ' 點）');
+    mk.forEach(m => {
+      const n = pccNeed(i, m.c);
+      out.push('　' + m.c + '　' + m.t
+        + '　→ 需要 ' + n + ' 次證據'
+        + (PCC_UNSURE.indexOf(m.c) >= 0 ? '（課堂沒有講，暫以 1 次計，請在輸出標「未確認」）' : ''));
+    });
+  });
+  return out.join('\n');
+}
+function pccTotals(){
+  let marks = 0;
+  ACC.forEach((a, i) => { if (i >= 2) marks += (MK[i] || []).length; });
+  let need = 0;
+  Object.keys(PCC_MIN).forEach(k => { need += PCC_MIN[k]; });
+  return { marks: marks, need: need };
+}
+function copyPccPrompt(){
+  const t = pccTotals();
+  const text = '你是一位熟悉 ICF PCC 標記（PCC Markers）的資深導師教練（Mentor Coach）。'
+    + '我正在準備 PCC 認證，請你照下面的計分口徑，逐條審查我這一場會談的核心職能細項。\n'
+    + '\n'
+    + '【計分口徑的來源，請先讀完】\n'
+    + '下面的點數門檻與證據次數，是我的教練學院在課堂上口述的計分口徑，'
+    + '不是 ICF 公開文件寫的數字。請在輸出裡一律稱它為「學院的計分口徑」，'
+    + '不要寫成「ICF 規定」或「ICF 標準要求」。\n'
+    + '\n'
+    + '【判定規則】\n'
+    + '一、核心職能 1（展現道德規範）與核心職能 2（體現教練心態）是合格項，先判，不計點。\n'
+    + '二、核心職能 3 到 8，每一項都要達到各自的最低點數'
+    + '（課堂說的是「過三分之二」，但實際要幾點照下面每一項各自寫的數字，不要自己換算），'
+    + '六項**全部**達標才算通過；任何一項沒到，就是還沒到。\n'
+    + '三、一條標記要算「拿到」，必須在逐字稿裡找到指定次數的獨立證據。'
+    + '需要 2 次的，只出現 1 次就是還沒拿到。\n'
+    + '四、全場合計至少 ' + PCC_REF_TOTAL + ' 條標記是課堂提過的參考值，**只列出來參考，不拿它當判定依據**。\n'
+    + '\n'
+    + '【逐條門檻與證據次數】（共 ' + t.marks + ' 條，六項最低點數合計 ' + t.need + '）\n'
+    + pccMarkerLines() + '\n'
+    + '\n'
+    + '【請輸出】\n'
+    + '一、逐條表：每一條標記寫「找到幾次證據／需要幾次／拿到或還沒拿到」，'
+    + '拿到的各引 1–2 句逐字稿原文當證據。逐字稿裡沒有的，寫「逐字稿裡沒有看到」——'
+    + '那只代表這一場沒有出現，不要寫成我做不到。\n'
+    + '二、逐項小計：核心職能 3 到 8，各寫「拿到幾點／最低幾點／達標或還沒達標」。\n'
+    + '三、判定：六項是否全部達標。沒有的話，列出差最少的兩項，以及各差哪幾條。\n'
+    + '四、下一場可以練的兩條：挑「只差一次證據就拿到」的標記，'
+    + '各給一句我下次可以直接照唸的示範句。\n'
+    + '五、參考列：全場合計拿到幾條（對照課堂提過的 ' + PCC_REF_TOTAL + '）。\n'
+    + '\n'
+    + '【語氣】不評分、不排名、不寫「你失敗了」。沒有證據就是沒有證據，'
+    + '把它寫成「這一場還沒走到」，不要寫成能力不足。\n'
+    + '\n'
+    + '以下是逐字稿：\n';
+  copyText(text, '已複製 PCC 提示詞，貼到你慣用的 AI');
+}
 const ACC_AI_HTML = `
 <h2>給外部 AI 的分析提示詞</h2>
-<div class="lp-sub">複製提示詞，貼到你自己使用的 AI 工具，協助對照 ACC 八項職能</div>
+<div class="lp-sub">複製提示詞，貼到你自己使用的 AI 工具。兩份：ACC 看八項職能到位與否，PCC 逐條數標記</div>
 
 <h3>怎麼用（3 步驟）</h3>
 <p><b>1. 準備逐字稿：</b>轉成文字，客戶名字與公司改成代號。</p>
-<p><b>2. 開始分析：</b>按「複製分析提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。</p>
+<p><b>2. 開始分析：</b>按「複製 ACC 提示詞」或「複製 PCC 提示詞」，貼到你使用的外部 AI 工具；送出前先移除姓名與可識別資訊。</p>
 <p><b>3. 回來標記：</b>照 AI 的判定選狀態，佐證抄進「證據」，要練的寫進「要改的」。</p>
 
 <div class="lp-note"><b>提醒：</b>錄音前請先取得客戶同意；本工具不接收、不儲存逐字稿。</div>
-<p class="lp-sub">提示詞是一份依 ICF ACC 績效評估標準寫的長指令，按下面這顆按鈕直接複製，不用在這裡讀完。</p>
-<button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製分析提示詞</button>`;
+<p class="lp-sub">兩份都是長指令，按按鈕直接複製，不用在這裡讀完。<b>ACC</b> 依 ICF ACC 績效評估標準寫；<b>PCC</b> 逐條數 PCC 標記，點數門檻照學院的計分口徑（康妮課堂口述，不是 ICF 明文）。</p>
+<button class="btn btn-primary" style="width:100%" onclick="copyAccPrompt()">複製 ACC 提示詞</button>
+<button class="btn btn-primary" style="width:100%;margin-top:7px" onclick="copyPccPrompt()">複製 PCC 提示詞</button>`;
 function openAccAnalyze(){ openModal(ACC_AI_HTML); }
 /* 教練反思統計報告（歷史頁）：平均分數、能量對齊指數、最常展現的職能 */
 let reflectDays = 30;
